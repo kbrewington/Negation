@@ -9,8 +9,9 @@ player.sprite = 0
 player.x = 8
 player.y = 8
 player.speed = 3
-player.angle = 0.5
-player.turnspeed = 0.01
+player.current_speed = 0
+player.angle = 0
+player.turnspeed = 10
 
 map_ = {}
 map_.border = {}
@@ -38,7 +39,7 @@ function bump(x, y)
 end
 
 -- https://www.lexaloffle.com/bbs/?tid=2592
-function spra(angle, n, x, y, w, h, flip_x, flip_y)
+--[[function spra(angle, n, x, y, w, h, flip_x, flip_y)
   if w == nil or h == nil then
     w, h = 1, 1
   end
@@ -56,7 +57,32 @@ function spra(angle, n, x, y, w, h, flip_x, flip_y)
       end
     end
   end
+end]]
+
+-- https://www.lexaloffle.com/bbs/?pid=22757
+function spr_r(s,x,y,a,w,h)
+ sw=(w or 1)*8
+ sh=(h or 1)*8
+ sx=(s%8)*8
+ sy=flr(s/8)*8
+ x0=flr(0.5*sw)
+ y0=flr(0.5*sh)
+ a=a/360
+ sa=sin(a)
+ ca=cos(a)
+ for ix=0,sw-1 do
+  for iy=0,sh-1 do
+   dx=ix-x0
+   dy=iy-y0
+   xx=flr(dx*ca-dy*sa+x0)
+   yy=flr(dx*sa+dy*ca+y0)
+   if (xx>=0 and xx<sw and yy>=0 and yy<=sh) then
+    pset(x+ix,y+iy,sget(sx+xx,sy+yy))
+   end
+  end
+ end
 end
+
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -78,7 +104,7 @@ function _update()
       map_.sx -= 1
     else
 
-      player.angle += player.turnspeed
+      player.angle -= player.turnspeed
     end
   end --end left button
 
@@ -90,7 +116,7 @@ function _update()
       map_.sx += 1
 
     else
-      player.angle -= player.turnspeed
+      player.angle += player.turnspeed
     end
   end --end right button
 
@@ -101,14 +127,7 @@ function _update()
     if map_.movemap then
       map_.sy -= 1
     else
-      for i = 1, player.speed do
-        if player.y < map_.border.up + 1
-        or bump(player.x, player.y - 1)
-        or bump(player.x + 7, player.y - 1)
-        then break end
-
-        player.y -= 1
-      end
+      player.current_speed = player.speed
     end
   end --end up button
 
@@ -119,14 +138,7 @@ function _update()
     if map_.movemap then
       map_.sy += 1
     else
-      for i = 1, player.speed do
-        if player.y > map_.border.down - 1
-        or bump(player.x, player.y + 8)
-        or bump(player.x + 7, player.y + 8)
-        then break end
-
-        player.y += 1
-      end
+      player.current_speed = -player.speed
     end
   end --end down button
 
@@ -147,8 +159,15 @@ function _update()
     map_.sy = 0
     player.x = 8
     player.y = 8
-    player.angle = 0.5
+    player.angle = 0
   end --end x button
+
+  player.angle = player.angle % 360
+
+  player.x = player.x - player.current_speed * sin(player.angle/360)
+  player.y = player.y - player.current_speed * cos(player.angle/360)
+
+  if not (btn(2)) then player.current_speed = 0 end
 
 end --end _update()
 
@@ -161,7 +180,8 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  spra(player.angle, player.sprite, player.x, player.y)
+  --spra(player.angle, player.sprite, player.x, player.y)
+  spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
   --debug()
 end --end _draw()
@@ -463,4 +483,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
