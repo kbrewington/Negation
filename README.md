@@ -1,5 +1,6 @@
 # Negation
-Final project for COSC 438
+Final project for COSC 438  
+Kyle Brewington  
 
 Create a game in PICO 8. When Alan posts the document, will replace the README with it.
 
