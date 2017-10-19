@@ -13,6 +13,10 @@ player.current_speed = 0
 player.angle = 0
 player.turnspeed = 10
 
+cheats = {}
+cheats.noclip = false
+cheats.god = false
+
 map_ = {}
 map_.border = {}
 map_.border.left = 0
@@ -28,36 +32,25 @@ map_.movemap = false
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("px: " .. player.x, 0, 0, 7)
-  print("py: " .. player.y, 30, 0, 7)
-  print("sx: " .. map_.sx, 0, 6, 7)
-  print("sy: " .. map_.sy, 30, 6, 7)
+  print("px: " .. round(player.x, 1), 0, 0, 7)
+  print("py: " .. round(player.y, 1), 45, 0, 7)
+
+  print("ag: " .. player.angle, 0, 6, 7)
+  print("", 45, 6, 7)
+
+  print("sx: " .. round(map_.sx, 1), 0, 12, 7)
+  print("sy: " .. round(map_.sy, 1), 45, 12, 7)
 end
 
 function bump(x, y)
   return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
 end
 
--- https://www.lexaloffle.com/bbs/?tid=2592
---[[function spra(angle, n, x, y, w, h, flip_x, flip_y)
-  if w == nil or h == nil then
-    w, h = 1, 1
-  end
-  flip_x = flip_x or false
-  flip_y = flip_y or false
-
-  local nx, ny, cosa, sina, h2, w2 = n % 16 * 8, flr(n / 16) * 8, cos(angle), sin(angle), 8 * h - 1, 8 * w - 1
-  local h3, w3 = h * 4, w * 4
-  for i = 0, w2 do
-    local cx, sx, sprx = cosa * (i - w3), sina * (i - w3), flip_x and nx + w2 - i or nx + i
-    for j = 0, h2 do
-      local col = sget(sprx, flip_y and ny + h2 - j or ny + j)
-      if col != 0 then
-        pset(x + w3 + cx - sina * (j - h3), y + h3 + sx + cosa * (j - h3), col)
-      end
-    end
-  end
-end]]
+-- http://lua-users.org/wiki/SimpleRound
+function round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return flr(num * mult + 0.5) / mult
+end
 
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
@@ -100,32 +93,23 @@ function _update()
     left arrow
   ]]
   if (btn(0)) then
-    if map_.movemap then
-      map_.sx -= 1
-    else
-
-      player.angle -= player.turnspeed
-    end
+    player.angle -= player.turnspeed
   end --end left button
 
   --[[
     right arrow
   ]]
   if (btn(1)) then
-    if map_.movemap then
-      map_.sx += 1
-
-    else
-      player.angle += player.turnspeed
-    end
+    player.angle += player.turnspeed
   end --end right button
 
   --[[
     up arrow
   ]]
   if (btn(2)) then
-    if map_.movemap then
-      map_.sy -= 1
+    if not cheats.noclip then
+      -- if not collision statement
+      player.current_speed = player.speed
     else
       player.current_speed = player.speed
     end
@@ -135,8 +119,9 @@ function _update()
     down arrow
   ]]
   if (btn(3)) then
-    if map_.movemap then
-      map_.sy += 1
+    if not cheats.noclip then
+      -- if not collision statement
+      player.current_speed = -player.speed
     else
       player.current_speed = -player.speed
     end
@@ -146,9 +131,7 @@ function _update()
     z button
   ]]
   if (btn(4)) then
-    map_.movemap = true
-  else
-    map_.movemap = false
+
   end --end z button
 
   --[[
@@ -162,12 +145,18 @@ function _update()
     player.angle = 0
   end --end x button
 
+  if not cheats.noclip then
+    player.x = player.x - player.current_speed * sin(player.angle/360)
+    player.y = player.y - player.current_speed * cos(player.angle/360)
+  else
+    map_.sx = map_.sx + player.current_speed * sin(player.angle/360)
+    map_.sy = map_.sy + player.current_speed * cos(player.angle/360)
+    player.x = 64
+    player.y = 64
+  end
+
+  player.current_speed = 0
   player.angle = player.angle % 360
-
-  player.x = player.x - player.current_speed * sin(player.angle/360)
-  player.y = player.y - player.current_speed * cos(player.angle/360)
-
-  if not (btn(2)) then player.current_speed = 0 end
 
 end --end _update()
 
@@ -180,10 +169,9 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  --spra(player.angle, player.sprite, player.x, player.y)
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
-  --debug()
+  debug()
 end --end _draw()
 
 
