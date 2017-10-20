@@ -8,10 +8,13 @@ player = {}
 player.sprite = 0
 player.x = 8
 player.y = 8
-player.speed = 3
+player.speed = 1
 player.current_speed = 0
 player.angle = 0
 player.turnspeed = 10
+
+wall_fwd = false
+wall_bck = false
 
 cheats = {}
 cheats.noclip = false
@@ -25,7 +28,15 @@ map_.border.right = 120
 map_.border.down = 120
 map_.sx = 0
 map_.sy = 0
-map_.movemap = false
+
+-- controls
+c = {}
+c.left_arrow = 0
+c.right_arrow = 1
+c.up_arrow = 2
+c.down_arrow = 3
+c.z_button = 4
+c.x_button = 5
 
 
 --------------------------------------------------------------------------------
@@ -43,7 +54,26 @@ function debug()
 end
 
 function bump(x, y)
-  return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
+  local tx = flr((x - map_.sx) / 8)
+  local ty = flr((y - map_.sy) / 8)
+  local map_id = mget(tx, ty)
+
+  return fget(map_id, 0)
+  --return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
+end
+
+function collision()
+  local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
+  local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
+
+  local bck_tempx = player.x + player.speed * sin(player.angle / 360)
+  local bck_tempy = player.y + player.speed * cos(player.angle / 360)
+
+  wall_fwd =  bump(fwd_tempx, fwd_tempy) or bump(fwd_tempx + 7, fwd_tempy)
+              or bump(fwd_tempx, fwd_tempy + 7) or bump(fwd_tempx + 7, fwd_tempy + 7)
+
+  wall_bck =  bump(bck_tempx, bck_tempy) or bump(bck_tempx + 7, bck_tempy)
+              or bump(bck_tempx, bck_tempy + 7) or bump(bck_tempx + 7, bck_tempy + 7)
 end
 
 -- http://lua-users.org/wiki/SimpleRound
@@ -89,27 +119,30 @@ end --end _init()
 ---------------------------------- update --------------------------------------
 --------------------------------------------------------------------------------
 function _update()
+  collision()
+
   --[[
     left arrow
   ]]
-  if (btn(0)) then
+  if (btn(c.left_arrow)) then
     player.angle -= player.turnspeed
   end --end left button
 
   --[[
     right arrow
   ]]
-  if (btn(1)) then
+  if (btn(c.right_arrow)) then
     player.angle += player.turnspeed
   end --end right button
 
   --[[
     up arrow
   ]]
-  if (btn(2)) then
+  if (btn(c.up_arrow)) then
     if not cheats.noclip then
-      -- if not collision statement
-      player.current_speed = player.speed
+      if not wall_fwd then
+        player.current_speed = player.speed
+      end
     else
       player.current_speed = player.speed
     end
@@ -118,10 +151,11 @@ function _update()
   --[[
     down arrow
   ]]
-  if (btn(3)) then
+  if (btn(c.down_arrow)) then
     if not cheats.noclip then
-      -- if not collision statement
-      player.current_speed = -player.speed
+      if not wall_bck then
+        player.current_speed = -player.speed
+      end
     else
       player.current_speed = -player.speed
     end
@@ -130,14 +164,14 @@ function _update()
   --[[
     z button
   ]]
-  if (btn(4)) then
+  if (btn(c.z_button)) then
 
   end --end z button
 
   --[[
     x button
   ]]
-  if (btn(5)) then
+  if (btn(c.x_button)) then
     map_.sx = 0
     map_.sy = 0
     player.x = 8
@@ -146,18 +180,17 @@ function _update()
   end --end x button
 
   if not cheats.noclip then
-    player.x = player.x - player.current_speed * sin(player.angle/360)
-    player.y = player.y - player.current_speed * cos(player.angle/360)
+    player.x = player.x - player.current_speed * sin(player.angle / 360)
+    player.y = player.y - player.current_speed * cos(player.angle / 360)
   else
-    map_.sx = map_.sx + player.current_speed * sin(player.angle/360)
-    map_.sy = map_.sy + player.current_speed * cos(player.angle/360)
+    map_.sx = map_.sx + player.current_speed * sin(player.angle / 360)
+    map_.sy = map_.sy + player.current_speed * cos(player.angle / 360)
     player.x = 64
     player.y = 64
   end
 
   player.current_speed = 0
   player.angle = player.angle % 360
-
 end --end _update()
 
 
