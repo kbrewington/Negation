@@ -12,6 +12,9 @@ player.speed = 1
 player.current_speed = 0
 player.angle = 0
 player.turnspeed = 10
+player.current_dash_speed = 0
+player.dash_speed = 15
+player.dash_threshold = {.05, .2}
 
 wall_fwd = false
 wall_bck = false
@@ -38,6 +41,16 @@ c.down_arrow = 3
 c.z_button = 4
 c.x_button = 5
 
+player.last_time = {[c.left_arrow] = 0,
+                    [c.right_arrow] = 0,
+                    [c.up_arrow] = 0,
+                    [c.down_arrow] = 0}
+
+player.dashing = {[c.left_arrow] = false,
+                  [c.right_arrow] = false,
+                  [c.up_arrow] = false,
+                  [c.down_arrow] = false}
+pi = 3.14159265359
 
 --------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
@@ -106,6 +119,42 @@ function spr_r(s,x,y,a,w,h)
  end
 end
 
+--[[
+    implement dashing
+]]
+function dash(n)
+  player.dashing[n] = true
+
+  if n == c.down_arrow or n == c.left_arrow then
+    player.current_dash_speed = -player.dash_speed
+  else
+    player.current_dash_speed = player.dash_speed
+  end
+
+  if player.dashing[c.up_arrow] or player.dashing[c.down_arrow] then
+    player.x = player.x - player.current_dash_speed * sin(player.angle / 360)
+    player.y = player.y - player.current_dash_speed * cos(player.angle / 360)
+  else
+    player.x = player.x - player.current_dash_speed * sin((player.angle/360)-(pi/4))
+    player.y = player.y - player.current_dash_speed * cos((player.angle/360)-(pi/4))
+  end
+  player.current_dash_speed = 0
+  player.dashing[n] = false
+
+end
+
+--[[
+   detect whether the player double tapped to dash
+]]
+function dash_detect(n)
+  if player.last_time[n] ~= 0 then
+    if ((time() - player.last_time[n]) < player.dash_threshold[2]) and
+       ((time() - player.last_time[n]) > player.dash_threshold[1]) then
+         dash(n)
+    end
+  end
+  player.last_time[n] = time()
+end
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -125,6 +174,7 @@ function _update()
     left arrow
   ]]
   if (btn(c.left_arrow)) then
+    dash_detect(c.left_arrow)
     player.angle -= player.turnspeed
   end --end left button
 
@@ -132,6 +182,7 @@ function _update()
     right arrow
   ]]
   if (btn(c.right_arrow)) then
+    dash_detect(c.right_arrow)
     player.angle += player.turnspeed
   end --end right button
 
@@ -141,9 +192,11 @@ function _update()
   if (btn(c.up_arrow)) then
     if not cheats.noclip then
       if not wall_fwd then
+        dash_detect(c.up_arrow)
         player.current_speed = player.speed
       end
     else
+      dash_detect(c.up_arrow)
       player.current_speed = player.speed
     end
   end --end up button
@@ -154,9 +207,11 @@ function _update()
   if (btn(c.down_arrow)) then
     if not cheats.noclip then
       if not wall_bck then
+        dash_detect(c.down_arrow)
         player.current_speed = -player.speed
       end
     else
+      dash_detect(c.down_arrow)
       player.current_speed = -player.speed
     end
   end --end down button
