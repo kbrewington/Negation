@@ -52,6 +52,7 @@ player.dashing = {[c.left_arrow] = false,
                   [c.down_arrow] = false}
 
 basic_enemies = {}
+bullets = {}
 
 -- define some constants
 pi = 3.14159265359
@@ -108,6 +109,24 @@ function enemy(spawn_x, spawn_y)
            end
 
   return e
+end
+
+--[[
+  bullet object
+]]
+function bullet(startx, starty, angle)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = angle
+  b.sprite = 133
+  b.speed = 2
+  b.move = function()
+              b.x = b.x - b.speed * sin(b.angle / 360)
+              b.y = b.y - b.speed * cos(b.angle / 360)
+           end
+
+  return b
 end
 
 --------------------------------------------------------------------------------
@@ -366,6 +385,10 @@ function get_first(table)
  end
 end
 
+function shoot(x, y, a)
+  add(bullets, bullet(x, y, a))
+end
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
@@ -428,9 +451,10 @@ function _update()
 
   --[[
     z button
+    -- shoot for now, this can be changed later
   ]]
   if (btn(c.z_button)) then
-
+    shoot(player.x, player.y, player.angle)
   end --end z button
 
   --[[
@@ -472,6 +496,11 @@ function _draw()
   for e in all(basic_enemies) do
     spr(e.sprite, e.x, e.y)
     e.move()
+  end
+
+  for b in all(bullets) do
+    spr(b.sprite, b.x, b.y)
+    b.move()
   end
 
   debug()
