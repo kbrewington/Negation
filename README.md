@@ -5,7 +5,7 @@ Kyle Brewington
 Sinclair Fuh  
 Joshua Cheseman
 
-Create a game in PICO 8. When Alan posts the document, will replace the README with it.
+Create a game in PICO 8.
 
 Milestone 1 demos: October 25th  
 Milestone 2 demos: November 8th  
