@@ -50,7 +50,65 @@ player.dashing = {[c.left_arrow] = false,
                   [c.right_arrow] = false,
                   [c.up_arrow] = false,
                   [c.down_arrow] = false}
+
+basic_enemies = {}
+
+-- define some constants
 pi = 3.14159265359
+inf = 32767.99 -- max number as defined in https://neko250.github.io/pico8-api/
+
+--------------------------------------------------------------------------------
+------------------------ object-like structures --------------------------------
+--------------------------------------------------------------------------------
+--[[
+  node object
+]]
+function node(x, y)
+  local n = {}
+  n.x = x
+  n.y = y
+  n.distance = function(d)
+                  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) -- use euclidean distance for now
+               end
+  n.equals = function(onode)
+                if n.x == onode.x and n.y == onode.y then
+                  return true
+                else
+                  return false
+                end
+              end
+  return n
+end
+
+--[[
+  enemy object
+]]
+function enemy(spawn_x, spawn_y)
+  local e = {}
+  e.sprite = 132
+  e.angle = 360
+  e.speed = .7
+  e.x = (spawn_x or 20)
+  e.y = (spawn_y or 20)
+  e.hitbox = {['x'] = e.x,
+              ['y'] = e.y,
+              ['dx'] = e.x + 7,
+              ['dy'] = e.y + 7}
+  e.update_hitbox = function(x, y)
+                      e.hitbox.x = x
+                      e.hitbox.y = y
+                      e.hitbox.dx = x + 7
+                      e.hitbox.dy = y + 7
+                    end
+  e.move = function()
+              path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+              e.x = path.x
+              e.y = path.y
+              e.update_hitbox(e.x, e.y)
+           end
+
+  return e
+end
 
 --------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
@@ -60,10 +118,12 @@ function debug()
   print("py: " .. round(player.y, 1), 45, 0, 7)
 
   print("ag: " .. player.angle, 0, 6, 7)
-  print("", 45, 6, 7)
+  print("mem: ".. stat(0), 45, 6, 7)
 
   print("sx: " .. round(map_.sx, 1), 0, 12, 7)
   print("sy: " .. round(map_.sy, 1), 45, 12, 7)
+
+  print("coll: " .. enemy_collision(basic_enemies[1]), 45, 24, 7)
 end
 
 function bump(x, y)
@@ -75,6 +135,10 @@ function bump(x, y)
   --return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
 end
 
+function bump_all(x, y)
+  return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
+end
+
 function collision()
   local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
   local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
@@ -82,11 +146,21 @@ function collision()
   local bck_tempx = player.x + player.speed * sin(player.angle / 360)
   local bck_tempy = player.y + player.speed * cos(player.angle / 360)
 
-  wall_fwd =  bump(fwd_tempx, fwd_tempy) or bump(fwd_tempx + 7, fwd_tempy)
-              or bump(fwd_tempx, fwd_tempy + 7) or bump(fwd_tempx + 7, fwd_tempy + 7)
+  wall_fwd =  bump_all(fwd_tempx, fwd_tempy) --bump(fwd_tempx, fwd_tempy) or bump(fwd_tempx + 7, fwd_tempy)
+              -- or bump(fwd_tempx, fwd_tempy + 7) or bump(fwd_tempx + 7, fwd_tempy + 7)
 
-  wall_bck =  bump(bck_tempx, bck_tempy) or bump(bck_tempx + 7, bck_tempy)
-              or bump(bck_tempx, bck_tempy + 7) or bump(bck_tempx + 7, bck_tempy + 7)
+  wall_bck =  bump_all(bck_tempx, bck_tempy) --bump(bck_tempx, bck_tempy) or bump(bck_tempx + 7, bck_tempy)
+              -- or bump(bck_tempx, bck_tempy + 7) or bump(bck_tempx + 7, bck_tempy + 7)
+end
+
+function enemy_collision(e)
+  if e.x < player.x and player.x < e.hitbox.x then
+  --    player.y < e.y and player.y > e.hitbox.y and
+  --    e.hitbox.dx < player.hitbox.dx and e.hitbox.dx > player.hitbox.x and
+  --    e.hitbox.dy < player.hitbox.dy and e.hitbox.dy > player.hitbox.y then
+       return 'true'
+  end
+  return 'false'
 end
 
 -- http://lua-users.org/wiki/SimpleRound
@@ -134,7 +208,7 @@ function dash(n)
   if player.dashing[c.up_arrow] or player.dashing[c.down_arrow] then
     player.x = player.x - player.current_dash_speed * sin(player.angle / 360)
     player.y = player.y - player.current_dash_speed * cos(player.angle / 360)
-  else
+  else -- dash left right as defined on unit circle
     player.x = player.x - player.current_dash_speed * sin((player.angle/360)-(pi/4))
     player.y = player.y - player.current_dash_speed * cos((player.angle/360)-(pi/4))
   end
@@ -156,11 +230,147 @@ function dash_detect(n)
   player.last_time[n] = time()
 end
 
+--[[
+    get min
+]]
+function get_min(list)
+  local min = inf
+  min_idx = 0
+  for v, k in pairs(list) do
+    if k < min then
+      min = k
+      min_idx = v
+    end
+  end
+  return min_idx
+end
+
+function match(item, indict)
+  for i,v in pairs(indict) do
+    if i == item then
+      return i
+    end
+  end
+end
+
+function not_empty(dict)
+  for k,v in pairs(dict) do
+    return true
+  end
+  return false
+end
+--]]
+
+--[[
+    basic enemy AI pathfinding
+    -- TODO break ties in a lifo manner
+]]
+function astar(start, goal)
+  map = {}
+  closedset = {}
+  openset = {}
+  camefrom = {}
+  gscore = {}
+  fscore = {}
+  map.x = 128*8
+  map.y = 128*8
+  openset[start] = true
+  gscore[start] = 0
+  fscore[start] = start.distance(goal)
+  while not_empty(openset) do
+    current = match(get_min(fscore), openset) -- or get_first(openset)
+    if current.equals(goal) then
+      return get_path(camefrom, current)
+    end
+    del(openset, current)
+    -- add(closedset, current)
+    closedset[current] = true
+    -- check all adjacent nodes
+    for i=-1,1 do
+      for j=-1,1 do
+        nx = current.x+(i*enemy().speed)
+        ny = current.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y then
+          neighbor = node(nx, ny)
+          -- check if neighbor is in closed set
+          if not closedset[neighbor] then
+            -- check if neighbor is not in open set (add to open set if not)
+            if not openset[neighbor] then
+              openset[neighbor] = true
+            end
+            -- distance from start to neighbor
+            tentative_gscore = gscore[current] + current.distance(neighbor)
+            if tentative_gscore < (gscore[neighbor] or inf) then
+              camefrom[neighbor] = current
+              gscore[neighbor] = tentative_gscore
+              fscore[neighbor] = gscore[neighbor] + neighbor.distance(goal)
+            end
+          end
+        end
+      end -- end j for
+    end --end i for
+  end -- end while
+  return {node(40, 61)}
+end -- end func
+
+function minimum_neighbor(start, goal)
+  local map = {}
+  map.x = 128
+  map.y = 120
+  local minimum_dist = inf
+  local min_node = nil
+    for i=-1,1 do
+      for j=-1,1 do
+        local nx = start.x+(i*enemy().speed)
+        local ny = start.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+          local current = node(nx, ny)
+          local cur_distance = current.distance(goal)
+          if cur_distance < minimum_dist then
+            minimum_dist = cur_distance
+            min_node = current
+          end
+        end
+      end -- end j for
+    end --end i for
+    return min_node
+end
+
+function is_in(table, key)
+  for k, v in pairs(table) do
+    if key == k then return true end
+  end
+  return false
+end
+
+--[[
+    reconstruct path
+]]
+function get_path(camefrom, current)
+  total_path = {}
+  add(total_path, current)
+  while is_in(camefrom, current) do
+    current = camefrom[current]
+    add(total_path, current)
+  end
+  return total_path
+end
+
+--[[
+    get first item from a table of key, pairs
+    todo: find a better way to do this
+]]
+function get_first(table)
+ for k, v in all(table) do
+   return k
+ end
+end
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-
+  add(basic_enemies, enemy(40, 60))
 end --end _init()
 
 
@@ -258,6 +468,11 @@ function _draw()
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
+
+  for e in all(basic_enemies) do
+    spr(e.sprite, e.x, e.y)
+    e.move()
+  end
 
   debug()
 end --end _draw()
