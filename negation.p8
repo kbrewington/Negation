@@ -8,9 +8,26 @@ player = {}
 player.sprite = 0
 player.x = 8
 player.y = 8
+<<<<<<< HEAD
 player.speed = 3
 player.angle = 0.5
-player.turnspeed = 0.01
+player.turnspeed = 0.03
+=======
+player.speed = 1
+player.current_speed = 0
+player.angle = 0
+player.turnspeed = 10
+player.current_dash_speed = 0
+player.dash_speed = 15
+player.dash_threshold = {.05, .2}
+
+wall_fwd = false
+wall_bck = false
+
+cheats = {}
+cheats.noclip = false
+cheats.god = false
+>>>>>>> master
 
 map_ = {}
 map_.border = {}
@@ -20,49 +37,430 @@ map_.border.right = 120
 map_.border.down = 120
 map_.sx = 0
 map_.sy = 0
-map_.movemap = false
 
+-- controls
+c = {}
+c.left_arrow = 0
+c.right_arrow = 1
+c.up_arrow = 2
+c.down_arrow = 3
+c.z_button = 4
+c.x_button = 5
 
+player.last_time = {[c.left_arrow] = 0,
+                    [c.right_arrow] = 0,
+                    [c.up_arrow] = 0,
+                    [c.down_arrow] = 0}
+
+player.dashing = {[c.left_arrow] = false,
+                  [c.right_arrow] = false,
+                  [c.up_arrow] = false,
+                  [c.down_arrow] = false}
+
+basic_enemies = {}
+bullets = {}
+
+-- define some constants
+pi = 3.14159265359
+inf = 32767.99 -- max number as defined in https://neko250.github.io/pico8-api/
+
+--------------------------------------------------------------------------------
+------------------------ object-like structures --------------------------------
+--------------------------------------------------------------------------------
+--[[
+  node object
+]]
+function node(x, y)
+  local n = {}
+  n.x = x
+  n.y = y
+  n.distance = function(d)
+                  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) -- use euclidean distance for now
+               end
+  n.equals = function(onode)
+                if n.x == onode.x and n.y == onode.y then
+                  return true
+                else
+                  return false
+                end
+              end
+  return n
+end
+
+--[[
+  enemy object
+]]
+function enemy(spawn_x, spawn_y)
+  local e = {}
+  e.sprite = 132
+  e.angle = 360
+  e.speed = .7
+  e.x = (spawn_x or 20)
+  e.y = (spawn_y or 20)
+  e.hitbox = {['x'] = e.x,
+              ['y'] = e.y,
+              ['dx'] = e.x + 7,
+              ['dy'] = e.y + 7}
+  e.update_hitbox = function(x, y)
+                      e.hitbox.x = x
+                      e.hitbox.y = y
+                      e.hitbox.dx = x + 7
+                      e.hitbox.dy = y + 7
+                    end
+  e.move = function()
+              path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+              e.x = path.x
+              e.y = path.y
+              e.update_hitbox(e.x, e.y)
+           end
+
+  return e
+end
+
+--[[
+  bullet object
+]]
+function bullet(startx, starty, angle)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = angle
+  b.sprite = 133
+  b.speed = 2
+  b.move = function()
+              b.x = b.x - b.speed * sin(b.angle / 360)
+              b.y = b.y - b.speed * cos(b.angle / 360)
+           end
+
+  return b
+end
+
+--[[
+  boss object
+]]
+function boss(startx, starty, sprite)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = 0
+  b.sprite = sprite
+  b.bullet_speed = 2
+  b.pattern = {90, 180, 270, 360}
+  b.update = function()
+                 b.angle = (b.angle + 1)%360
+                 for i in all(b.pattern) do
+                     add(bullets, bullet(b.x, b.y, (b.angle % i)))
+                 end
+             end
+
+  return b
+end
 --------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("px: " .. player.x, 0, 0, 7)
-  print("py: " .. player.y, 30, 0, 7)
-  print("sx: " .. map_.sx, 0, 6, 7)
-  print("sy: " .. map_.sy, 30, 6, 7)
+  print("px: " .. round(player.x, 1), 0, 0, 7)
+  print("py: " .. round(player.y, 1), 45, 0, 7)
+
+  print("ag: " .. player.angle, 0, 6, 7)
+  print("mem: ".. stat(0), 45, 6, 7)
+
+  print("sx: " .. round(map_.sx, 1), 0, 12, 7)
+  print("sy: " .. round(map_.sy, 1), 45, 12, 7)
+
+  print("coll: " .. enemy_collision(basic_enemies[1]), 45, 24, 7)
 end
 
 function bump(x, y)
-  return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
+  local tx = flr((x - map_.sx) / 8)
+  local ty = flr((y - map_.sy) / 8)
+  local map_id = mget(tx, ty)
+
+  return fget(map_id, 0)
+  --return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
 end
 
--- https://www.lexaloffle.com/bbs/?tid=2592
-function spra(angle, n, x, y, w, h, flip_x, flip_y)
-  if w == nil or h == nil then
-    w, h = 1, 1
-  end
-  flip_x = flip_x or false
-  flip_y = flip_y or false
+function bump_all(x, y)
+  return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
+end
 
-  local nx, ny, cosa, sina, h2, w2 = n % 16 * 8, flr(n / 16) * 8, cos(angle), sin(angle), 8 * h - 1, 8 * w - 1
-  local h3, w3 = h * 4, w * 4
-  for i = 0, w2 do
-    local cx, sx, sprx = cosa * (i - w3), sina * (i - w3), flip_x and nx + w2 - i or nx + i
-    for j = 0, h2 do
-      local col = sget(sprx, flip_y and ny + h2 - j or ny + j)
-      if col != 0 then
-        pset(x + w3 + cx - sina * (j - h3), y + h3 + sx + cosa * (j - h3), col)
-      end
+function collision()
+  local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
+  local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
+
+  local bck_tempx = player.x + player.speed * sin(player.angle / 360)
+  local bck_tempy = player.y + player.speed * cos(player.angle / 360)
+
+  wall_fwd =  bump_all(fwd_tempx, fwd_tempy) --bump(fwd_tempx, fwd_tempy) or bump(fwd_tempx + 7, fwd_tempy)
+              -- or bump(fwd_tempx, fwd_tempy + 7) or bump(fwd_tempx + 7, fwd_tempy + 7)
+
+  wall_bck =  bump_all(bck_tempx, bck_tempy) --bump(bck_tempx, bck_tempy) or bump(bck_tempx + 7, bck_tempy)
+              -- or bump(bck_tempx, bck_tempy + 7) or bump(bck_tempx + 7, bck_tempy + 7)
+end
+
+function enemy_collision(e)
+  if e.x < player.x and player.x < e.hitbox.x then
+  --    player.y < e.y and player.y > e.hitbox.y and
+  --    e.hitbox.dx < player.hitbox.dx and e.hitbox.dx > player.hitbox.x and
+  --    e.hitbox.dy < player.hitbox.dy and e.hitbox.dy > player.hitbox.y then
+       return 'true'
+  end
+  return 'false'
+end
+
+-- http://lua-users.org/wiki/SimpleRound
+function round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
+  return flr(num * mult + 0.5) / mult
+end
+
+-- https://www.lexaloffle.com/bbs/?pid=22757
+function spr_r(s,x,y,a,w,h)
+ sw=(w or 1)*8
+ sh=(h or 1)*8
+ sx=(s%8)*8
+ sy=flr(s/8)*8
+ x0=flr(0.5*sw)
+ y0=flr(0.5*sh)
+ a=a/360
+ sa=sin(a)
+ ca=cos(a)
+ for ix=0,sw-1 do
+  for iy=0,sh-1 do
+   dx=ix-x0
+   dy=iy-y0
+   xx=flr(dx*ca-dy*sa+x0)
+   yy=flr(dx*sa+dy*ca+y0)
+   if (xx>=0 and xx<sw and yy>=0 and yy<=sh) then
+    pset(x+ix,y+iy,sget(sx+xx,sy+yy))
+   end
+  end
+ end
+end
+
+--[[
+    implement dashing
+]]
+function dash(n)
+  player.dashing[n] = true
+
+  if n == c.down_arrow or n == c.left_arrow then
+    player.current_dash_speed = -player.dash_speed
+  else
+    player.current_dash_speed = player.dash_speed
+  end
+
+  if player.dashing[c.up_arrow] or player.dashing[c.down_arrow] then
+    player.x = player.x - player.current_dash_speed * sin(player.angle / 360)
+    player.y = player.y - player.current_dash_speed * cos(player.angle / 360)
+  else -- dash left right as defined on unit circle
+    player.x = player.x - player.current_dash_speed * sin((player.angle/360)-(pi/4))
+    player.y = player.y - player.current_dash_speed * cos((player.angle/360)-(pi/4))
+  end
+  player.current_dash_speed = 0
+  player.dashing[n] = false
+
+end
+
+--[[
+   detect whether the player double tapped to dash
+]]
+function dash_detect(n)
+  if player.last_time[n] ~= 0 then
+    if ((time() - player.last_time[n]) < player.dash_threshold[2]) and
+       ((time() - player.last_time[n]) > player.dash_threshold[1]) then
+         dash(n)
+    end
+  end
+  player.last_time[n] = time()
+end
+
+--[[
+    get min
+]]
+function get_min(list)
+  local min = inf
+  min_idx = 0
+  for v, k in pairs(list) do
+    if k < min then
+      min = k
+      min_idx = v
+    end
+  end
+  return min_idx
+end
+
+function match(item, indict)
+  for i,v in pairs(indict) do
+    if i == item then
+      return i
     end
   end
 end
 
+<<<<<<< HEAD
+
+function shoot(x,y)
+
+  local b = {}
+  b.x = x
+  b.y = y
+  
+  b.ax = 0
+  b.ay = 0
+  
+  b.frame = 3
+  
+  add(pbullets, b)
+  
+end
+
+function drawb (b)
+  spr(b.frame,b.x,b.y)
+end
+=======
+function not_empty(dict)
+  for k,v in pairs(dict) do
+    return true
+  end
+  return false
+end
+--]]
+
+--[[
+    basic enemy AI pathfinding
+    -- TODO break ties in a lifo manner
+]]
+function astar(start, goal)
+  map = {}
+  closedset = {}
+  openset = {}
+  camefrom = {}
+  gscore = {}
+  fscore = {}
+  map.x = 128*8
+  map.y = 128*8
+  openset[start] = true
+  gscore[start] = 0
+  fscore[start] = start.distance(goal)
+  while not_empty(openset) do
+    current = match(get_min(fscore), openset) -- or get_first(openset)
+    if current.equals(goal) then
+      return get_path(camefrom, current)
+    end
+    del(openset, current)
+    -- add(closedset, current)
+    closedset[current] = true
+    -- check all adjacent nodes
+    for i=-1,1 do
+      for j=-1,1 do
+        nx = current.x+(i*enemy().speed)
+        ny = current.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y then
+          neighbor = node(nx, ny)
+          -- check if neighbor is in closed set
+          if not closedset[neighbor] then
+            -- check if neighbor is not in open set (add to open set if not)
+            if not openset[neighbor] then
+              openset[neighbor] = true
+            end
+            -- distance from start to neighbor
+            tentative_gscore = gscore[current] + current.distance(neighbor)
+            if tentative_gscore < (gscore[neighbor] or inf) then
+              camefrom[neighbor] = current
+              gscore[neighbor] = tentative_gscore
+              fscore[neighbor] = gscore[neighbor] + neighbor.distance(goal)
+            end
+          end
+        end
+      end -- end j for
+    end --end i for
+  end -- end while
+  return {node(40, 61)}
+end -- end func
+
+function minimum_neighbor(start, goal)
+  local map = {}
+  map.x = 128
+  map.y = 120
+  local minimum_dist = inf
+  local min_node = nil
+    for i=-1,1 do
+      for j=-1,1 do
+        local nx = start.x+(i*enemy().speed)
+        local ny = start.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+          local current = node(nx, ny)
+          local cur_distance = current.distance(goal)
+          if cur_distance < minimum_dist then
+            minimum_dist = cur_distance
+            min_node = current
+          end
+        end
+      end -- end j for
+    end --end i for
+    return min_node
+end
+
+function is_in(table, key)
+  for k, v in pairs(table) do
+    if key == k then return true end
+  end
+  return false
+end
+
+--[[
+    reconstruct path
+]]
+function get_path(camefrom, current)
+  total_path = {}
+  add(total_path, current)
+  while is_in(camefrom, current) do
+    current = camefrom[current]
+    add(total_path, current)
+  end
+  return total_path
+end
+
+--[[
+    get first item from a table of key, pairs
+    todo: find a better way to do this
+]]
+function get_first(table)
+ for k, v in all(table) do
+   return k
+ end
+end
+
+--[[
+  shoot: create bullet objects and add them to the 'bullets' table
+]]
+function shoot(x, y, a)
+  add(bullets, bullet(x, y, a))
+end
+
+--[[
+  delete offscreen objects
+]]
+function delete_offscreen(list, obj)
+  if obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128 then
+    del(list, obj)
+  end
+end
+
+>>>>>>> master
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+<<<<<<< HEAD
 
+ pbullets = {}
+
+=======
+  --boss1 = boss(20, 20, 128)
+  add(basic_enemies, enemy(40, 60))
+>>>>>>> master
 end --end _init()
 
 
@@ -70,9 +468,19 @@ end --end _init()
 ---------------------------------- update --------------------------------------
 --------------------------------------------------------------------------------
 function _update()
+  collision()
+
   --[[
     left arrow
   ]]
+<<<<<<< HEAD
+  
+  if (btn(4)) then
+  --shoot function
+  
+  shoot(player.x,player.y)
+  end
+  
   if (btn(0)) then
     if map_.movemap then
       map_.sx -= 1
@@ -80,76 +488,82 @@ function _update()
 
       player.angle += player.turnspeed
     end
+=======
+  if (btn(c.left_arrow)) then
+    dash_detect(c.left_arrow)
+    player.angle -= player.turnspeed
+>>>>>>> master
   end --end left button
 
   --[[
     right arrow
   ]]
-  if (btn(1)) then
-    if map_.movemap then
-      map_.sx += 1
-
-    else
-      player.angle -= player.turnspeed
-    end
+  if (btn(c.right_arrow)) then
+    dash_detect(c.right_arrow)
+    player.angle += player.turnspeed
   end --end right button
 
   --[[
     up arrow
   ]]
-  if (btn(2)) then
-    if map_.movemap then
-      map_.sy -= 1
-    else
-      for i = 1, player.speed do
-        if player.y < map_.border.up + 1
-        or bump(player.x, player.y - 1)
-        or bump(player.x + 7, player.y - 1)
-        then break end
-
-        player.y -= 1
+  if (btn(c.up_arrow)) then
+    if not cheats.noclip then
+      if not wall_fwd then
+        dash_detect(c.up_arrow)
+        player.current_speed = player.speed
       end
+    else
+      dash_detect(c.up_arrow)
+      player.current_speed = player.speed
     end
   end --end up button
 
   --[[
     down arrow
   ]]
-  if (btn(3)) then
-    if map_.movemap then
-      map_.sy += 1
-    else
-      for i = 1, player.speed do
-        if player.y > map_.border.down - 1
-        or bump(player.x, player.y + 8)
-        or bump(player.x + 7, player.y + 8)
-        then break end
-
-        player.y += 1
+  if (btn(c.down_arrow)) then
+    if not cheats.noclip then
+      if not wall_bck then
+        dash_detect(c.down_arrow)
+        player.current_speed = -player.speed
       end
+    else
+      dash_detect(c.down_arrow)
+      player.current_speed = -player.speed
     end
   end --end down button
 
   --[[
     z button
+    -- shoot for now, this can be changed later
   ]]
-  if (btn(4)) then
-    map_.movemap = true
-  else
-    map_.movemap = false
+  if (btn(c.z_button)) then
+    shoot(player.x, player.y, player.angle)
   end --end z button
 
   --[[
     x button
   ]]
-  if (btn(5)) then
+  if (btn(c.x_button)) then
     map_.sx = 0
     map_.sy = 0
     player.x = 8
     player.y = 8
-    player.angle = 0.5
+    player.angle = 0
   end --end x button
 
+  if not cheats.noclip then
+    player.x = player.x - player.current_speed * sin(player.angle / 360)
+    player.y = player.y - player.current_speed * cos(player.angle / 360)
+  else
+    map_.sx = map_.sx + player.current_speed * sin(player.angle / 360)
+    map_.sy = map_.sy + player.current_speed * cos(player.angle / 360)
+    player.x = 64
+    player.y = 64
+  end
+
+  player.current_speed = 0
+  player.angle = player.angle % 360
 end --end _update()
 
 
@@ -161,21 +575,45 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  spra(player.angle, player.sprite, player.x, player.y)
+  spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
+  for e in all(basic_enemies) do
+    -- this should never happen, but just in case:
+    delete_offscreen(basic_enemies, e)
+
+<<<<<<< HEAD
+  foreach(pbullets, drawb)
   --debug()
+=======
+    spr(e.sprite, e.x, e.y)
+    e.move()
+  end
+
+  for b in all(bullets) do
+    -- first delete offscreen bullets:
+    delete_offscreen(bullets, b)
+
+    spr(b.sprite, b.x, b.y)
+    b.move()
+  end
+
+  --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
+  --boss1.update()
+
+  debug()
+>>>>>>> master
 end --end _draw()
 
 
 __gfx__
-bbbbbbbb555555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80000008500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80700708500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80077008500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80077008500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80700708500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-80000008500000050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-88888888555555550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+bbbbbbbb5555555500066a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+80000008500000050001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+80700708500000050011100000700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+800770085000000501449900000cc000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+800770085000000501449900000cc000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+80700708500000050011100000700700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+80000008500000050001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+888888885555555500066a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -232,21 +670,21 @@ bbbbbbbb555555550000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0300000000000300000b000000000000200000200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00300000000030000003000000000000020202000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003000000030000000b000000000000022222000088800000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00025555503000000b3b3b0000000000025552000082800000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003885883200000000b000000000000028582000088800000000000000000000000000000000000000000000000000000000000000000000000000000000000
+03335535533330000003000000000000020502000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+3003333333000300000b000000000000202020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00303030303000300000000000000000202020200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+20303030300300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+33030030030300200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+20003000300032000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00003000300020000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00020000020002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00200000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+02000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -298,7 +736,7 @@ bbbbbbbb555555550000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 
 __gff__
-0001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0001000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __map__
 0101010000000000000000000001010100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -463,3 +901,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
