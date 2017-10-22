@@ -129,6 +129,26 @@ function bullet(startx, starty, angle)
   return b
 end
 
+--[[
+  boss object
+]]
+function boss(startx, starty, sprite)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = 0
+  b.sprite = sprite
+  b.bullet_speed = 2
+  b.pattern = {90, 180, 270, 360}
+  b.update = function()
+                 b.angle = (b.angle + 1)%360
+                 for i in all(b.pattern) do
+                     add(bullets, bullet(b.x, b.y, (b.angle % i)))
+                 end
+             end
+
+  return b
+end
 --------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
@@ -385,14 +405,27 @@ function get_first(table)
  end
 end
 
+--[[
+  shoot: create bullet objects and add them to the 'bullets' table
+]]
 function shoot(x, y, a)
   add(bullets, bullet(x, y, a))
+end
+
+--[[
+  delete offscreen objects
+]]
+function delete_offscreen(list, obj)
+  if obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128 then
+    del(list, obj)
+  end
 end
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+  --boss1 = boss(20, 20, 128)
   add(basic_enemies, enemy(40, 60))
 end --end _init()
 
@@ -494,14 +527,23 @@ function _draw()
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
   for e in all(basic_enemies) do
+    -- this should never happen, but just in case:
+    delete_offscreen(basic_enemies, e)
+
     spr(e.sprite, e.x, e.y)
     e.move()
   end
 
   for b in all(bullets) do
+    -- first delete offscreen bullets:
+    delete_offscreen(bullets, b)
+
     spr(b.sprite, b.x, b.y)
     b.move()
   end
+
+  --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
+  --boss1.update()
 
   debug()
 end --end _draw()
