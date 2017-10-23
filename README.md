@@ -1,14 +1,9 @@
 # Negation
 Final project for COSC 438  
 Brendan Rollins  
-<<<<<<< HEAD
 Kyle Brewington  
 Sinclair Fuh  
 Joshua Cheseman
-=======
-Kyle Brewington 
-Sinclair Fuh  
->>>>>>> 8d0f3a1eb130e9e4a44ad77743822772bd47ddb8
 
 Create a game in PICO 8. When Alan posts the document, will replace the README with it.
 

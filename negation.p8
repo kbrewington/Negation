@@ -150,6 +150,97 @@ function boss(startx, starty, sprite)
   return b
 end
 --------------------------------------------------------------------------------
+------------------------ object-like structures --------------------------------
+--------------------------------------------------------------------------------
+--[[
+  node object
+]]
+function node(x, y)
+  local n = {}
+  n.x = x
+  n.y = y
+  n.distance = function(d)
+                  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) -- use euclidean distance for now
+               end
+  n.equals = function(onode)
+                if n.x == onode.x and n.y == onode.y then
+                  return true
+                else
+                  return false
+                end
+              end
+  return n
+end
+
+--[[
+  enemy object
+]]
+function enemy(spawn_x, spawn_y)
+  local e = {}
+  e.sprite = 132
+  e.angle = 360
+  e.speed = .7
+  e.x = (spawn_x or 20)
+  e.y = (spawn_y or 20)
+  e.hitbox = {['x'] = e.x,
+              ['y'] = e.y,
+              ['dx'] = e.x + 7,
+              ['dy'] = e.y + 7}
+  e.update_hitbox = function(x, y)
+                      e.hitbox.x = x
+                      e.hitbox.y = y
+                      e.hitbox.dx = x + 7
+                      e.hitbox.dy = y + 7
+                    end
+  e.move = function()
+              path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+              e.x = path.x
+              e.y = path.y
+              e.update_hitbox(e.x, e.y)
+           end
+
+  return e
+end
+
+--[[
+  bullet object
+]]
+function bullet(startx, starty, angle)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = angle
+  b.sprite = 133
+  b.speed = 2
+  b.move = function()
+              b.x = b.x - b.speed * sin(b.angle / 360)
+              b.y = b.y - b.speed * cos(b.angle / 360)
+           end
+
+  return b
+end
+
+--[[
+  boss object
+]]
+function boss(startx, starty, sprite)
+  local b = {}
+  b.x = startx
+  b.y = starty
+  b.angle = 0
+  b.sprite = sprite
+  b.bullet_speed = 2
+  b.pattern = {90, 180, 270, 360}
+  b.update = function()
+                 b.angle = (b.angle + 1)%360
+                 for i in all(b.pattern) do
+                     add(bullets, bullet(b.x, b.y, (b.angle % i)))
+                 end
+             end
+
+  return b
+end
+--------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
@@ -202,9 +293,9 @@ function enemy_collision(e)
   return 'false'
 end
 
--- http://lua-users.org/wiki/simpleround
-function round(num, numdecimalplaces)
-  local mult = 10^(numdecimalplaces or 0)
+-- http://lua-users.org/wiki/SimpleRound
+function round(num, numDecimalPlaces)
+  local mult = 10^(numDecimalPlaces or 0)
   return flr(num * mult + 0.5) / mult
 end
 
@@ -421,6 +512,135 @@ function delete_offscreen(list, obj)
   end
 end
 
+function not_empty(dict)
+  for k,v in pairs(dict) do
+    return true
+  end
+  return false
+end
+--]]
+
+--[[
+    basic enemy AI pathfinding
+    -- TODO break ties in a lifo manner
+]]
+function astar(start, goal)
+  map = {}
+  closedset = {}
+  openset = {}
+  camefrom = {}
+  gscore = {}
+  fscore = {}
+  map.x = 128*8
+  map.y = 128*8
+  openset[start] = true
+  gscore[start] = 0
+  fscore[start] = start.distance(goal)
+  while not_empty(openset) do
+    current = match(get_min(fscore), openset) -- or get_first(openset)
+    if current.equals(goal) then
+      return get_path(camefrom, current)
+    end
+    del(openset, current)
+    -- add(closedset, current)
+    closedset[current] = true
+    -- check all adjacent nodes
+    for i=-1,1 do
+      for j=-1,1 do
+        nx = current.x+(i*enemy().speed)
+        ny = current.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y then
+          neighbor = node(nx, ny)
+          -- check if neighbor is in closed set
+          if not closedset[neighbor] then
+            -- check if neighbor is not in open set (add to open set if not)
+            if not openset[neighbor] then
+              openset[neighbor] = true
+            end
+            -- distance from start to neighbor
+            tentative_gscore = gscore[current] + current.distance(neighbor)
+            if tentative_gscore < (gscore[neighbor] or inf) then
+              camefrom[neighbor] = current
+              gscore[neighbor] = tentative_gscore
+              fscore[neighbor] = gscore[neighbor] + neighbor.distance(goal)
+            end
+          end
+        end
+      end -- end j for
+    end --end i for
+  end -- end while
+  return {node(40, 61)}
+end -- end func
+
+function minimum_neighbor(start, goal)
+  local map = {}
+  map.x = 128
+  map.y = 120
+  local minimum_dist = inf
+  local min_node = nil
+    for i=-1,1 do
+      for j=-1,1 do
+        local nx = start.x+(i*enemy().speed)
+        local ny = start.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+          local current = node(nx, ny)
+          local cur_distance = current.distance(goal)
+          if cur_distance < minimum_dist then
+            minimum_dist = cur_distance
+            min_node = current
+          end
+        end
+      end -- end j for
+    end --end i for
+    return min_node
+end
+
+function is_in(table, key)
+  for k, v in pairs(table) do
+    if key == k then return true end
+  end
+  return false
+end
+
+--[[
+    reconstruct path
+]]
+function get_path(camefrom, current)
+  total_path = {}
+  add(total_path, current)
+  while is_in(camefrom, current) do
+    current = camefrom[current]
+    add(total_path, current)
+  end
+  return total_path
+end
+
+--[[
+    get first item from a table of key, pairs
+    todo: find a better way to do this
+]]
+function get_first(table)
+ for k, v in all(table) do
+   return k
+ end
+end
+
+--[[
+  shoot: create bullet objects and add them to the 'bullets' table
+]]
+function shoot(x, y, a)
+  add(bullets, bullet(x, y, a))
+end
+
+--[[
+  delete offscreen objects
+]]
+function delete_offscreen(list, obj)
+  if obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128 then
+    del(list, obj)
+  end
+end
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
@@ -512,9 +732,9 @@ function _update()
   end
 
   for b in all(bullets) do
-  
+
   end
-  
+
   player.current_speed = 0
   player.angle = player.angle % 360
 end --end _update()
@@ -849,4 +1069,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
