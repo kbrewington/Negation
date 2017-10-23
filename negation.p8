@@ -202,7 +202,6 @@ function bump(x, y)
   local map_id = mget(tx, ty)
 
   return fget(map_id, 0)
-  --return fget( mget( flr( (x - map_.sx) / 8 ), flr( (y - map_.sy) / 8 ) ), 0 )
 end
 
 function bump_all(x, y)
@@ -487,17 +486,6 @@ function dialog_seraph()
   print("ccccccccccccccccccccccccccccccd", 2, 120, fnt_color)
 end
 
-<<<<<<< HEAD
-=======
---[[
-  delete offscreen objects
-]]
-function delete_offscreen(list, obj)
-  if obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128 then
-    del(list, obj)
-  end
-end
->>>>>>> brendan's-work
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -604,7 +592,7 @@ function _draw()
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-  pset()
+
   for e in all(basic_enemies) do
     -- this should never happen, but just in case:
     delete_offscreen(basic_enemies, e)
@@ -612,10 +600,8 @@ function _draw()
     spr(e.sprite, e.x, e.y)
 
     e.move()
-
   end
 
-<<<<<<< HEAD
 --Joshua Cheseman
 --[[
   for ex in all (basic_enemies)do
@@ -624,8 +610,7 @@ function _draw()
 
     ex.move()
 --]]
-  for b in all(bullets) do
-=======
+
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
     delete_offscreen(player_bullets, b)
@@ -635,7 +620,6 @@ function _draw()
   end
 
   for b in all(enemy_bullets) do
->>>>>>> brendan's-work
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
@@ -646,9 +630,9 @@ function _draw()
   spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
   boss1.update()
 
-  dialog_seraph()
+  --dialog_seraph()
 
-  debug()
+  debug() -- always on bottom
 end --end _draw()
 
 
