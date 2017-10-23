@@ -53,7 +53,8 @@ player.dashing = {[c.left_arrow] = false,
                   [c.down_arrow] = false}
 
 basic_enemies = {}
-bullets = {}
+player_bullets = {}
+enemy_bullets = {}
 
 -- define some constants
 pi = 3.14159265359
@@ -89,7 +90,7 @@ function enemy(spawn_x, spawn_y)
   local e = {}
   e.sprite = 132
   e.angle = 360
-  e.speed = .7
+  e.speed = .35
   e.x = (spawn_x or 20)
   e.y = (spawn_y or 20)
   e.hitbox = {['x'] = e.x,
@@ -141,12 +142,13 @@ end
 --[[
   bullet object
 ]]
-function bullet(startx, starty, angle)
+function bullet(startx, starty, angle, sprite, friendly)
   local b = {}
   b.x = startx
   b.y = starty
   b.angle = angle
-  b.sprite = 133
+  b.sprite = sprite
+  b.friendly = friendly
   b.speed = 2
   b.move = function()
               b.x = b.x - b.speed * sin(b.angle / 360)
@@ -166,102 +168,14 @@ function boss(startx, starty, sprite)
   b.angle = 0
   b.sprite = sprite
   b.bullet_speed = 2
+  b.bullet_spread = 7
   b.pattern = {90, 180, 270, 360}
   b.update = function()
                  b.angle = (b.angle + 1)%360
-                 for i in all(b.pattern) do
-                     add(bullets, bullet(b.x, b.y, (b.angle % i)))
-                 end
-             end
-
-  return b
-end
---------------------------------------------------------------------------------
------------------------- object-like structures --------------------------------
---------------------------------------------------------------------------------
---[[
-  node object
-]]
-function node(x, y)
-  local n = {}
-  n.x = x
-  n.y = y
-  n.distance = function(d)
-                  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) -- use euclidean distance for now
-               end
-  n.equals = function(onode)
-                if n.x == onode.x and n.y == onode.y then
-                  return true
-                else
-                  return false
-                end
-              end
-  return n
-end
-
---[[
-  enemy object
-]]
-function enemy(spawn_x, spawn_y)
-  local e = {}
-  e.sprite = 132
-  e.angle = 360
-  e.speed = .7
-  e.x = (spawn_x or 20)
-  e.y = (spawn_y or 20)
-  e.hitbox = {['x'] = e.x,
-              ['y'] = e.y,
-              ['dx'] = e.x + 7,
-              ['dy'] = e.y + 7}
-  e.update_hitbox = function(x, y)
-                      e.hitbox.x = x
-                      e.hitbox.y = y
-                      e.hitbox.dx = x + 7
-                      e.hitbox.dy = y + 7
-                    end
-  e.move = function()
-              path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
-              e.x = path.x
-              e.y = path.y
-              e.update_hitbox(e.x, e.y)
-           end
-
-  return e
-end
-
---[[
-  bullet object
-]]
-function bullet(startx, starty, angle)
-  local b = {}
-  b.x = startx
-  b.y = starty
-  b.angle = angle
-  b.sprite = 133
-  b.speed = 2
-  b.move = function()
-              b.x = b.x - b.speed * sin(b.angle / 360)
-              b.y = b.y - b.speed * cos(b.angle / 360)
-           end
-
-  return b
-end
-
---[[
-  boss object
-]]
-function boss(startx, starty, sprite)
-  local b = {}
-  b.x = startx
-  b.y = starty
-  b.angle = 0
-  b.sprite = sprite
-  b.bullet_speed = 2
-  b.pattern = {90, 180, 270, 360}
-  b.update = function()
-                 b.angle = (b.angle + 1)%360
-                 for i in all(b.pattern) do
-                     add(bullets, bullet(b.x, b.y, (b.angle % i)))
+                 for i=0,3 do
+                   if b.angle%b.bullet_spread == 0 then
+                     add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
+                   end
                  end
              end
 
@@ -280,7 +194,6 @@ function debug()
   print("sx: " .. round(map_.sx, 1), 0, 12, 7)
   print("sy: " .. round(map_.sy, 1), 45, 12, 7)
 
-  print("coll: " .. enemy_collision(basic_enemies[1]), 45, 24, 7)
 end
 
 function bump(x, y)
@@ -303,21 +216,17 @@ function collision()
   local bck_tempx = player.x + player.speed * sin(player.angle / 360)
   local bck_tempy = player.y + player.speed * cos(player.angle / 360)
 
-  wall_fwd =  bump_all(fwd_tempx, fwd_tempy) --bump(fwd_tempx, fwd_tempy) or bump(fwd_tempx + 7, fwd_tempy)
-              -- or bump(fwd_tempx, fwd_tempy + 7) or bump(fwd_tempx + 7, fwd_tempy + 7)
+  wall_fwd =  bump_all(fwd_tempx, fwd_tempy)
 
-  wall_bck =  bump_all(bck_tempx, bck_tempy) --bump(bck_tempx, bck_tempy) or bump(bck_tempx + 7, bck_tempy)
-              -- or bump(bck_tempx, bck_tempy + 7) or bump(bck_tempx + 7, bck_tempy + 7)
+  wall_bck =  bump_all(bck_tempx, bck_tempy)
 end
 
 function enemy_collision(e)
-  if e.x < player.x and player.x < e.hitbox.x then
-  --    player.y < e.y and player.y > e.hitbox.y and
-  --    e.hitbox.dx < player.hitbox.dx and e.hitbox.dx > player.hitbox.x and
-  --    e.hitbox.dy < player.hitbox.dy and e.hitbox.dy > player.hitbox.y then
-       return 'true'
-  end
-  return 'false'
+  return (e.x > player.x+8 or e.x+8 < player.x or e.y > player.y+8 or e.y+8<player.y) == false
+end
+
+function bullet_collision(sp, b)
+  return (b.x > sp.x+4 or b.x+4 < sp.x or b.y > sp.y+4 or b.y+4<sp.y) == false
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -429,8 +338,8 @@ function astar(start, goal)
   camefrom = {}
   gscore = {}
   fscore = {}
-  map.x = 128*8
-  map.y = 128*8
+  map.x = 128
+  map.y = 120
   openset[start] = true
   gscore[start] = 0
   fscore[start] = start.distance(goal)
@@ -526,8 +435,12 @@ end
 --[[
   shoot: create bullet objects and add them to the 'bullets' table
 ]]
-function shoot(x, y, a)
-  add(bullets, bullet(x, y, a))
+function shoot(x, y, a, spr, friendly)
+  if friendly then
+    add(player_bullets, bullet(x, y, a, spr, friendly))
+  else
+    add(enemy_bullets, bullet(x, y, a, spr, friendly))
+  end
 end
 
 --[[
@@ -574,12 +487,23 @@ function dialog_seraph()
   print("ccccccccccccccccccccccccccccccd", 2, 120, fnt_color)
 end
 
+<<<<<<< HEAD
+=======
+--[[
+  delete offscreen objects
+]]
+function delete_offscreen(list, obj)
+  if obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128 then
+    del(list, obj)
+  end
+end
+>>>>>>> brendan's-work
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-  --boss1 = boss(20, 20, 128)
+  boss1 = boss(20, 20, 128)
   add(basic_enemies, enemy(40, 60))
   --add(basic_enemies,exploder(50,70))
 end --end _init()
@@ -642,7 +566,7 @@ function _update()
     -- shoot for now, this can be changed later
   ]]
   if (btn(c.z_button)) then
-    shoot(player.x, player.y, player.angle)
+    shoot(player.x, player.y, player.angle, 133, true)
   end --end z button
 
   --[[
@@ -691,6 +615,7 @@ function _draw()
 
   end
 
+<<<<<<< HEAD
 --Joshua Cheseman
 --[[
   for ex in all (basic_enemies)do
@@ -700,15 +625,26 @@ function _draw()
     ex.move()
 --]]
   for b in all(bullets) do
+=======
+  for b in all(player_bullets) do
     -- first delete offscreen bullets:
-    delete_offscreen(bullets, b)
+    delete_offscreen(player_bullets, b)
 
     spr(b.sprite, b.x, b.y)
     b.move()
   end
 
-  --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
-  --boss1.update()
+  for b in all(enemy_bullets) do
+>>>>>>> brendan's-work
+    -- first delete offscreen bullets:
+    delete_offscreen(enemy_bullets, b)
+
+    spr(b.sprite, b.x, b.y)
+    b.move()
+  end
+
+  spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
+  boss1.update()
 
   dialog_seraph()
 
