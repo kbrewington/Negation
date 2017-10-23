@@ -641,6 +641,42 @@ function delete_offscreen(list, obj)
   end
 end
 
+--[[
+  print seraph dialog
+]]
+function dialog_seraph()
+  bck_color = 5--rnd(16)--0
+  brd_color = 12
+  fnt_color = 7
+
+  rectfill(0, 99, 25, 105, bck_color) -- name rect
+
+  rectfill(26, 99, 26, 126, bck_color) -- angle
+  rectfill(27, 100, 27, 126, bck_color)
+  rectfill(28, 101, 28, 126, bck_color)
+  rectfill(29, 102, 29, 126, bck_color)
+  rectfill(30, 103, 30, 126, bck_color)
+  pset(31, 104, bck_color)
+
+  -- big rect
+  rectfill(0, 105, 127, 127, bck_color)
+
+  -- border
+  rectfill(0, 98, 26, 98, brd_color)
+  pset(27, 99, brd_color)
+  pset(28, 100, brd_color)
+  pset(29, 101, brd_color)
+  pset(30, 102, brd_color)
+  pset(31, 103, brd_color)
+  rectfill(32, 104, 127, 104, brd_color)
+
+  print("seraph", 1, 100, fnt_color)
+  print("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaab", 2, 108, fnt_color) --31 character limit
+  print("bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbc", 2, 114, fnt_color)
+  print("ccccccccccccccccccccccccccccccd", 2, 120, fnt_color)
+end
+
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
@@ -731,10 +767,6 @@ function _update()
     player.y = 64
   end
 
-  for b in all(bullets) do
-
-  end
-
   player.current_speed = 0
   player.angle = player.angle % 360
 end --end _update()
@@ -768,6 +800,8 @@ function _draw()
 
   --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
   --boss1.update()
+
+  dialog_seraph()
 
   debug()
 end --end _draw()
