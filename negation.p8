@@ -16,6 +16,9 @@ player.turnspeed = 10
 player.current_dash_speed = 0
 player.dash_speed = 15
 player.dash_threshold = {.05, .2}
+player.health = 10
+player.immune_time = .5
+player.last_hit = 0
 
 wall_fwd = false
 wall_bck = false
@@ -194,7 +197,8 @@ function debug()
   print("py: " .. round(player.y, 1), 45, 0, 7)
 
   print("ag: " .. player.angle, 0, 6, 7)
-  print("mem: ".. stat(0), 45, 6, 7)
+  --print("mem: ".. stat(0), 45, 6, 7)
+  print("health: ".. player.health, 45, 6, 7)
 
   print(costatus(game), 0, 12, 7)
   print("", 45, 12, 7)
@@ -653,6 +657,31 @@ function _draw()
 
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
+  for e in all(basic_enemies) do
+    -- this should never happen, but just in case:
+    delete_offscreen(basic_enemies, e)
+
+    -- check if this sprite has been shot
+    for b in all(player_bullets) do
+      if bullet_collision(e, b) then
+        del(basic_enemies, e)
+        e = nil
+        break
+      end
+    end
+
+    if e ~= nil then
+      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+        player.health = player.health - 1
+        player.last_hit = time()
+        -- TODO: trigger animation here
+      end
+      spr(e.sprite, e.x, e.y)
+      e.move()
+    end
+
+  end
+
 --Joshua Cheseman
 --[[
   for ex in all (basic_enemies)do
@@ -661,15 +690,6 @@ function _draw()
 
     ex.move()
 --]]
-
-for e in all(basic_enemies) do
-  -- this should never happen, but just in case:
-  delete_offscreen(basic_enemies, e)
-
-  spr(e.sprite, e.x, e.y)
-
-  e.move()
-end
 
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
@@ -683,6 +703,11 @@ end
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
+    if bullet_collision(player, b) then
+      player.health = player.health - 1
+      -- TODO: trigger animation here
+    end
+
     spr(b.sprite, b.x, b.y)
     b.move()
   end
@@ -692,7 +717,7 @@ end
 
   if drawdialog then dialog_seraph(seraph) end
 
-  --debug() -- always on bottom
+  debug() -- always on bottom
 end --end _draw()
 
 
