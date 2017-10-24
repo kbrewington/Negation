@@ -33,6 +33,11 @@ map_.border.down = 120
 map_.sx = 0
 map_.sy = 0
 
+firsttime = true
+wait = {}
+wait.controls = false
+wait.dialog_finish = false
+
 -- controls
 c = {}
 c.left_arrow = 0
@@ -191,8 +196,8 @@ function debug()
   print("ag: " .. player.angle, 0, 6, 7)
   print("mem: ".. stat(0), 45, 6, 7)
 
-  print("sx: " .. round(map_.sx, 1), 0, 12, 7)
-  print("sy: " .. round(map_.sy, 1), 45, 12, 7)
+  print(costatus(game), 0, 12, 7)
+  print("", 45, 12, 7)
 
 end
 
@@ -455,12 +460,18 @@ end
   print seraph dialog
 ]]
 function dialog_seraph(dialog)
+  wait.dialog_finish = true
   local dialog = dialog or {}
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
 
   local d = dialog.text or "I WAS GOING TO SAY SOMETHING..BUT I FORGOT."
+
+  if firsttime then
+    rectfill(0, 0, 127, 127, 0)
+    print("nEGATION", 47, 40, 12)
+  end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -495,6 +506,32 @@ function dialog_seraph(dialog)
   print(sub(d, 0, 30), 5, 107, fnt_color) --30 character limit
   print(sub(d, 31, 60), 5, 113, fnt_color)
   print(sub(d, 61, 90), 5, 119, fnt_color)
+
+  --print("Z/X TO CONTINUE", 69, 123, 7)
+  wait.dialog_finish = false
+end
+
+function gameflow()
+  -- start game
+  seraph = {}
+  seraph.brd_color = 12
+  seraph.text = "READY TO GET TO WORK?"
+  drawdialog = true
+  wait.controls = true
+  yield()
+
+  firsttime = false
+  seraph = {}
+  seraph.text = "YOU SURE?"
+  drawdialog = true
+  wait.controls = true
+  yield()
+
+  wait.controls = false
+  drawdialog = false
+
+  -- probably function to start/control enemy spawning instead of just adding them here
+  add(basic_enemies, enemy(40, 60))
 end
 
 
@@ -502,9 +539,12 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-  boss1 = boss(20, 20, 128)
+  --boss1 = boss(20, 20, 128)
   --add(basic_enemies, enemy(40, 60))
   --add(basic_enemies,exploder(50,70))
+
+  game = cocreate(gameflow)
+  coresume(game)
 end --end _init()
 
 
@@ -512,71 +552,80 @@ end --end _init()
 ---------------------------------- update --------------------------------------
 --------------------------------------------------------------------------------
 function _update()
+
   collision()
 
-  --[[
-    left arrow
-  ]]
-  if (btn(c.left_arrow)) then
-    dash_detect(c.left_arrow)
-    player.angle -= player.turnspeed
-  end --end left button
+  if not wait.controls then
+    --[[
+      left arrow
+    ]]
+    if (btn(c.left_arrow)) then
+      dash_detect(c.left_arrow)
+      player.angle -= player.turnspeed
+    end --end left button
 
-  --[[
-    right arrow
-  ]]
-  if (btn(c.right_arrow)) then
-    dash_detect(c.right_arrow)
-    player.angle += player.turnspeed
-  end --end right button
+    --[[
+      right arrow
+    ]]
+    if (btn(c.right_arrow)) then
+      dash_detect(c.right_arrow)
+      player.angle += player.turnspeed
+    end --end right button
 
-  --[[
-    up arrow
-  ]]
-  if (btn(c.up_arrow)) then
-    if not cheats.noclip then
-      if not wall_fwd then
+    --[[
+      up arrow
+    ]]
+    if (btn(c.up_arrow)) then
+      if not cheats.noclip then
+        if not wall_fwd then
+          dash_detect(c.up_arrow)
+          player.current_speed = player.speed
+        end
+      else
         dash_detect(c.up_arrow)
         player.current_speed = player.speed
       end
-    else
-      dash_detect(c.up_arrow)
-      player.current_speed = player.speed
-    end
-  end --end up button
+    end --end up button
 
-  --[[
-    down arrow
-  ]]
-  if (btn(c.down_arrow)) then
-    if not cheats.noclip then
-      if not wall_bck then
+    --[[
+      down arrow
+    ]]
+    if (btn(c.down_arrow)) then
+      if not cheats.noclip then
+        if not wall_bck then
+          dash_detect(c.down_arrow)
+          player.current_speed = -player.speed
+        end
+      else
         dash_detect(c.down_arrow)
         player.current_speed = -player.speed
       end
-    else
-      dash_detect(c.down_arrow)
-      player.current_speed = -player.speed
-    end
-  end --end down button
+    end --end down button
+  end -- end wait.controls
 
   --[[
     z button
     -- shoot for now, this can be changed later
   ]]
   if (btn(c.z_button)) then
-    shoot(player.x, player.y, player.angle, 133, true)
+    if wait.controls and not wait.dialog_finish and btnp(c.z_button) then
+      coresume(game)
+    else
+      shoot(player.x, player.y, player.angle, 133, true)
+    end
   end --end z button
 
   --[[
     x button
   ]]
-  if (btn(c.x_button)) then
-    map_.sx = 0
-    map_.sy = 0
-    player.x = 8
-    player.y = 8
-    player.angle = 0
+  if (btnp(c.x_button)) then
+      --[[map_.sx = 0
+      map_.sy = 0
+      player.x = 8
+      player.y = 8
+      player.angle = 0]]
+
+      coresume(game)
   end --end x button
 
   if not cheats.noclip then
@@ -604,15 +653,6 @@ function _draw()
 
   spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
-  for e in all(basic_enemies) do
-    -- this should never happen, but just in case:
-    delete_offscreen(basic_enemies, e)
-
-    spr(e.sprite, e.x, e.y)
-
-    e.move()
-  end
-
 --Joshua Cheseman
 --[[
   for ex in all (basic_enemies)do
@@ -621,6 +661,15 @@ function _draw()
 
     ex.move()
 --]]
+
+for e in all(basic_enemies) do
+  -- this should never happen, but just in case:
+  delete_offscreen(basic_enemies, e)
+
+  spr(e.sprite, e.x, e.y)
+
+  e.move()
+end
 
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
@@ -641,12 +690,7 @@ function _draw()
   --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
   --boss1.update()
 
-  test = {}
-  test.bck_color = 3
-  --test.brd_color = 3
-  --test.fnt_color = 7
-  test.text = "I CAN PUT ANYTHING I WANT HEREAS LONG AS ITS LESS THAN 90   CHARACTERS LONG"
-  dialog_seraph(test)
+  if drawdialog then dialog_seraph(seraph) end
 
   --debug() -- always on bottom
 end --end _draw()
