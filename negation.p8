@@ -36,7 +36,7 @@ map_.border.down = 120
 map_.sx = 0
 map_.sy = 0
 
-firsttime = true
+titlescreen = true
 wait = {}
 wait.controls = false
 wait.dialog_finish = false
@@ -460,6 +460,13 @@ function delete_offscreen(list, obj)
   end
 end
 
+function kill_all_enemies()
+  for e in all(basic_enemies) do
+    del(basic_enemies, e)
+    e = nil
+  end
+end
+
 --[[
   print seraph dialog
 ]]
@@ -472,7 +479,7 @@ function dialog_seraph(dialog)
 
   local d = dialog.text or "I WAS GOING TO SAY SOMETHING..BUT I FORGOT."
 
-  if firsttime then
+  if titlescreen then
     rectfill(0, 0, 127, 127, 0)
     print("nEGATION", 47, 40, 12)
   end
@@ -524,7 +531,9 @@ function gameflow()
   wait.controls = true
   yield()
 
-  firsttime = false
+  titlescreen = false
+
+  -- TODO: delete this and make animation of being teleported in
   seraph = {}
   seraph.text = "YOU SURE?"
   drawdialog = true
@@ -536,6 +545,21 @@ function gameflow()
 
   -- probably function to start/control enemy spawning instead of just adding them here
   add(basic_enemies, enemy(40, 60))
+  add(basic_enemies, enemy(100, 100))
+  yield()
+
+  kill_all_enemies()
+  seraph = {}
+  seraph.text = "BOSS INC!"
+  drawdialog = true
+  wait.controls = true
+  yield()
+
+  wait.controls = false
+  drawdialog = false
+
+  boss1 = boss(20, 20, 128)
+  drawboss = true
 end
 
 
@@ -614,7 +638,7 @@ function _update()
   if (btn(c.z_button)) then
     if wait.controls and not wait.dialog_finish and btnp(c.z_button) then
       coresume(game)
-    else
+    elseif not wait.controls then
       shoot(player.x, player.y, player.angle, 133, true)
     end
   end --end z button
@@ -623,13 +647,13 @@ function _update()
     x button
   ]]
   if (btnp(c.x_button)) then
-      --[[map_.sx = 0
-      map_.sy = 0
-      player.x = 8
-      player.y = 8
-      player.angle = 0]]
+    --[[map_.sx = 0
+    map_.sy = 0
+    player.x = 8
+    player.y = 8
+    player.angle = 0]]
 
-      coresume(game)
+    coresume(game)
   end --end x button
 
   if not cheats.noclip then
@@ -712,8 +736,10 @@ function _draw()
     b.move()
   end
 
-  --spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
-  --boss1.update()
+  if drawboss then
+    spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
+    boss1.update()
+  end
 
   if drawdialog then dialog_seraph(seraph) end
 
