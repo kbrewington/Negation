@@ -172,8 +172,8 @@ function debug()
   print("py: " .. round(player.y, 1), 45, 0, 7)
 
   print("ag: " .. player.angle, 0, 6, 7)
-  --print("mem: ".. stat(0), 45, 6, 7)
-  print("health: ".. player.health, 45, 6, 7)
+  print("mem: ".. stat(0), 45, 6, 7)
+  --print("health: ".. player.health, 45, 6, 7)
 
   print(costatus(game), 0, 12, 7)
   print("", 45, 12, 7)
@@ -448,7 +448,7 @@ end
 ]]
 function dialog_seraph(dialog)
   wait.dialog_finish = true
-  local dialog = dialog or {}
+  --local dialog = dialog or {}
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
@@ -520,8 +520,8 @@ function gameflow()
   drawdialog = false
 
   -- probably function to start/control enemy spawning instead of just adding them here
-  add(basic_enemies, enemy(40, 60))
-  add(basic_enemies, enemy(100, 100))
+  add(basic_enemies, enemy(40, 120))
+  add(basic_enemies, enemy(112, 60))
   yield()
 
   kill_all_enemies()
@@ -534,7 +534,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  boss1 = boss(20, 20, 128)
+  boss1 = boss(56, 56, 128)
   drawboss = true
 end
 
@@ -708,7 +708,7 @@ function _draw()
     end
 
     if bump(b.x, b.y) then
-      del(player_bullets, b)
+      del(enemy_bullets, b)
       b = nil
     end
 
