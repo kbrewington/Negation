@@ -122,31 +122,6 @@ function enemy(spawn_x, spawn_y)
 end
 
 
---Joshua Cheseman
---[[function exploder(spawn_x,spawn_y)
-  local ex ={}
-  ex.sprite=134
-  ex.angle=360
-  ex.speed=.4
-  ex.x=(spawn_x or 20)
-  ex.y=(spawn_y or 20)
-  ex.hitbox={['x']=ex.x,
-              ['y']=ex.y,
-              ['dx']=ex.x+7,
-              ['dy']=ey.y+7}]
-  ex.update_hitbox=function(x,y)
-                    ex.hitbox.x=x
-                    ex.hitbox.y=y
-                    ex.hitbox.dx=x+7
-                    ex.hitbox.dy=y+7
-                  end
-  ex.move=function()
-          path=minimum_neighbor(node(ex.x,ex.y), node(player.x,player.y))
-        end
-      return ex
-end
---]]
-
 --[[
   bullet object
 ]]
@@ -340,6 +315,7 @@ end
     -- todo break ties in a lifo manner
 ]]
 function astar(start, goal)
+  speed = enemy().speed
   map = {}
   closedset = {}
   openset = {}
@@ -362,8 +338,8 @@ function astar(start, goal)
     -- check all adjacent nodes
     for i=-1,1 do
       for j=-1,1 do
-        nx = current.x+(i*enemy().speed)
-        ny = current.y+(j*enemy().speed)
+        nx = current.x+(i*speed)
+        ny = current.y+(j*speed)
         if 0 < nx and nx < map.x and 0 < ny and ny < map.y then
           neighbor = node(nx, ny)
           -- check if neighbor is in closed set
@@ -695,10 +671,11 @@ function _draw()
     end
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+      if --[[((time() - player.last_hit) > player.immune_time) and]] enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
         -- TODO: trigger animation here
+        --pset(player.x+3, player.y+3, 0)
       end
       spr(e.sprite, e.x, e.y)
       e.move()
@@ -706,21 +683,19 @@ function _draw()
 
   end
 
---Joshua Cheseman
---[[
-  for ex in all (basic_enemies)do
-
-    spr(ex.sprite,ex.x,ey.y)
-
-    ex.move()
---]]
-
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
     delete_offscreen(player_bullets, b)
 
-    spr(b.sprite, b.x, b.y)
-    b.move()
+    if bump(b.x, b.y) then
+      del(player_bullets, b)
+      b = nil
+    end
+
+    if b ~= nil then
+      spr(b.sprite, b.x, b.y)
+      b.move()
+    end
   end
 
   for b in all(enemy_bullets) do
@@ -732,8 +707,15 @@ function _draw()
       -- TODO: trigger animation here
     end
 
-    spr(b.sprite, b.x, b.y)
-    b.move()
+    if bump(b.x, b.y) then
+      del(player_bullets, b)
+      b = nil
+    end
+
+    if b ~= nil then
+      spr(b.sprite, b.x, b.y)
+      b.move()
+    end
   end
 
   if drawboss then
