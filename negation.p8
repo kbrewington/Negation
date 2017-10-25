@@ -16,11 +16,9 @@ player.turnspeed = 10
 player.current_dash_speed = 0
 player.dash_speed = 15
 player.dash_threshold = {.05, .2}
-player.bullet_spread = 5
 player.health = 10
-player.immune_time = 2
+player.immune_time = .5
 player.last_hit = 0
-player.b_count = 0
 
 wall_fwd = false
 wall_bck = false
@@ -156,7 +154,7 @@ function boss(startx, starty, sprite)
   b.bullet_spread = 7
   b.pattern = {90, 180, 270, 360}
   b.update = function()
-                 b.angle = (b.angle+1)%360
+                 b.angle = (b.angle + 1)%360
                  for i=0,3 do
                    if b.angle%b.bullet_spread == 0 then
                      add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
@@ -212,10 +210,6 @@ end
 
 function bullet_collision(sp, b)
   return (b.x > sp.x+4 or b.x+4 < sp.x or b.y > sp.y+4 or b.y+4<sp.y) == false
-end
-
-function boss_collision(sp, b)
-  return (b.x > sp.x+16 or b.x+16 < sp.x or b.y > sp.y+16 or b.y+16<sp.y) == false
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -463,11 +457,7 @@ function dialog_seraph(dialog)
 
   if titlescreen then
     rectfill(0, 0, 127, 127, 0)
-<<<<<<< HEAD
     print("nEGATION", 47, 40, 12)
-=======
-    print("NEGATION", 47, 40, 12)
->>>>>>> Joshua-Branch
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -530,14 +520,8 @@ function gameflow()
   drawdialog = false
 
   -- probably function to start/control enemy spawning instead of just adding them here
-<<<<<<< HEAD
   add(basic_enemies, enemy(40, 120))
   add(basic_enemies, enemy(112, 60))
-=======
-  add(basic_enemies, enemy(40, 60))
-  add(basic_enemies, enemy(100, 100))
-  add(basic_enemies, enemy(48,60))
->>>>>>> Joshua-Branch
   yield()
 
   kill_all_enemies()
@@ -562,7 +546,7 @@ function _init()
   --boss1 = boss(20, 20, 128)
   --add(basic_enemies, enemy(40, 60))
   --add(basic_enemies,exploder(50,70))
-  player.last_hit = time()
+
   game = cocreate(gameflow)
   coresume(game)
 end --end _init()
@@ -631,10 +615,7 @@ function _update()
     if wait.controls and not wait.dialog_finish and btnp(c.z_button) then
       coresume(game)
     elseif not wait.controls then
-      player.b_count = player.b_count + 1
-      if player.b_count%player.bullet_spread == 0 then
-        shoot(player.x, player.y, player.angle, 133, true)
-      end
+      shoot(player.x, player.y, player.angle, 133, true)
     end
   end --end z button
 
@@ -674,14 +655,7 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-
-
-
-  if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
-    --
-  else
-    spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-  end
+  spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
   for e in all(basic_enemies) do
     -- this should never happen, but just in case:
@@ -697,10 +671,11 @@ function _draw()
     end
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+      if --[[((time() - player.last_hit) > player.immune_time) and]] enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
         -- TODO: trigger animation here
+        --pset(player.x+3, player.y+3, 0)
       end
       spr(e.sprite, e.x, e.y)
       e.move()
@@ -727,11 +702,9 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
+    if bullet_collision(player, b) then
       player.health = player.health - 1
-      player.last_hit = time()
       -- TODO: trigger animation here
-<<<<<<< HEAD
     end
 
     if bump(b.x, b.y) then
@@ -739,15 +712,6 @@ function _draw()
       b = nil
     end
 
-=======
-    end
-
-    if bump(b.x, b.y) then
-      del(enemy_bullets, b)
-      b = nil
-    end
-
->>>>>>> Joshua-Branch
     if b ~= nil then
       spr(b.sprite, b.x, b.y)
       b.move()
