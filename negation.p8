@@ -457,7 +457,11 @@ function dialog_seraph(dialog)
 
   if titlescreen then
     rectfill(0, 0, 127, 127, 0)
+<<<<<<< HEAD
     print("nEGATION", 47, 40, 12)
+=======
+    print("NEGATION", 47, 40, 12)
+>>>>>>> Joshua-Branch
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -520,8 +524,14 @@ function gameflow()
   drawdialog = false
 
   -- probably function to start/control enemy spawning instead of just adding them here
+<<<<<<< HEAD
   add(basic_enemies, enemy(40, 120))
   add(basic_enemies, enemy(112, 60))
+=======
+  add(basic_enemies, enemy(40, 60))
+  add(basic_enemies, enemy(100, 100))
+  add(basic_enemies, enemy(48,60))
+>>>>>>> Joshua-Branch
   yield()
 
   kill_all_enemies()
@@ -705,6 +715,7 @@ function _draw()
     if bullet_collision(player, b) then
       player.health = player.health - 1
       -- TODO: trigger animation here
+<<<<<<< HEAD
     end
 
     if bump(b.x, b.y) then
@@ -712,6 +723,15 @@ function _draw()
       b = nil
     end
 
+=======
+    end
+
+    if bump(b.x, b.y) then
+      del(player_bullets, b)
+      b = nil
+    end
+
+>>>>>>> Joshua-Branch
     if b ~= nil then
       spr(b.sprite, b.x, b.y)
       b.move()
@@ -721,6 +741,11 @@ function _draw()
   if drawboss then
     spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
     boss1.update()
+  end
+
+  if player.health<=0 then
+    print("GAME OVER", 48, 60, 8)
+    stop()
   end
 
   if drawdialog then dialog_seraph(seraph) end
