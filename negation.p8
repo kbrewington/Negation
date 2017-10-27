@@ -38,7 +38,6 @@ map_.border.down = 120
 map_.sx = 0
 map_.sy = 0
 
-titlescreen = true
 wait = {}
 wait.controls = false
 wait.dialog_finish = false
@@ -62,7 +61,8 @@ player.dashing = {[c.left_arrow] = false,
                   [c.up_arrow] = false,
                   [c.down_arrow] = false}
 
-basic_enemies = {}
+enemy_table  = {}
+enemy_spawned = {}
 player_bullets = {}
 enemy_bullets = {}
 
@@ -96,28 +96,23 @@ end
 --[[
   enemy object
 ]]
-function enemy(spawn_x, spawn_y)
+function enemy(spawn_x, spawn_y, type, time)
   local e = {}
-  e.sprite = 132
-  e.angle = 360
+  e.x = spawn_x
+  e.y = spawn_y
   e.speed = .35
-  e.x = (spawn_x or 20)
-  e.y = (spawn_y or 20)
-  e.hitbox = {['x'] = e.x,
-              ['y'] = e.y,
-              ['dx'] = e.x + 7,
-              ['dy'] = e.y + 7}
-  e.update_hitbox = function(x, y)
-                      e.hitbox.x = x
-                      e.hitbox.y = y
-                      e.hitbox.dx = x + 7
-                      e.hitbox.dy = y + 7
-                    end
+  e.time = time
+
+  if type == "basic" then
+    e.sprite = 132
+    e.angle = 360
+    e.speed = .35
+  end
+
   e.move = function()
               path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
               e.x = path.x
               e.y = path.y
-              e.update_hitbox(e.x, e.y)
            end
 
   return e
@@ -442,10 +437,49 @@ function delete_offscreen(list, obj)
   end
 end
 
+function spawnenemies()
+  for enemy in all(enemy_table) do
+    if time() - wait.start_time >= enemy.time then
+      add(enemy_spawned, enemy)
+      del(enemy_table, enemy)
+    end
+  end
+
+  if #enemy_table == 0 then
+    spawn_enmies = false
+    if not wait.timer then detect_killed_enemies = true end
+  end
+end
+
+function detect_kill_enemies()
+  if #enemy_spawned == 0 then
+    detect_killed_enemies = false
+    coresume(game)
+  end
+end
+
 function kill_all_enemies()
-  for e in all(basic_enemies) do
-    del(basic_enemies, e)
-    e = nil
+  for e in all(enemy_table) do
+    del(enemy_table, e)
+  end
+
+  for e in all(enemy_spawned) do
+    del(enemy_spawned, e)
+  end
+end
+
+function drawcountdown()
+  local countdown = flr((wait.start_time + wait.end_time) - time())
+  local hours = flr(countdown/3600);
+  local mins = flr(countdown/60 - (hours * 60));
+  local secs = flr(countdown - hours * 3600 - mins * 60);
+  if secs < 10 then secs = "0" .. secs end
+
+  print(mins .. ":" .. secs, 50, 50, 12)
+
+  if countdown == 0 then
+    wait.timer = false
+    coresume(game)
   end
 end
 
@@ -454,14 +488,13 @@ end
 ]]
 function dialog_seraph(dialog)
   wait.dialog_finish = true
-  local dialog = dialog or {}
+
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
+  local d = dialog.text
 
-  local d = dialog.text or "I WAS GOING TO SAY SOMETHING..BUT I FORGOT."
-
-  if titlescreen then
+  if not titlescreen then
     rectfill(0, 0, 127, 127, 0)
     print("nEGATION", 47, 40, 12)
   end
@@ -513,11 +546,10 @@ function gameflow()
   wait.controls = true
   yield()
 
-  titlescreen = false
+  titlescreen = true
 
-  -- TODO: delete this and make animation of being teleported in
   seraph = {}
-  seraph.text = "YOU SURE?"
+  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
   drawdialog = true
   wait.controls = true
   yield()
@@ -526,13 +558,30 @@ function gameflow()
   drawdialog = false
 
   -- probably function to start/control enemy spawning instead of just adding them here
-  add(basic_enemies, enemy(100, 100))
-  add(basic_enemies, enemy(48,60))
+  add(enemy_table, enemy(100, 100, "basic", 4))
+  add(enemy_table, enemy(50, 50, "basic", 4))
+
+  add(enemy_table, enemy(100, 100, "basic", 5))
+  add(enemy_table, enemy(50, 50, "basic", 5))
+
+  add(enemy_table, enemy(100, 100, "basic", 6))
+  add(enemy_table, enemy(50, 50, "basic", 6))
+
+  spawn_enmies = true
+  wait.start_time = time()
+  wait.timer = true
+  wait.end_time = 20
   yield()
 
   kill_all_enemies()
   seraph = {}
-  seraph.text = "BOSS INC!"
+  seraph.text = "OKAY, THAT SHOULD DO-"
+  drawdialog = true
+  wait.controls = true
+  yield()
+
+  seraph = {}
+  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
   drawdialog = true
   wait.controls = true
   yield()
@@ -549,10 +598,8 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-  --boss1 = boss(20, 20, 128)
-  --add(basic_enemies, enemy(40, 60))
-  --add(basic_enemies,exploder(50,70))
-  player.last_hit = time()
+  player.last_hit = time() - player.immune_time
+
   game = cocreate(gameflow)
   coresume(game)
 end --end _init()
@@ -663,20 +710,22 @@ function _draw()
   cls()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
+
   if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
       --
   else
     spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
+    if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
   end
 
-  for e in all(basic_enemies) do
+  for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
-    delete_offscreen(basic_enemies, e)
+    delete_offscreen(enemy_spawned, e)
 
     -- check if this sprite has been shot
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
-        del(basic_enemies, e)
+        del(enemy_spawned, e)
         e = nil
         break
       end
@@ -739,6 +788,10 @@ function _draw()
     print("GAME OVER", 48, 60, 8)
     stop()
   end
+
+  if spawn_enmies then spawnenemies() end
+  if detect_killed_enemies then detect_kill_enemies() end
+  if wait.timer then drawcountdown() end
 
   if drawdialog then dialog_seraph(seraph) end
 
