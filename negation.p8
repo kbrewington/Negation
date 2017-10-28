@@ -110,9 +110,25 @@ function enemy(spawn_x, spawn_y, type, time)
   end
 
   e.move = function()
-              path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
-              e.x = path.x
-              e.y = path.y
+              -- local next = a_star(e)
+              -- if next ~= nil then
+              --   local new_x = next[1]*8
+              --   local new_y = next[2]*8
+              --   local xsign = 1
+              --   local ysign = 1
+              --   if new_x > e.x then
+              --     xsign = -1
+              --   end
+              --   if new_y > e.y then
+              --     ysign = -1
+              --   end
+              --   e.x = e.x - (xsign*e.speed)
+              --   e.y = e.y - (ysign*e.speed)
+              -- else
+                path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+                e.x = path.x
+                e.y = path.y
+              -- end
            end
 
   return e
@@ -237,7 +253,11 @@ function spr_r(s,x,y,a,w,h)
    xx=flr(dx*ca-dy*sa+x0)
    yy=flr(dx*sa+dy*ca+y0)
    if (xx>=0 and xx<sw and yy>=0 and yy<=sh) then
-    pset(x+ix,y+iy,sget(sx+xx,sy+yy))
+    if sget(sx+xx, sy+yy) == 0 then
+      pset(x+ix, y+iy, pget(x+ix, y+iy))
+    else
+      pset(x+ix,y+iy, sget(sx+xx,sy+yy))
+    end
    end
   end
  end
@@ -280,96 +300,86 @@ function dash_detect(n)
   player.last_time[n] = time()
 end
 
---[[
-    get min
-]]
-function get_min(list)
-  local min = inf
-  min_idx = 0
-  for v, k in pairs(list) do
-    if k < min then
-      min = k
-      min_idx = v
-    end
-  end
-  return min_idx
+function get_neighbors(x,y)
+	local dirs = {{1,0}, {0,1}, {1,1}, {-1,0}, {0,-1}, {-1,-1}, {-1,1}, {1,-1}}
+	local neighs = {}
+	for d in all(dirs) do
+		local neighbor = {x+d[1], y+d[2]}
+		if check(neighbor[1], neighbor[2]) then
+			add(neighs, neighbor)
+		end
+	end
+
+	return neighs
 end
 
-function match(item, indict)
-  for i,v in pairs(indict) do
-    if i == item then
-      return i
+function a_star(e, debug)
+	local path={}
+	local start={flr(e.x/8), flr(e.y/8)}
+	local flood={start}
+
+	local camefrom={}
+	camefrom[idx(start)] = nil
+
+	while #flood > 0 do
+		local current = flood[1]
+
+		if (current[1] == flr(player.x/8) and current[2] == flr(player.y/8)) then
+      break
     end
-  end
+
+		local neighbors = get_neighbors(current[1], current[2])
+
+		if #neighbors > 0 then
+			for n in all(neighbors) do
+				if camefrom[idx(n)] == nil and not contains(camefrom, n) then
+					add(flood,n)
+					camefrom[idx(n)] = current
+
+					if debug then
+						rectfill(n[1]*8, n[2]*8, (n[1]*8)+7, (n[2]*8)+7)
+						flip()
+					end
+
+				end
+			end
+		end
+
+		del(flood,current)
+	end
+
+	local current = {flr(player.x/8), flr(player.y/8)}
+	while camefrom[idx(current)] ~= nil do
+    add(path,current)
+		current = camefrom[idx(current)]
+	end
+  return path[#path-1]
 end
 
-function not_empty(dict)
-  for k,v in pairs(dict) do
-    return true
-  end
-  return false
+function contains(t,v)
+	for k,val in pairs(t) do
+		if (val[1] == v[1] and val[2] == v[2]) return true
+	end
+	return false
 end
---]]
 
---[[
-    basic enemy ai pathfinding
-    -- todo break ties in a lifo manner
-]]
-function astar(start, goal)
-  speed = enemy().speed
-  map = {}
-  closedset = {}
-  openset = {}
-  camefrom = {}
-  gscore = {}
-  fscore = {}
-  map.x = 128
-  map.y = 120
-  openset[start] = true
-  gscore[start] = 0
-  fscore[start] = start.distance(goal)
-  while not_empty(openset) do
-    current = match(get_min(fscore), openset) -- or get_first(openset)
-    if current.equals(goal) then
-      return get_path(camefrom, current)
-    end
-    del(openset, current)
-    -- add(closedset, current)
-    closedset[current] = true
-    -- check all adjacent nodes
-    for i=-1,1 do
-      for j=-1,1 do
-        nx = current.x+(i*speed)
-        ny = current.y+(j*speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y then
-          neighbor = node(nx, ny)
-          -- check if neighbor is in closed set
-          if not closedset[neighbor] then
-            -- check if neighbor is not in open set (add to open set if not)
-            if not openset[neighbor] then
-              openset[neighbor] = true
-            end
-            -- distance from start to neighbor
-            tentative_gscore = gscore[current] + current.distance(neighbor)
-            if tentative_gscore < (gscore[neighbor] or inf) then
-              camefrom[neighbor] = current
-              gscore[neighbor] = tentative_gscore
-              fscore[neighbor] = gscore[neighbor] + neighbor.distance(goal)
-            end
-          end
-        end
-      end -- end j for
-    end --end i for
-  end -- end while
-  return {node(40, 61)}
-end -- end func
+function idx(t)
+	return t[1].."_"..t[2]
+end
+
+function check(x,y)
+	if x <= 15 and x > 0 and y <= 15 and y > 0 then
+		local val = mget(x,y)
+    return (not fget(val, 0))
+  end
+end
 
 function minimum_neighbor(start, goal)
   local map = {}
   map.x = 128
   map.y = 120
   local minimum_dist = inf
-  local min_node = nil
+  local min_node = start
     for i=-1,1 do
       for j=-1,1 do
         local nx = start.x+(i*enemy().speed)
@@ -385,36 +395,6 @@ function minimum_neighbor(start, goal)
       end -- end j for
     end --end i for
     return min_node
-end
-
-function is_in(table, key)
-  for k, v in pairs(table) do
-    if key == k then return true end
-  end
-  return false
-end
-
---[[
-    reconstruct path
-]]
-function get_path(camefrom, current)
-  total_path = {}
-  add(total_path, current)
-  while is_in(camefrom, current) do
-    current = camefrom[current]
-    add(total_path, current)
-  end
-  return total_path
-end
-
---[[
-    get first item from a table of key, pairs
-    todo: find a better way to do this
-]]
-function get_first(table)
- for k, v in all(table) do
-   return k
- end
 end
 
 --[[
