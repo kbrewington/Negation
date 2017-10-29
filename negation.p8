@@ -195,8 +195,8 @@ end
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("px: " .. round(player.x, 1), 0, 0, 7)
-  print("py: " .. round(player.y, 1), 45, 0, 7)
+  print("px: " .. stat(32), 0, 0, 7)
+  print("py: " .. stat(33), 45, 0, 7)
 
   print("ag: " .. player.angle, 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
@@ -568,22 +568,23 @@ function gameflow()
   seraph = {}
   seraph.brd_color = 12
   seraph.text = "READY TO GET TO WORK?"
-  drawdialog = true
-  wait.controls = true
+  drawdialog = true -- show seraph's dialog
+  wait.controls = true -- stop player controls
   yield()
 
-  titlescreen = true
+  titlescreen = true -- stop showing titlescreen
 
-  seraph = {}
+  seraph = {} -- reset seraph table to defaults
   seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
-  drawdialog = true
-  wait.controls = true
+  drawdialog = true -- show seraph's dialog
+  wait.controls = true -- stop player controls
   yield()
 
-  wait.controls = false
-  drawdialog = false
+  wait.controls = false  -- resume player controls
+  drawdialog = false -- stop showing seraph's dialog
 
-  -- probably function to start/control enemy spawning instead of just adding them here
+  -- add list of enemies to spawn_enmies
+  --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
   add(enemy_table, enemy(100, 100, "basic", 4))
   add(enemy_table, enemy(50, 50, "basic", 4))
 
@@ -593,13 +594,16 @@ function gameflow()
   add(enemy_table, enemy(100, 100, "basic", 6))
   add(enemy_table, enemy(50, 50, "basic", 6))
 
-  spawn_enmies = true
-  wait.start_time = time()
-  wait.timer = true
-  wait.end_time = 20
+  spawn_enemies = true -- tell the game we want to spawn enemies
+  wait.start_time = time() -- used for timer and spawn time to compare when to spawn
+  wait.end_time = 65 -- how long the timer should run for in seconds
+  wait.timer = true -- tells the game we want to wait for the timer to finish
   yield()
 
   kill_all_enemies()
+  wait.timer = false
+  spawn_enemies = false
+  
   seraph = {}
   seraph.text = "OKAY, THAT SHOULD DO-"
   drawdialog = true
@@ -675,6 +679,8 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+  poke(0x5f2d, 1)
+
   player.last_hit = time() - player.immune_time
 
   game = cocreate(gameflow)
@@ -900,7 +906,7 @@ function _draw()
     stop()
   end
 
-  if spawn_enmies then spawnenemies() end
+  if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
 
