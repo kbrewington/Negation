@@ -410,7 +410,9 @@ end
 ]]
 function shoot(x, y, a, spr, friendly)
   if friendly then
-    add(player_bullets, bullet(x, y, a, spr, friendly))
+    local bx = x - 6*sin(player.angle/360)
+    local by = y - 6*cos(player.angle/360)
+    add(player_bullets, bullet(bx, by, a, spr, friendly))
   else
     add(enemy_bullets, bullet(x, y, a, spr, friendly))
   end
