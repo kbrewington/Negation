@@ -65,6 +65,7 @@ enemy_table  = {}
 enemy_spawned = {}
 player_bullets = {}
 enemy_bullets = {}
+destroyed = {}
 
 -- define some constants
 pi = 3.14159265359
@@ -102,6 +103,9 @@ function enemy(spawn_x, spawn_y, type, time)
   e.y = spawn_y
   e.speed = .35
   e.time = time
+  e.destroy_anim_length = 15
+  e.destroyed_step = 0
+  e.destroy_sequence = {135, 136, 135}
 
   if type == "basic" then
     e.sprite = 132
@@ -219,6 +223,10 @@ end
 
 function enemy_collision(e)
   return (e.x > player.x+8 or e.x+8 < player.x or e.y > player.y+8 or e.y+8<player.y) == false
+end
+
+function spr_collision(e,p)
+  return (e.x > p.x+8 or e.x+8 < p.x or e.y > p.y+8 or e.y+8<p.y) == false
 end
 
 function bullet_collision(sp, b)
@@ -573,6 +581,27 @@ function gameflow()
   drawboss = true
 end
 
+--[[
+    draw enemy destruction animation to screen
+  ]]
+function step_destroy_animation(e)
+
+  if e.destroyed_step <= e.destroy_anim_length then
+    if e.destroyed_step < 5 then
+      spr(e.destroy_sequence[1], e.x, e.y)
+    elseif e.destroyed_step <= 10 then
+      spr(e.destroy_sequence[2], e.x, e.y)
+    elseif e.destroyed_step <= 15 then
+      spr(e.destroy_sequence[3], e.x, e.y)
+    end
+  else
+    del(destroyed, e)
+  end
+
+  circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
+  e.destroyed_step = e.destroyed_step + 1
+
+end
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -706,6 +735,7 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
+        add(destroyed, e)
         e = nil
         break
       end
@@ -723,6 +753,10 @@ function _draw()
       e.move()
     end
 
+  end
+
+  for d in all(destroyed) do
+    step_destroy_animation(d)
   end
 
   for b in all(player_bullets) do
