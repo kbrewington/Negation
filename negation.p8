@@ -691,12 +691,12 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
-      --
-  else
+  -- if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
+  --     --
+  -- else
     spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-    if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
-  end
+  --   if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
+  -- end
 
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -715,7 +715,9 @@ function _draw()
       if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
-        -- TODO: trigger animation here
+      elseif enemy_collision(e) then -- shake screen to show you've taken damage
+        -- https://www.lexaloffle.com/bbs/?tid=2168
+        camera(cos((time()*1000)/3), cos((time()*1000)/2))
       end
       spr(e.sprite, e.x, e.y)
       e.move()
@@ -745,7 +747,8 @@ function _draw()
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
       player.health = player.health - 1
       player.last_hit = time()
-      -- TODO: trigger animation here
+    elseif bullet_collision(player, b) then
+      camera(cos((time()*1000)/3), cos((time()*1000)/2))
     end
 
     if bump(b.x, b.y) then
