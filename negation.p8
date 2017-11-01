@@ -174,6 +174,10 @@ function boss(startx, starty, sprite)
   local b = {}
   b.x = startx
   b.y = starty
+  b.dx = 0
+  b.dy = 0
+  b.mdx = 4
+  b.mdy = 4
   b.angle = 0
   b.sprite = sprite
   b.bullet_speed = 2
@@ -875,8 +879,8 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
+        add(destroyed_enemies, e)
         del(player_bullets, b)
-        add(destroyed, e)
         b = nil
         e = nil
         break
