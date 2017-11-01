@@ -524,7 +524,7 @@ function dialog_seraph(dialog)
 
   if not titlescreen then
     rectfill(0, 0, 127, 127, 0)
-    print("negation", 47, 40, 12)
+    print("nEGATION", 47, 40, 12)
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -569,50 +569,32 @@ function gameflow()
   -- start game
   seraph = {}
   seraph.brd_color = 12
-<<<<<<< HEAD
   seraph.text = "READY TO GET TO WORK?"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
-=======
-  seraph.text = "ready to get to work?"
-  drawdialog = true
-  wait.controls = true
->>>>>>> brendan's-work
   yield()
 
   titlescreen = true -- stop showing titlescreen
 
-<<<<<<< HEAD
   seraph = {} -- reset seraph table to defaults
   seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
-=======
-  seraph = {}
-  seraph.text = "alright, i see a door. give mea minute and i'll try and openit"
-  drawdialog = true
-  wait.controls = true
->>>>>>> brendan's-work
   yield()
 
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
 
-<<<<<<< HEAD
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-=======
-  -- probably function to start/control enemy spawning instead of just adding them here
-
->>>>>>> brendan's-work
   add(enemy_table, enemy(100, 100, "basic", 4))
-  --add(enemy_table, enemy(50, 50, "basic", 4))
+  add(enemy_table, enemy(50, 50, "basic", 4))
 
-  --add(enemy_table, enemy(100, 100, "basic", 5))
-  --add(enemy_table, enemy(50, 50, "basic", 5))
+  add(enemy_table, enemy(100, 100, "basic", 5))
+  add(enemy_table, enemy(50, 50, "basic", 5))
 
-  --add(enemy_table, enemy(100, 100, "basic", 6))
-  --add(enemy_table, enemy(50, 50, "basic", 6))
+  add(enemy_table, enemy(100, 100, "basic", 6))
+  add(enemy_table, enemy(50, 50, "basic", 6))
 
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
@@ -928,11 +910,7 @@ function _draw()
     boss1.update()
   end
 
-<<<<<<< HEAD
   if player.health <= 0 then
-=======
-  if player.health<=0 then
->>>>>>> brendan's-work
     print("game over", 48, 60, 8)
     stop()
   end
