@@ -212,7 +212,7 @@ function debug()
   print("px: " .. stat(32), 0, 0, 7)
   print("py: " .. stat(33), 45, 0, 7)
 
-  print("ag: " .. player.angle, 0, 6, 7)
+  print("ag: ", 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
   print("hp: ".. player.health, 45, 6, 7)
 
@@ -774,6 +774,8 @@ function _update()
     if (btn(c.left_arrow)) then
       --dash_detect(c.left_arrow)
       --player.angle -= player.turnspeed
+      player.x = player.x - player.speed * sin((player.angle - 85) / 360)
+      player.y = player.y - player.speed * cos((player.angle - 85) / 360)
     end --end left button
 
     --[[
@@ -782,6 +784,8 @@ function _update()
     if (btn(c.right_arrow)) then
       --dash_detect(c.right_arrow)
       --player.angle += player.turnspeed
+      player.x = player.x - player.speed * sin((player.angle + 85) / 360)
+      player.y = player.y - player.speed * cos((player.angle + 85) / 360)
     end --end right button
 
     --[[
@@ -856,7 +860,9 @@ function _update()
   end
 
   player.current_speed = 0
-  if not drawdialog then player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90 end
+  if not drawdialog then
+    player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90
+  end
   player.angle = player.angle % 360
 end --end _update()
 
