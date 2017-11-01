@@ -21,6 +21,7 @@ player.health = 10
 player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
+player.tokens = 0
 
 wall_fwd = false
 wall_bck = false
@@ -65,6 +66,12 @@ enemy_table  = {}
 enemy_spawned = {}
 player_bullets = {}
 enemy_bullets = {}
+destroyed = {}
+
+skill_count = 0
+highlighted = 10
+currently_selected = 1
+skills_selected = {true, false, false}
 
 -- define some constants
 pi = 3.14159265359
@@ -102,6 +109,9 @@ function enemy(spawn_x, spawn_y, type, time)
   e.y = spawn_y
   e.speed = .35
   e.time = time
+  e.destroy_anim_length = 15
+  e.destroyed_step = 0
+  e.destroy_sequence = {135, 136, 135}
 
   if type == "basic" then
     e.sprite = 132
@@ -217,8 +227,9 @@ function collision()
   wall_bck =  bump_all(bck_tempx, bck_tempy)
 end
 
-function enemy_collision(e)
-  return (e.x > player.x+8 or e.x+8 < player.x or e.y > player.y+8 or e.y+8<player.y) == false
+function enemy_collision(e, p)
+  local other = (p or player)
+  return (e.x > other.x+8 or e.x+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
 end
 
 function bullet_collision(sp, b)
@@ -227,6 +238,34 @@ end
 
 function boss_collision(sp, b)
   return (b.x > sp.x+16 or b.x+16 < sp.x or b.y > sp.y+16 or b.y+16<sp.y) == false
+end
+
+function collide_all_enemies()
+  local e = enemy_spawned[1]
+  for o in all(enemy_spawned) do
+    if o~=e and enemy_collision(e, o) then
+      fix_enemy(o, e)
+    end
+  end
+end
+
+function fix_enemy(o, e)
+  if (o.x - e.x) < 0 then
+    o.x = o.x - 8
+  elseif (o.x - e.x) > 0 then
+    o.x = o.x + 8
+  elseif (o.x == e.y) then
+    o.x = o.x + 8
+  end
+
+  if (o.y - e.y) < 0 then
+    o.y = o.y - 8
+  elseif (o.y - e.y) > 0 then
+    o.y = o.y + 8
+  elseif (o.y == e.y) then
+    o.y = o.y + 8
+  end
+  --bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -253,7 +292,7 @@ function spr_r(s,x,y,a,w,h)
    xx=flr(dx*ca-dy*sa+x0)
    yy=flr(dx*sa+dy*ca+y0)
    if (xx>=0 and xx<sw and yy>=0 and yy<=sh) then
-    if sget(sx+xx, sy+yy) == 0 then
+    if sget(sx+xx, sy+yy) == 0 or sget(sx+xx, sy+yy) == 5 then
       pset(x+ix, y+iy, pget(x+ix, y+iy))
     else
       pset(x+ix,y+iy, sget(sx+xx,sy+yy))
@@ -402,7 +441,9 @@ end
 ]]
 function shoot(x, y, a, spr, friendly)
   if friendly then
-    add(player_bullets, bullet(x, y, a, spr, friendly))
+    local bx = x - 6*sin(player.angle/360)
+    local by = y - 6*cos(player.angle/360)
+    add(player_bullets, bullet(bx, by, a, spr, friendly))
   else
     add(enemy_bullets, bullet(x, y, a, spr, friendly))
   end
@@ -573,6 +614,57 @@ function gameflow()
   drawboss = true
 end
 
+--[[
+    Skill-tree menu (needs to be called continuously from draw to work)
+]]
+function skilltree()
+  in_skilltree = true
+  local token_sprites = {64, 64, 64, 64, 64, 66, 66, 66, 66, 66, 68, 68, 68, 68, 68, 68, 70, 70, 70, 70, 70, 72, 72, 72, 72, 72}
+  for i=#token_sprites,0,-1 do -- reverse list and add it to token_sprites animation
+    add(token_sprites, token_sprites[i])
+  end
+
+  rectfill(0, 0, 127, 127, 0)
+  --spr(token_sprites[skill_count%#token_sprites + 1], 20, 20, 2, 2)
+  spr(token_sprites[flr(time()*50)%#token_sprites + 1], 20, 20, 2, 2)
+  print(" - " .. player.tokens, 36, 26, 7)
+
+  print("upgrade health ", 20, 52, 7)
+  print("upgrade damage ", 20, 44, 7)
+  print("upgrade speed ", 20, 36, 7)
+
+
+  if skills_selected[1] then
+    print("upgrade speed ", 20, 36, highlighted)
+  elseif skills_selected[2] then
+    print("upgrade damage ", 20, 44, highlighted)
+  elseif skills_selected[3] then
+    print("upgrade health ", 20, 52, highlighted)
+  end
+  skill_count = skill_count+1
+end
+
+--[[
+    draw enemy destruction animation to screen
+  ]]
+function step_destroy_animation(e)
+
+  if e.destroyed_step <= e.destroy_anim_length then
+    if e.destroyed_step < 5 then
+      spr(e.destroy_sequence[1], e.x, e.y)
+    elseif e.destroyed_step <= 10 then
+      spr(e.destroy_sequence[2], e.x, e.y)
+    elseif e.destroyed_step <= 15 then
+      spr(e.destroy_sequence[3], e.x, e.y)
+    end
+  else
+    del(destroyed, e)
+  end
+
+  circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
+  e.destroyed_step = e.destroyed_step + 1
+
+end
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -591,6 +683,20 @@ end --end _init()
 function _update()
 
   collision()
+  collide_all_enemies()
+
+  if in_skilltree then
+    skills_selected[currently_selected] = false
+    local diff = 0
+    if btnp((c.up_arrow)) then
+      diff = -1
+    elseif btnp(c.down_arrow) then
+      diff = 1
+    end
+    currently_selected = ((currently_selected+diff)%#skills_selected)
+    if currently_selected == 0 then currently_selected = 3 end
+    skills_selected[currently_selected] = true
+  end
 
   if not wait.controls then
     --[[
@@ -691,12 +797,12 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
-      --
-  else
+  -- if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
+  --     --
+  -- else
     spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-    if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
-  end
+  --   if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
+  -- end
 
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -706,6 +812,7 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
+        add(destroyed, e)
         e = nil
         break
       end
@@ -715,12 +822,18 @@ function _draw()
       if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
-        -- TODO: trigger animation here
+      elseif enemy_collision(e) then -- shake screen to show you've taken damage
+        -- https://www.lexaloffle.com/bbs/?tid=2168
+        camera(cos((time()*1000)/3), cos((time()*1000)/2))
       end
       spr(e.sprite, e.x, e.y)
       e.move()
     end
 
+  end
+
+  for d in all(destroyed) do
+    step_destroy_animation(d)
   end
 
   for b in all(player_bullets) do
@@ -745,7 +858,8 @@ function _draw()
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
       player.health = player.health - 1
       player.last_hit = time()
-      -- TODO: trigger animation here
+    elseif bullet_collision(player, b) then
+      camera(cos((time()*1000)/3), cos((time()*1000)/2))
     end
 
     if bump(b.x, b.y) then
@@ -775,6 +889,7 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
+  -- skilltree(j)
   debug() -- always on bottom
 end --end _draw()
 
@@ -815,16 +930,16 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000000000000000000000000000000000000
+0000a999999a000000000a999a000000000000a9a0000000000000a999a000000000a999999a0000000000000000000000000000000000000000000000000000
+000a9979a999a0000000a9979a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979aaa99a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979a9999a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979aaa99a0000000a9799a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a99999a99a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a999aaa99a0000000a9999a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
+0000a999a99a000000000a999a000000000000a9a0000000000000a999a000000000a999999a0000000000000000000000000000000000000000000000000000
+00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1075,3 +1190,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
