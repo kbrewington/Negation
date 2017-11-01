@@ -22,7 +22,6 @@ player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
-Boss_health=50
 
 
 wall_fwd = false
@@ -68,7 +67,9 @@ enemy_table  = {}
 enemy_spawned = {}
 player_bullets = {}
 enemy_bullets = {}
-destroyed = {}
+destroyed_enemies = {}
+destroyed_bosses = {}
+boss_hit_anims = {}
 
 skill_count = 0
 highlighted = 10
@@ -158,6 +159,8 @@ function bullet(startx, starty, angle, sprite, friendly)
   b.sprite = sprite
   b.friendly = friendly
   b.speed = 2
+  b.current_step = 0
+  b.max_anim_steps = 5
   b.move = function()
               b.x = b.x - b.speed * sin(b.angle / 360)
               b.y = b.y - b.speed * cos(b.angle / 360)
@@ -173,12 +176,20 @@ function boss(startx, starty, sprite)
   local b = {}
   b.x = startx
   b.y = starty
+  b.dx = 0
+  b.dy = 0
+  b.mdx = 4
+  b.mdy = 4
   b.angle = 0
   b.sprite = sprite
   b.bullet_speed = 2
   b.bullet_spread = 7
   b.immune_time=1
   b.last_hit=0
+  b.health = 100
+  b.destroyed_step = 0
+  b.destroy_sequence = {135, 136, 135}
+  b.destroy_anim_length = 30
   b.pattern = {90, 180, 270, 360}
   b.update = function()
                  b.angle = (b.angle+1)%360
@@ -187,6 +198,14 @@ function boss(startx, starty, sprite)
                      add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
                    end
                  end
+                --  local sx = 1
+                --  local sy = 1
+                --  if b.dx > 2 then sx = -1 end
+                --  if b.dy > 2 then sy = -1 end
+                --  b.dx = (b.dx + 1)%b.mdx
+                --  b.dy = (b.dy + 1)%b.mdy
+                --  b.x = b.x + b.dx*sx
+                --  b.y = b.y + b.dy*sy
              end
 
   return b
@@ -204,7 +223,6 @@ function debug()
 
   print(costatus(game), 0, 12, 7)
   print("", 45, 12, 7)
-  print(Boss_health)
 
 end
 
@@ -242,7 +260,7 @@ function bullet_collision(sp, b)
 end
 
 function boss_collision(sp, b)
-  return (b.x > sp.x+16 or b.x+16 < sp.x or b.y > sp.y+16 or b.y+16<sp.y) == false
+  return (b.x > sp.x+16 or b.x+4 < sp.x or b.y > sp.y+16 or b.y+4 < sp.y)==false
 end
 
 function collide_all_enemies()
@@ -663,11 +681,53 @@ function step_destroy_animation(e)
       spr(e.destroy_sequence[3], e.x, e.y)
     end
   else
-    del(destroyed, e)
+    del(destroyed_enemies, e)
   end
 
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step = e.destroyed_step + 1
+
+end
+
+--[[
+    draw boss hit animation
+]]
+function boss_hit_animation(bul)
+  local colors = {8, 9}
+
+  if bul.current_step <= bul.max_anim_steps then
+    circ(bul.x, bul.y, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+  else
+    del(boss_hit_anims, bul)
+  end
+
+  bul.current_step = bul.current_step+1
+end
+
+--[[
+  draw boss destruction animation
+]]
+function step_boss_destroyed_animation(b)
+  local s = 1 s1 = 1
+  if flr(rnd(10))%2 == 0 then s = -1 end
+  if flr(rnd(10))%2 == 0 then s1 = -1 end
+  if b.destroyed_step <= b.destroy_anim_length then
+    if b.destroyed_step < flr(b.destroy_anim_length/3) then
+      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    elseif b.destroyed_step <= flr(b.destroy_anim_length/3)*2 then
+      spr(b.destroy_sequence[2], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    elseif b.destroyed_step <= b.destroy_anim_length then
+      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    end
+  else
+    del(destroyed_bosses, b)
+  end
+
+  circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
+  b.destroyed_step = b.destroyed_step + 1
 
 end
 
@@ -817,7 +877,7 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
-        add(destroyed, e)
+        add(destroyed_enemies, e)
         e = nil
         break
       end
@@ -838,7 +898,7 @@ function _draw()
 
   end
 
-  for d in all(destroyed) do
+  for d in all(destroyed_enemies) do
     step_destroy_animation(d)
   end
 
@@ -883,16 +943,25 @@ function _draw()
     spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
     boss1.update()
     for b in all(player_bullets) do
-      if(((time()-boss1.last_hit)>boss1.immune_time) and (boss_collision(boss1,b)))then
-        Boss_health=Boss_health-5
-        boss1.last_hit=time()
-        if(Boss_health<=0)then
+      if boss_collision(boss1,b) then
+        boss1.health = boss1.health - 1
+        del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if(boss1.health<=0)then
           del(boss1)
+          add(destroyed_bosses, boss1)
           drawboss=false
         end
         break
       end
     end
+  end
+
+  for b in all(boss_hit_anims) do
+    boss_hit_animation(b)
+  end
+  for b in all(destroyed_bosses) do
+    step_boss_destroyed_animation(b)
   end
 
   if player.health<=0 then
