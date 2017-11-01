@@ -22,6 +22,8 @@ player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
+Boss_health=50
+
 
 wall_fwd = false
 wall_bck = false
@@ -175,6 +177,8 @@ function boss(startx, starty, sprite)
   b.sprite = sprite
   b.bullet_speed = 2
   b.bullet_spread = 7
+  b.immune_time=1
+  b.last_hit=0
   b.pattern = {90, 180, 270, 360}
   b.update = function()
                  b.angle = (b.angle+1)%360
@@ -200,6 +204,7 @@ function debug()
 
   print(costatus(game), 0, 12, 7)
   print("", 45, 12, 7)
+  print(Boss_health)
 
 end
 
@@ -818,6 +823,7 @@ function _draw()
       end
     end
 
+
     if e ~= nil then
       if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
         player.health = player.health - 1
@@ -876,6 +882,17 @@ function _draw()
   if drawboss then
     spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
     boss1.update()
+    for b in all(player_bullets) do
+      if(((time()-boss1.last_hit)>boss1.immune_time) and (boss_collision(boss1,b)))then
+        Boss_health=Boss_health-5
+        boss1.last_hit=time()
+        if(Boss_health<=0)then
+          del(boss1)
+          drawboss=false
+        end
+        break
+      end
+    end
   end
 
   if player.health<=0 then
@@ -1190,4 +1207,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
