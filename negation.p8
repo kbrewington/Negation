@@ -52,6 +52,23 @@ c.down_arrow = 3
 c.z_button = 4
 c.x_button = 5
 
+title = {}
+title.title_step = 0
+title.startx = 20
+title.starty = 20
+title.text =    {{1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1},
+                 {2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2,2},
+                 {3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3},
+                 {4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4,4},
+                 {5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5,5},
+                 {6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6,6}}
+title.height = #title.text
+title.width = #title.text[1]
+title.drawn = {}
+title.drawn.x = {}
+title.drawn.y = {}
+title.drawn.colors = {}
+
 player.last_time = {[c.left_arrow] = 0,
                     [c.right_arrow] = 0,
                     [c.up_arrow] = 0,
@@ -301,8 +318,8 @@ end
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
- sx=(s%8)*8
- sy=flr(s/8)*8
+ sx=(s%8)*8 --
+ sy=(s%8)*8 --
  x0=flr(0.5*sw)
  y0=flr(0.5*sh)
  a=a/360
@@ -527,6 +544,41 @@ function drawcountdown()
   end
 end
 
+function draw_titlescreen()
+  --[[
+  blk = 0
+  nvy = 1
+  mroon = 2
+  dk grn = 3
+  brwn = 4
+  drk gry = 5
+  lght gry = 6
+  wht = 7
+  red = 8
+  orange = 9
+  yellow = 10
+  green = 11
+  blue = 12
+  purp = 13
+  pink = 14
+  skin = 15
+  ]]
+  rectfill(0, 0, 127, 127, 0)
+
+  local nx = title.startx+(title.title_step%title.width)
+  local ny = title.starty+(title.title_step%title.height)
+  local nc = title.text[(title.title_step%title.width) + 1][title.title_step%title.height + 1]
+  title.drawn.x[#title.drawn.x+1] = nx
+  title.drawn.y[#title.drawn.y+1] = ny
+  title.drawn.colors[#title.drawn.colors+1] = nc
+  for i=1,#title.drawn.x do
+    pset(title.drawn.x[i], title.drawn.y[i], title.drawn.colors[i])
+  end
+  pset(nx, ny, nc)
+
+  title.title_step = title.title_step + 1
+end
+
 --[[
   print seraph dialog
 ]]
@@ -539,8 +591,7 @@ function dialog_seraph(dialog)
   local d = dialog.text
 
   if not titlescreen then
-    rectfill(0, 0, 127, 127, 0)
-    print("nEGATION", 47, 40, 12)
+    draw_titlescreen()
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -585,15 +636,16 @@ function gameflow()
   -- start game
   seraph = {}
   seraph.brd_color = 12
-  seraph.text = "READY TO GET TO WORK?"
+  seraph.text = "ready to get to work?"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
 
   titlescreen = true -- stop showing titlescreen
 
+
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
+  seraph.text = "alright, i see a door. give mea minute and i'll try and openit"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
