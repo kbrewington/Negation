@@ -68,7 +68,6 @@ player_bullets = {}
 enemy_bullets = {}
 destroyed = {}
 
-skill_count = 0
 highlighted = 10
 currently_selected = 1
 skills_selected = {true, false, false}
@@ -525,7 +524,7 @@ function dialog_seraph(dialog)
 
   if not titlescreen then
     rectfill(0, 0, 127, 127, 0)
-    print("nEGATION", 47, 40, 12)
+    print("negation", 47, 40, 12)
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -570,24 +569,42 @@ function gameflow()
   -- start game
   seraph = {}
   seraph.brd_color = 12
+<<<<<<< HEAD
   seraph.text = "READY TO GET TO WORK?"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
+=======
+  seraph.text = "ready to get to work?"
+  drawdialog = true
+  wait.controls = true
+>>>>>>> brendan's-work
   yield()
 
   titlescreen = true -- stop showing titlescreen
 
+<<<<<<< HEAD
   seraph = {} -- reset seraph table to defaults
   seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
+=======
+  seraph = {}
+  seraph.text = "alright, i see a door. give mea minute and i'll try and openit"
+  drawdialog = true
+  wait.controls = true
+>>>>>>> brendan's-work
   yield()
 
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
 
+<<<<<<< HEAD
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
+=======
+  -- probably function to start/control enemy spawning instead of just adding them here
+
+>>>>>>> brendan's-work
   add(enemy_table, enemy(100, 100, "basic", 4))
   --add(enemy_table, enemy(50, 50, "basic", 4))
 
@@ -608,13 +625,13 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO-"
+  seraph.text = "okay, that should do-"
   drawdialog = true
   wait.controls = true
   yield()
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
+  seraph.text = "okay, that should do- wait    what's that?"
   drawdialog = true
   wait.controls = true
   yield()
@@ -631,14 +648,13 @@ end
 ]]
 function skilltree()
   in_skilltree = true
-  local token_sprites = {64, 64, 64, 64, 64, 66, 66, 66, 66, 66, 68, 68, 68, 68, 68, 68, 70, 70, 70, 70, 70, 72, 72, 72, 72, 72}
+  local token_sprites = {64, 66, 68, 70, 72}
   for i=#token_sprites,0,-1 do -- reverse list and add it to token_sprites animation
     add(token_sprites, token_sprites[i])
   end
 
   rectfill(0, 0, 127, 127, 0)
-  --spr(token_sprites[skill_count%#token_sprites + 1], 20, 20, 2, 2)
-  spr(token_sprites[flr(time()*50)%#token_sprites + 1], 20, 20, 2, 2)
+  spr(token_sprites[flr(time()*8)%#token_sprites + 1], 20, 20, 2, 2)
   print(" - " .. player.tokens, 36, 26, 7)
 
   print("upgrade health ", 20, 52, 7)
@@ -653,7 +669,6 @@ function skilltree()
   elseif skills_selected[3] then
     print("upgrade health ", 20, 52, highlighted)
   end
-  skill_count = skill_count+1
 end
 
 --[[
@@ -814,12 +829,7 @@ function _draw()
 
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  -- if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
-  --     --
-  -- else
-    spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-  --   if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
-  -- end
+  spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -829,7 +839,9 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
+        del(player_bullets, b)
         add(destroyed, e)
+        b = nil
         e = nil
         break
       end
@@ -843,6 +855,8 @@ function _draw()
       elseif enemy_collision(e) then -- shake screen to show you've taken damage
         -- https://www.lexaloffle.com/bbs/?tid=2168
         camera(cos((time()*1000)/3), cos((time()*1000)/2))
+      else
+        -- camera()
       end
       spr(e.sprite, e.x, e.y)
       e.move()
@@ -890,11 +904,15 @@ function _draw()
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
       player.health = player.health - 1
       player.last_hit = time()
+      del(enemy_bullets, b)
+      b = nil
     elseif bullet_collision(player, b) then
       camera(cos((time()*1000)/3), cos((time()*1000)/2))
+    else
+      -- camera()
     end
 
-    if bump(b.x, b.y) then
+    if b~=nil and bump(b.x, b.y) then
       del(enemy_bullets, b)
       b = nil
     end
@@ -910,7 +928,11 @@ function _draw()
     boss1.update()
   end
 
+<<<<<<< HEAD
   if player.health <= 0 then
+=======
+  if player.health<=0 then
+>>>>>>> brendan's-work
     print("game over", 48, 60, 8)
     stop()
   end
@@ -923,7 +945,7 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
-  -- skilltree(j)
+  -- skilltree()
   debug() -- always on bottom
 end --end _draw()
 
@@ -965,14 +987,14 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000000000000000000000000000000000000
-0000a999999a000000000a999a000000000000a9a0000000000000a999a000000000a999999a0000000000000000000000000000000000000000000000000000
-000a9979a999a0000000a9979a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a979aaa99a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a979a9999a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a979aaa99a0000000a9799a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a99999a99a0000000a979aa000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a999aaa99a0000000a9999a000000000000a9a0000000000000a9999a0000000a99999999a000000000000000000000000000000000000000000000000000
-0000a999a99a000000000a999a000000000000a9a0000000000000a999a000000000a999999a0000000000000000000000000000000000000000000000000000
+0000a999999a000000000a9999a00000000000a9a000000000000a9999a000000000a999999a0000000000000000000000000000000000000000000000000000
+000a9979a999a0000000a9979a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979a9999a0000000a979a99a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a99999a99a0000000a9799a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+000a999aaa99a0000000a999aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+0000a999a99a000000000a999aa00000000000a9a000000000000a9999a000000000a999999a0000000000000000000000000000000000000000000000000000
 00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
