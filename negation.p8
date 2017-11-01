@@ -22,8 +22,6 @@ player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
-Boss_health=50
-
 
 wall_fwd = false
 wall_bck = false
@@ -177,8 +175,9 @@ function boss(startx, starty, sprite)
   b.sprite = sprite
   b.bullet_speed = 2
   b.bullet_spread = 7
-  b.immune_time=1
-  b.last_hit=0
+  b.immune_time = 1
+  b.last_hit = 0
+  b.health = 50
   b.pattern = {90, 180, 270, 360}
   b.update = function()
                  b.angle = (b.angle+1)%360
@@ -200,11 +199,15 @@ function debug()
 
   print("ag: " .. player.angle, 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
-  print("health: ".. player.health, 45, 6, 7)
+  print("hp: ".. player.health, 45, 6, 7)
 
+  -- stat(33) = y stat(32) = x
   print(costatus(game), 0, 12, 7)
-  print("", 45, 12, 7)
-  print(Boss_health)
+  if boss1 ~= nil then
+    print(boss1.health, 45, 12, 7)
+  else
+    print("dead", 45, 12, 7)
+  end
 
 end
 
@@ -559,7 +562,7 @@ function dialog_seraph(dialog)
   print(sub(d, 31, 60), 5, 113, fnt_color)
   print(sub(d, 61, 90), 5, 119, fnt_color)
 
-  --print("Z/X TO CONTINUE", 69, 123, 7)
+  --print("z/x to continue", 69, 123, 7)
   wait.dialog_finish = false
 end
 
@@ -586,13 +589,13 @@ function gameflow()
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
   add(enemy_table, enemy(100, 100, "basic", 4))
-  add(enemy_table, enemy(50, 50, "basic", 4))
+  --add(enemy_table, enemy(50, 50, "basic", 4))
 
-  add(enemy_table, enemy(100, 100, "basic", 5))
-  add(enemy_table, enemy(50, 50, "basic", 5))
+  --add(enemy_table, enemy(100, 100, "basic", 5))
+  --add(enemy_table, enemy(50, 50, "basic", 5))
 
-  add(enemy_table, enemy(100, 100, "basic", 6))
-  add(enemy_table, enemy(50, 50, "basic", 6))
+  --add(enemy_table, enemy(100, 100, "basic", 6))
+  --add(enemy_table, enemy(50, 50, "basic", 6))
 
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
@@ -603,7 +606,7 @@ function gameflow()
   kill_all_enemies()
   wait.timer = false
   spawn_enemies = false
-  
+
   seraph = {}
   seraph.text = "OKAY, THAT SHOULD DO-"
   drawdialog = true
@@ -624,7 +627,7 @@ function gameflow()
 end
 
 --[[
-    Skill-tree menu (needs to be called continuously from draw to work)
+    skill-tree menu (needs to be called continuously from draw to work)
 ]]
 function skilltree()
   in_skilltree = true
@@ -714,16 +717,16 @@ function _update()
       left arrow
     ]]
     if (btn(c.left_arrow)) then
-      dash_detect(c.left_arrow)
-      player.angle -= player.turnspeed
+      --dash_detect(c.left_arrow)
+      --player.angle -= player.turnspeed
     end --end left button
 
     --[[
       right arrow
     ]]
     if (btn(c.right_arrow)) then
-      dash_detect(c.right_arrow)
-      player.angle += player.turnspeed
+      --dash_detect(c.right_arrow)
+      --player.angle += player.turnspeed
     end --end right button
 
     --[[
@@ -732,11 +735,11 @@ function _update()
     if (btn(c.up_arrow)) then
       if not cheats.noclip then
         if not wall_fwd then
-          dash_detect(c.up_arrow)
+          --dash_detect(c.up_arrow)
           player.current_speed = player.speed
         end
       else
-        dash_detect(c.up_arrow)
+        --dash_detect(c.up_arrow)
         player.current_speed = player.speed
       end
     end --end up button
@@ -747,11 +750,11 @@ function _update()
     if (btn(c.down_arrow)) then
       if not cheats.noclip then
         if not wall_bck then
-          dash_detect(c.down_arrow)
+          --dash_detect(c.down_arrow)
           player.current_speed = -player.speed
         end
       else
-        dash_detect(c.down_arrow)
+        --dash_detect(c.down_arrow)
         player.current_speed = -player.speed
       end
     end --end down button
@@ -761,8 +764,10 @@ function _update()
     z button
     -- shoot for now, this can be changed later
   ]]
-  if (btn(c.z_button)) then
-    if wait.controls and not wait.dialog_finish and btnp(c.z_button) then
+  --if (btn(c.z_button)) then
+  --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
+  if (stat(34) == 1) then
+    if wait.controls and not wait.dialog_finish then
       coresume(game)
     elseif not wait.controls then
       player.b_count = player.b_count + 1
@@ -796,6 +801,7 @@ function _update()
   end
 
   player.current_speed = 0
+  if not drawdialog then player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90 end
   player.angle = player.angle % 360
 end --end _update()
 
@@ -861,6 +867,20 @@ function _draw()
       spr(b.sprite, b.x, b.y)
       b.move()
     end
+
+    if drawboss then
+      if (time() - boss1.last_hit > boss1.immune_time) and boss_collision(boss1, b) then
+        boss1.health -= 5
+        boss1.last_hit = time()
+        if (boss1.health <= 0) then
+          drawboss = false
+          boss1 = nil
+        end
+        break
+      end
+
+      if boss_collision(boss1, b) then del(player_bullets, b) end
+    end
   end
 
   for b in all(enemy_bullets) do
@@ -888,23 +908,14 @@ function _draw()
   if drawboss then
     spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
     boss1.update()
-    for b in all(player_bullets) do
-      if(((time()-boss1.last_hit)>boss1.immune_time) and (boss_collision(boss1,b)))then
-        Boss_health=Boss_health-5
-        boss1.last_hit=time()
-        if(Boss_health<=0)then
-          del(boss1)
-          drawboss=false
-        end
-        break
-      end
-    end
   end
 
-  if player.health<=0 then
-    print("GAME OVER", 48, 60, 8)
+  if player.health <= 0 then
+    print("game over", 48, 60, 8)
     stop()
   end
+
+  spr(96, stat(32) - 3, stat(33) - 3)
 
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
@@ -966,13 +977,13 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+88080880000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
