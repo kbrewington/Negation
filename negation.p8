@@ -578,6 +578,7 @@ function gameflow()
   drawdialog = false
 
   -- probably function to start/control enemy spawning instead of just adding them here
+
   add(enemy_table, enemy(100, 100, "basic", 4))
   add(enemy_table, enemy(50, 50, "basic", 4))
 
@@ -791,15 +792,10 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
-  
+
   map(0, 0, map_.sx, map_.sy, 128, 128)
 
-  -- if (time() - player.last_hit) < player.immune_time and (time()%.5==0) then
-  --     --
-  -- else
-    spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
-  --   if time() - player.last_hit <= 0 then player.last_hit = time() - player.immune_time end
-  -- end
+  spr_r(player.sprite, player.x, player.y, player.angle, 1, 1)
 
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -809,7 +805,9 @@ function _draw()
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
         del(enemy_spawned, e)
+        del(player_bullets, b)
         add(destroyed, e)
+        b = nil
         e = nil
         break
       end
@@ -822,6 +820,8 @@ function _draw()
       elseif enemy_collision(e) then -- shake screen to show you've taken damage
         -- https://www.lexaloffle.com/bbs/?tid=2168
         camera(cos((time()*1000)/3), cos((time()*1000)/2))
+      else
+        -- camera()
       end
       spr(e.sprite, e.x, e.y)
       e.move()
@@ -855,11 +855,15 @@ function _draw()
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
       player.health = player.health - 1
       player.last_hit = time()
+      del(enemy_bullets, b)
+      b = nil
     elseif bullet_collision(player, b) then
       camera(cos((time()*1000)/3), cos((time()*1000)/2))
+    else
+      -- camera()
     end
 
-    if bump(b.x, b.y) then
+    if b~=nil and bump(b.x, b.y) then
       del(enemy_bullets, b)
       b = nil
     end
