@@ -56,24 +56,6 @@ title = {}
 title.title_step = 0
 title.startx = 20
 title.starty = 20
-  --[[
-  blk = 0
-  nvy = 1
-  mroon = 2
-  dk grn = 3
-  brwn = 4
-  drk gry = 5
-  lght gry = 6
-  wht = 7
-  red = 8
-  orange = 9
-  yellow = 10
-  green = 11
-  blue = 12
-  purp = 13
-  pink = 14
-  skin = 15
-  ]]
 title.text =    {{14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14},
                  {14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14},
                  {14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14},
@@ -154,13 +136,21 @@ function enemy(spawn_x, spawn_y, type, time)
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
+  e.shoot_distance = 50
+  e.explode_distance = 5
+  e.bullet_spread = 5
+  e.bullet_count = 0
 
-  if type == "basic" then
+  -- if type == "basic" or type == "exploder" or type == "shooter" then
     e.sprite = 132
     e.angle = 360
     e.speed = .35
-  end
-
+  -- end
+  e.update_xy = function()
+                    path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+                    e.x = path.x
+                    e.y = path.y
+                end
   e.move = function()
               -- local next = a_star(e)
               -- if next ~= nil then
@@ -177,9 +167,30 @@ function enemy(spawn_x, spawn_y, type, time)
               --   e.x = e.x - (xsign*e.speed)
               --   e.y = e.y - (ysign*e.speed)
               -- else
-                path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
-                e.x = path.x
-                e.y = path.y
+                if type == "shooter" then
+                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.shoot_distance then
+                    e.update_xy()
+                  else
+                    local plyrx = player.x - e.x
+                    local plyry = player.y - e.y
+                    e.angle = ((atan2(plyry, plyrx) * 360)+180)%360
+                    if e.angle <= 0 then
+                      e.angle = (e.angle + 360)%360
+                    end
+                    e.bullet_count = e.bullet_count + 1
+                    if e.bullet_count%e.bullet_spread == 0 then
+                      add(enemy_bullets, bullet(e.x, e.y, e.angle, 130, false))
+                    end
+                  end
+                elseif type == "exploder" then
+                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.explode_distance then
+                    e.update_xy()
+                  else
+                    --start explosion
+                  end
+                elseif type == "basic" then
+                  e.update_xy()
+                end
               -- end
            end
 
@@ -669,14 +680,14 @@ function gameflow()
 
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "basic", 4))
-  add(enemy_table, enemy(50, 50, "basic", 4))
+  add(enemy_table, enemy(100, 100, "shooter", 4))
+  add(enemy_table, enemy(50, 50, "shooter", 4))
 
-  add(enemy_table, enemy(100, 100, "basic", 5))
-  add(enemy_table, enemy(50, 50, "basic", 5))
+  add(enemy_table, enemy(100, 100, "shooter", 5))
+  add(enemy_table, enemy(50, 50, "shooter", 5))
 
-  add(enemy_table, enemy(100, 100, "basic", 6))
-  add(enemy_table, enemy(50, 50, "basic", 6))
+  add(enemy_table, enemy(100, 100, "shooter", 6))
+  add(enemy_table, enemy(50, 50, "shooter", 6))
 
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
