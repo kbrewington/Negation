@@ -92,6 +92,7 @@ enemy_bullets = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
 boss_hit_anims = {}
+exploding_enemies = {}
 
 highlighted = 10
 currently_selected = 1
@@ -137,9 +138,13 @@ function enemy(spawn_x, spawn_y, type, time)
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.shoot_distance = 50
-  e.explode_distance = 5
+  e.explode_distance = 15
+  e.explode_wait = 15
+  e.explode_step = 0
   e.bullet_spread = 5
   e.bullet_count = 0
+  e.exploding = false
+  e.dont_move = false
 
   -- if type == "basic" or type == "exploder" or type == "shooter" then
     e.sprite = 132
@@ -183,10 +188,12 @@ function enemy(spawn_x, spawn_y, type, time)
                     end
                   end
                 elseif type == "exploder" then
-                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.explode_distance then
+                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.explode_distance and not e.dont_move then
                     e.update_xy()
                   else
-                    --start explosion
+                    e.dont_move = true
+                    e.exploding = true
+                    e.explode_step = e.explode_step + 1
                   end
                 elseif type == "basic" then
                   e.update_xy()
@@ -680,14 +687,14 @@ function gameflow()
 
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "shooter", 4))
-  add(enemy_table, enemy(50, 50, "shooter", 4))
+  add(enemy_table, enemy(100, 100, "exploder", 4))
+  add(enemy_table, enemy(50, 50, "basic", 4))
 
   add(enemy_table, enemy(100, 100, "shooter", 5))
-  add(enemy_table, enemy(50, 50, "shooter", 5))
+  add(enemy_table, enemy(50, 50, "exploder", 5))
 
   add(enemy_table, enemy(100, 100, "shooter", 6))
-  add(enemy_table, enemy(50, 50, "shooter", 6))
+  add(enemy_table, enemy(50, 50, "basic", 6))
 
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
@@ -808,6 +815,27 @@ function step_boss_destroyed_animation(b)
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
   b.destroyed_step = b.destroyed_step + 1
 
+end
+
+function step_explode_enemy(e)
+  if e.destroyed_step <= e.destroy_anim_length then
+    if e.destroyed_step < 5 then
+      spr(e.destroy_sequence[1], e.x, e.y)
+    elseif e.destroyed_step <= 10 then
+      spr(e.destroy_sequence[2], e.x, e.y)
+    elseif e.destroyed_step <= 15 then
+      spr(e.destroy_sequence[3], e.x, e.y)
+    end
+  else
+    del(destroyed_enemies, e)
+  end
+
+  circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+  e.destroyed_step = e.destroyed_step + 1
+  if e.destroyed_step == e.destroy_anim_length then
+    return true
+  end
+  return false
 end
 
 --------------------------------------------------------------------------------
@@ -969,16 +997,30 @@ function _draw()
       if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
-      elseif enemy_collision(e) then -- shake screen to show you've taken damage
-        -- https://www.lexaloffle.com/bbs/?tid=2168
-        camera(cos((time()*1000)/3), cos((time()*1000)/2))
-      else
-        -- camera()
+      end
+
+      if e.exploding and flr(time()*500)%2==0 then
+        pal()
+        pal(2,8,0)
       end
       spr(e.sprite, e.x, e.y)
+      pal()
+      if e.explode_step == e.explode_wait then
+        add(exploding_enemies, e)
+      end
       e.move()
     end
+  end
 
+  for e in all(exploding_enemies) do
+    if step_explode_enemy(e) then
+      if node(e.x, e.y).distance(node(player.x, player.y)) <= 15 and ((time() - player.last_hit) > player.immune_time) then
+        player.health = player.health - 1
+        player.last_hit = time()
+      end
+      del(enemy_spawned, e)
+      del(exploding_enemies, e)
+    end
   end
 
   for d in all(destroyed_enemies) do
@@ -1023,10 +1065,6 @@ function _draw()
       player.last_hit = time()
       del(enemy_bullets, b)
       b = nil
-    elseif bullet_collision(player, b) then
-      camera(cos((time()*1000)/3), cos((time()*1000)/2))
-    else
-      -- camera()
     end
 
     if b~=nil and bump(b.x, b.y) then
@@ -1065,6 +1103,9 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
+  if ((time() - player.last_hit) < player.immune_time) then
+    camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  end
   -- skilltree()
   debug() -- always on bottom
 end --end _draw()
