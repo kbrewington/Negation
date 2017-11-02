@@ -52,6 +52,29 @@ c.down_arrow = 3
 c.z_button = 4
 c.x_button = 5
 
+title = {}
+title.title_step = 0
+title.startx = 20
+title.starty = 20
+title.text =    {{14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14},
+                 {14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14},
+                 {14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14},
+                 {14, 1,14,14, 1, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0, 0, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14,14, 1, 1,14,14, 1,14},
+                 {14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14},
+                 {14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0, 0, 14, 1,14, 0,14, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14},
+                 {14, 1,14, 0, 0,14, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0,14, 1, 1, 1,14},
+                 {14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14},
+                 {14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14,14,14, 1,14,14,14, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14},
+                 {14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14},
+                 {14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14}}
+title.height = #title.text
+title.width = #title.text[1]
+title.drawn = {}
+title.row = 0
+title.drawn.x = {}
+title.drawn.y = {}
+title.drawn.colors = {}
+
 player.last_time = {[c.left_arrow] = 0,
                     [c.right_arrow] = 0,
                     [c.up_arrow] = 0,
@@ -69,6 +92,7 @@ enemy_bullets = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
 boss_hit_anims = {}
+exploding_enemies = {}
 
 highlighted = 10
 currently_selected = 1
@@ -113,13 +137,25 @@ function enemy(spawn_x, spawn_y, type, time)
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
+  e.shoot_distance = 50
+  e.explode_distance = 15
+  e.explode_wait = 15
+  e.explode_step = 0
+  e.bullet_spread = 5
+  e.bullet_count = 0
+  e.exploding = false
+  e.dont_move = false
 
-  if type == "basic" then
+  -- if type == "basic" or type == "exploder" or type == "shooter" then
     e.sprite = 132
     e.angle = 360
     e.speed = .35
-  end
-
+  -- end
+  e.update_xy = function()
+                    path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
+                    e.x = path.x
+                    e.y = path.y
+                end
   e.move = function()
               -- local next = a_star(e)
               -- if next ~= nil then
@@ -136,9 +172,32 @@ function enemy(spawn_x, spawn_y, type, time)
               --   e.x = e.x - (xsign*e.speed)
               --   e.y = e.y - (ysign*e.speed)
               -- else
-                path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
-                e.x = path.x
-                e.y = path.y
+                if type == "shooter" then
+                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.shoot_distance then
+                    e.update_xy()
+                  else
+                    local plyrx = player.x - e.x
+                    local plyry = player.y - e.y
+                    e.angle = ((atan2(plyry, plyrx) * 360)+180)%360
+                    if e.angle <= 0 then
+                      e.angle = (e.angle + 360)%360
+                    end
+                    e.bullet_count = e.bullet_count + 1
+                    if e.bullet_count%e.bullet_spread == 0 then
+                      add(enemy_bullets, bullet(e.x, e.y, e.angle, 130, false))
+                    end
+                  end
+                elseif type == "exploder" then
+                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.explode_distance and not e.dont_move then
+                    e.update_xy()
+                  else
+                    e.dont_move = true
+                    e.exploding = true
+                    e.explode_step = e.explode_step + 1
+                  end
+                elseif type == "basic" then
+                  e.update_xy()
+                end
               -- end
            end
 
@@ -301,8 +360,8 @@ end
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
- sx=(s%8)*8
- sy=flr(s/8)*8
+ sx=(s%8)*8 --
+ sy=(s%8)*8 --
  x0=flr(0.5*sw)
  y0=flr(0.5*sh)
  a=a/360
@@ -527,6 +586,31 @@ function drawcountdown()
   end
 end
 
+function draw_titlescreen()
+  rectfill(0, 0, 127, 127, 0)
+
+  if title.title_step%title.width == 0 then
+    title.row = title.row+1
+  end
+
+
+  local nx = title.startx+(title.title_step%title.width)
+  local ny = title.starty+title.row
+  local nc = title.text[title.row][(title.title_step%title.width)+1]
+  title.drawn.x[#title.drawn.x+1] = nx
+  title.drawn.y[#title.drawn.y+1] = ny
+  title.drawn.colors[#title.drawn.colors+1] = nc
+  for i=1,#title.drawn.x do
+    pset(title.drawn.x[i], title.drawn.y[i], title.drawn.colors[i])
+  end
+  pset(nx, ny, nc)
+
+  title.title_step = title.title_step + 1
+  if title.title_step == title.height*title.width then
+    title.title_step = title.title_step - 1
+  end
+end
+
 --[[
   print seraph dialog
 ]]
@@ -539,8 +623,7 @@ function dialog_seraph(dialog)
   local d = dialog.text
 
   if not titlescreen then
-    rectfill(0, 0, 127, 127, 0)
-    print("nEGATION", 47, 40, 12)
+    draw_titlescreen()
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -585,15 +668,16 @@ function gameflow()
   -- start game
   seraph = {}
   seraph.brd_color = 12
-  seraph.text = "READY TO GET TO WORK?"
+  seraph.text = "ready to get to work?"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
 
   titlescreen = true -- stop showing titlescreen
 
+
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT"
+  seraph.text = "alright, i see a door. give mea minute and i'll try and openit"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
@@ -603,13 +687,13 @@ function gameflow()
 
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "basic", 4))
+  add(enemy_table, enemy(100, 100, "exploder", 4))
   add(enemy_table, enemy(50, 50, "basic", 4))
 
-  add(enemy_table, enemy(100, 100, "basic", 5))
-  add(enemy_table, enemy(50, 50, "basic", 5))
+  add(enemy_table, enemy(100, 100, "shooter", 5))
+  add(enemy_table, enemy(50, 50, "exploder", 5))
 
-  add(enemy_table, enemy(100, 100, "basic", 6))
+  add(enemy_table, enemy(100, 100, "shooter", 6))
   add(enemy_table, enemy(50, 50, "basic", 6))
 
   spawn_enemies = true -- tell the game we want to spawn enemies
@@ -731,6 +815,27 @@ function step_boss_destroyed_animation(b)
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
   b.destroyed_step = b.destroyed_step + 1
 
+end
+
+function step_explode_enemy(e)
+  if e.destroyed_step <= e.destroy_anim_length then
+    if e.destroyed_step < 5 then
+      spr(e.destroy_sequence[1], e.x, e.y)
+    elseif e.destroyed_step <= 10 then
+      spr(e.destroy_sequence[2], e.x, e.y)
+    elseif e.destroyed_step <= 15 then
+      spr(e.destroy_sequence[3], e.x, e.y)
+    end
+  else
+    del(destroyed_enemies, e)
+  end
+
+  circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+  e.destroyed_step = e.destroyed_step + 1
+  if e.destroyed_step == e.destroy_anim_length then
+    return true
+  end
+  return false
 end
 
 --------------------------------------------------------------------------------
@@ -892,16 +997,30 @@ function _draw()
       if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
         player.health = player.health - 1
         player.last_hit = time()
-      elseif enemy_collision(e) then -- shake screen to show you've taken damage
-        -- https://www.lexaloffle.com/bbs/?tid=2168
-        camera(cos((time()*1000)/3), cos((time()*1000)/2))
-      else
-        -- camera()
+      end
+
+      if e.exploding and flr(time()*500)%2==0 then
+        pal()
+        pal(2,8,0)
       end
       spr(e.sprite, e.x, e.y)
+      pal()
+      if e.explode_step == e.explode_wait then
+        add(exploding_enemies, e)
+      end
       e.move()
     end
+  end
 
+  for e in all(exploding_enemies) do
+    if step_explode_enemy(e) then
+      if node(e.x, e.y).distance(node(player.x, player.y)) <= 15 and ((time() - player.last_hit) > player.immune_time) then
+        player.health = player.health - 1
+        player.last_hit = time()
+      end
+      del(enemy_spawned, e)
+      del(exploding_enemies, e)
+    end
   end
 
   for d in all(destroyed_enemies) do
@@ -946,10 +1065,6 @@ function _draw()
       player.last_hit = time()
       del(enemy_bullets, b)
       b = nil
-    elseif bullet_collision(player, b) then
-      camera(cos((time()*1000)/3), cos((time()*1000)/2))
-    else
-      -- camera()
     end
 
     if b~=nil and bump(b.x, b.y) then
@@ -988,6 +1103,9 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
+  if ((time() - player.last_hit) < player.immune_time) then
+    camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  end
   -- skilltree()
   debug() -- always on bottom
 end --end _draw()
