@@ -269,12 +269,14 @@ end
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("sx: " .. map_.sx, 0, 0, 7)
-  print("sy: " .. map_.sy, 45, 0, 7)
-
-  print(map_.border.right + map_.sx - 120, 0, 6, 7)
+  print("px: " .. player.x, 0, 0, 7)
+  print("sx: " .. map_.sx, 45, 0, 7)
+  local map_right = map_.border.right + map_.sx - 120
+  local map_left = map_.border.left + map_.sx
+  print(map_right, 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
-  print("hp: ".. player.health, 45, 6, 7)
+  --print("hp: ".. player.health, 45, 6, 7)
+  print(map_left, 45, 6, 7)
 
   -- stat(33) = y stat(32) = x
   print(costatus(game), 0, 12, 7)
@@ -580,32 +582,34 @@ end
 
 function screentransaction()
   local map_right = map_.border.right + map_.sx - 120
+  local map_left = map_.border.left + map_.sx
 
-  if player.x > 51 and map_right != 0 then
-    map_.sx -= 1
-    player.x -= 1
+  --when to transistion
+  if map_.sx < -78 and map_.sy == 0 then move_map = true end
 
-  elseif map_right != 0  and player.x > 50 and map_.sx > 128 - map_.border.right then
-    map_.sx = flr(map_.sx + player.current_speed * sin((player.angle - player.turn) / 360))
+  --if player.x > 50 and map_right > 0 then
+    --map_.sx -= 1
+    --player.x -= 1
+
+  --follow player if not all the way left, not all the way right, and player.x == 50
+  if map_right > 0 and (player.x > 50 or map_left < 0) and not move_map then
+    map_.sx = map_.sx + player.current_speed * sin((player.angle - player.turn) / 360)
     player.x = 50
   end
 
-  --player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
-
-  if map_.sx == -78 and map_right != 0 then move_map = true end
-
-  -- if map_.sx == next transition then move_map = true end
-
-
+  --if hit transistion trigger from above, move the map to center on new level
   if move_map then
-    if map_right != 0 then
-      wait.controls = true
-      map_.sx -= 1
-      player.x -= 1
+    if map_right > 0 then
+      map_.sx = flr(map_.sx) --reset so map lines up nicely
+      player.x -= 1 --move player sprite back along with
+      map_.sx -= 1 --moving map
+      wait.controls = true --pause player controls
     else
       move_map = nil
-      wait.controls = false
-      screen_transaction = false
+      wait.controls = false --resume player controls
+      screen_transaction = false --stop doing this functions checks
+      map_.sx = 120 - map_.border.right --make the new map bounds the new level
+      map_.border.left += 128
     end
   end
 end
@@ -1158,8 +1162,10 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
-  if ((time() - player.last_hit) < player.immune_time) then
+  if (abs(time() - player.last_hit) < player.immune_time) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  else
+    camera()
   end
   -- skilltree()
   debug() -- always on bottom
