@@ -13,6 +13,7 @@ player.speed = 1
 player.current_speed = 0
 player.angle = 0
 player.turnspeed = 10
+player.turn = 0
 player.current_dash_speed = 0
 player.dash_speed = 15
 player.dash_threshold = {.05, .2}
@@ -268,10 +269,10 @@ end
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("px: " .. stat(32), 0, 0, 7)
-  print("py: " .. stat(33), 45, 0, 7)
+  print("sx: " .. map_.sx, 0, 0, 7)
+  print("sy: " .. map_.sy, 45, 0, 7)
 
-  print("ag: " .. player.angle, 0, 6, 7)
+  print(map_.border.right + map_.sx - 120, 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
   print("hp: ".. player.health, 45, 6, 7)
 
@@ -569,6 +570,44 @@ function kill_all_enemies()
   for e in all(enemy_spawned) do
     del(enemy_spawned, e)
   end
+
+  if drawboss then
+    drawboss = false
+    add(destroyed_bosses, boss1)
+    boss1 = nil
+  end
+end
+
+function screentransaction()
+  local map_right = map_.border.right + map_.sx - 120
+
+  if player.x > 51 and map_right != 0 then
+    map_.sx -= 1
+    player.x -= 1
+
+  elseif map_right != 0  and player.x > 50 and map_.sx > 128 - map_.border.right then
+    map_.sx = flr(map_.sx + player.current_speed * sin((player.angle - player.turn) / 360))
+    player.x = 50
+  end
+
+  --player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
+
+  if map_.sx == -78 and map_right != 0 then move_map = true end
+
+  -- if map_.sx == next transition then move_map = true end
+
+
+  if move_map then
+    if map_right != 0 then
+      wait.controls = true
+      map_.sx -= 1
+      player.x -= 1
+    else
+      move_map = nil
+      wait.controls = false
+      screen_transaction = false
+    end
+  end
 end
 
 function drawcountdown()
@@ -723,6 +762,11 @@ function gameflow()
 
   boss1 = boss(56, 56, 128)
   drawboss = true
+  yield()
+
+  kill_all_enemies()
+  map_.border.right = 248
+  screen_transaction = true
 end
 
 --[[
@@ -879,6 +923,8 @@ function _update()
     if (btn(c.left_arrow)) then
       --dash_detect(c.left_arrow)
       --player.angle -= player.turnspeed
+      player.turn = 85
+      player.current_speed = player.speed
     end --end left button
 
     --[[
@@ -887,6 +933,8 @@ function _update()
     if (btn(c.right_arrow)) then
       --dash_detect(c.right_arrow)
       --player.angle += player.turnspeed
+      player.turn = -85
+      player.current_speed = player.speed
     end --end right button
 
     --[[
@@ -941,27 +989,33 @@ function _update()
     x button
   ]]
   if (btnp(c.x_button)) then
-    --[[map_.sx = 0
-    map_.sy = 0
-    player.x = 8
-    player.y = 8
-    player.angle = 0]]
-
     coresume(game)
   end --end x button
 
   if not cheats.noclip then
-    player.x = player.x - player.current_speed * sin(player.angle / 360)
-    player.y = player.y - player.current_speed * cos(player.angle / 360)
-  else
-    map_.sx = map_.sx + player.current_speed * sin(player.angle / 360)
-    map_.sy = map_.sy + player.current_speed * cos(player.angle / 360)
-    player.x = 64
-    player.y = 64
+    player.x = player.x - player.current_speed * sin((player.angle - player.turn) / 360)
+    player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
+  --else
+    --map_.sx = map_.sx + player.current_speed * sin(player.angle / 360)
+    --map_.sy = map_.sy + player.current_speed * cos(player.angle / 360)
+    --player.x = 64
+    --player.y = 64
+  end
+
+  if screen_transaction then
+    screentransaction()
   end
 
   player.current_speed = 0
-  if not drawdialog then player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90 end
+  player.turn = 0
+  if player.x < -5 then player.x = -5 end
+  if player.y < -5 then player.y = -5 end
+  if player.x > 116 then player.x = 116 end
+  if player.y > 116 then player.y = 116 end
+
+  if not wait.controls then
+    player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90
+  end
   player.angle = player.angle % 360
 end --end _update()
 
@@ -1050,6 +1104,7 @@ function _draw()
           drawboss = false
           add(destroyed_bosses, boss1)
           boss1 = nil
+          coresume(game)
         end
         break
       end
