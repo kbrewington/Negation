@@ -664,8 +664,10 @@ function draw_hud()
   healthbar.ty = topy + 3
   healthbar.bx = healthbar.tx + (player.health * 5)
   healthbar.by = healthbar.ty + 4
-  if player.health >= 5 then
+  if player.health == 10 then
     healthbar.color = 11
+  elseif player.health >= 5 then
+    healthbar.color = 3
   elseif player.health >= 3 then
     healthbar.color = 9
   else
