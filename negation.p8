@@ -253,6 +253,14 @@ function boss(startx, starty, sprite)
                    if b.angle%b.bullet_spread == 0 then
                      add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
                    end
+
+                   --health bar
+                   if b.sprite == 128 then
+                     xoffset = 1
+                     b.full_health = 50
+                   end
+                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
+                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
                  end
                 --  local sx = 1
                 --  local sy = 1
@@ -922,26 +930,6 @@ function _update()
 
   if not wait.controls then
     --[[
-      left arrow
-    ]]
-    if (btn(c.left_arrow)) then
-      --dash_detect(c.left_arrow)
-      --player.angle -= player.turnspeed
-      player.turn = 85
-      player.current_speed = player.speed
-    end --end left button
-
-    --[[
-      right arrow
-    ]]
-    if (btn(c.right_arrow)) then
-      --dash_detect(c.right_arrow)
-      --player.angle += player.turnspeed
-      player.turn = -85
-      player.current_speed = player.speed
-    end --end right button
-
-    --[[
       up arrow
     ]]
     if (btn(c.up_arrow)) then
@@ -970,6 +958,26 @@ function _update()
         player.current_speed = -player.speed
       end
     end --end down button
+
+    --[[
+      left arrow
+    ]]
+    if (btn(c.left_arrow)) then
+      --dash_detect(c.left_arrow)
+      --player.angle -= player.turnspeed
+      player.turn = 85
+      player.current_speed = player.speed
+    end --end left button
+
+    --[[
+      right arrow
+    ]]
+    if (btn(c.right_arrow)) then
+      --dash_detect(c.right_arrow)
+      --player.angle += player.turnspeed
+      player.turn = -85
+      player.current_speed = player.speed
+    end --end right button
   end -- end wait.controls
 
   --[[
