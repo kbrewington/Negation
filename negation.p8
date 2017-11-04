@@ -112,26 +112,6 @@ inf = 32767.99 -- max number as defined in https://neko250.github.io/pico8-api/
 ------------------------ object-like structures --------------------------------
 --------------------------------------------------------------------------------
 --[[
-  node object
-]]
-function node(x, y)
-  local n = {}
-  n.x = x
-  n.y = y
-  n.distance = function(d)
-                  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) -- use euclidean distance for now
-               end
-  n.equals = function(onode)
-                if n.x == onode.x and n.y == onode.y then
-                  return true
-                else
-                  return false
-                end
-              end
-  return n
-end
-
---[[
   drop objects
 ]]
 function drop_obj(sx, sy, sprite)
@@ -167,39 +147,22 @@ function enemy(spawn_x, spawn_y, type, time)
   e.explode_distance = 15
   e.explode_wait = 15
   e.explode_step = 0
-  e.bullet_spread = 5
+  e.bullet_spread = 10
   e.bullet_count = 0
   e.exploding = false
   e.dont_move = false
+  e.sprite = 132
+  e.angle = 360
+  e.speed = .35
 
-  -- if type == "basic" or type == "exploder" or type == "shooter" then
-    e.sprite = 132
-    e.angle = 360
-    e.speed = .35
-  -- end
   e.update_xy = function()
-                    path = minimum_neighbor(node(e.x, e.y), node(player.x, player.y))
-                    e.x = path.x
-                    e.y = path.y
+                    path = minimum_neighbor(e, player)
+                    e.x = e.x + ((e.x-path.x)*e.speed)*(-1)
+                    e.y = e.y + ((e.y-path.y)*e.speed)*(-1)
                 end
   e.move = function()
-              -- local next = a_star(e)
-              -- if next ~= nil then
-              --   local new_x = next[1]*8
-              --   local new_y = next[2]*8
-              --   local xsign = 1
-              --   local ysign = 1
-              --   if new_x > e.x then
-              --     xsign = -1
-              --   end
-              --   if new_y > e.y then
-              --     ysign = -1
-              --   end
-              --   e.x = e.x - (xsign*e.speed)
-              --   e.y = e.y - (ysign*e.speed)
-              -- else
                 if type == "shooter" then
-                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.shoot_distance then
+                  if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
                   else
                     local plyrx = player.x - e.x
@@ -211,10 +174,11 @@ function enemy(spawn_x, spawn_y, type, time)
                     e.bullet_count = e.bullet_count + 1
                     if e.bullet_count%e.bullet_spread == 0 then
                       add(enemy_bullets, bullet(e.x, e.y, e.angle, 130, false))
+                      e.bullet_count = e.bullet_count + 1
                     end
                   end
                 elseif type == "exploder" then
-                  if node(e.x, e.y).distance(node(player.x, player.y)) >= e.explode_distance and not e.dont_move then
+                  if distance(e, player) >= e.explode_distance and not e.dont_move then
                     e.update_xy()
                   else
                     e.dont_move = true
@@ -224,7 +188,6 @@ function enemy(spawn_x, spawn_y, type, time)
                 elseif type == "basic" then
                   e.update_xy()
                 end
-              -- end
            end
 
   return e
@@ -259,10 +222,7 @@ function boss(startx, starty, sprite)
   local b = {}
   b.x = startx
   b.y = starty
-  b.dx = 0
-  b.dy = 0
-  b.mdx = 4
-  b.mdy = 4
+  b.speed = .01
   b.angle = 0
   b.sprite = sprite
   b.bullet_speed = 2
@@ -287,14 +247,9 @@ function boss(startx, starty, sprite)
                    rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
                    rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
                  end
-                --  local sx = 1
-                --  local sy = 1
-                --  if b.dx > 2 then sx = -1 end
-                --  if b.dy > 2 then sy = -1 end
-                --  b.dx = (b.dx + 1)%b.mdx
-                --  b.dy = (b.dy + 1)%b.mdy
-                --  b.x = b.x + b.dx*sx
-                --  b.y = b.y + b.dy*sy
+                 path = minimum_neighbor(b, player)
+                 b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
+                 b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
              end
   return b
 end
@@ -421,117 +376,6 @@ function spr_r(s,x,y,a,w,h)
  end
 end
 
---[[
-    implement dashing
-]]
-function dash(n)
-  player.dashing[n] = true
-
-  if n == c.down_arrow or n == c.left_arrow then
-    player.current_dash_speed = -player.dash_speed
-  else
-    player.current_dash_speed = player.dash_speed
-  end
-
-  if player.dashing[c.up_arrow] or player.dashing[c.down_arrow] then
-    player.x = player.x - player.current_dash_speed * sin(player.angle / 360)
-    player.y = player.y - player.current_dash_speed * cos(player.angle / 360)
-  else -- dash left right as defined on unit circle
-    player.x = player.x - player.current_dash_speed * sin((player.angle/360)-(pi/4))
-    player.y = player.y - player.current_dash_speed * cos((player.angle/360)-(pi/4))
-  end
-  player.current_dash_speed = 0
-  player.dashing[n] = false
-
-end
-
---[[
-   detect whether the player double tapped to dash
-]]
-function dash_detect(n)
-  if player.last_time[n] ~= 0 then
-    if ((time() - player.last_time[n]) < player.dash_threshold[2]) and
-       ((time() - player.last_time[n]) > player.dash_threshold[1]) then
-         dash(n)
-    end
-  end
-  player.last_time[n] = time()
-end
-
-function get_neighbors(x,y)
-	local dirs = {{1,0}, {0,1}, {1,1}, {-1,0}, {0,-1}, {-1,-1}, {-1,1}, {1,-1}}
-	local neighs = {}
-	for d in all(dirs) do
-		local neighbor = {x+d[1], y+d[2]}
-		if check(neighbor[1], neighbor[2]) then
-			add(neighs, neighbor)
-		end
-	end
-
-	return neighs
-end
-
-function a_star(e, debug)
-	local path={}
-	local start={flr(e.x/8), flr(e.y/8)}
-	local flood={start}
-
-	local camefrom={}
-	camefrom[idx(start)] = nil
-
-	while #flood > 0 do
-		local current = flood[1]
-
-		if (current[1] == flr(player.x/8) and current[2] == flr(player.y/8)) then
-      break
-    end
-
-		local neighbors = get_neighbors(current[1], current[2])
-
-		if #neighbors > 0 then
-			for n in all(neighbors) do
-				if camefrom[idx(n)] == nil and not contains(camefrom, n) then
-					add(flood,n)
-					camefrom[idx(n)] = current
-
-					if debug then
-						rectfill(n[1]*8, n[2]*8, (n[1]*8)+7, (n[2]*8)+7)
-						flip()
-					end
-
-				end
-			end
-		end
-
-		del(flood,current)
-	end
-
-	local current = {flr(player.x/8), flr(player.y/8)}
-	while camefrom[idx(current)] ~= nil do
-    add(path,current)
-		current = camefrom[idx(current)]
-	end
-  return path[#path-1]
-end
-
-function contains(t,v)
-	for k,val in pairs(t) do
-		if (val[1] == v[1] and val[2] == v[2]) return true
-	end
-	return false
-end
-
-function idx(t)
-	return t[1].."_"..t[2]
-end
-
-function check(x,y)
-	if x <= 15 and x > 0 and y <= 15 and y > 0 then
-		local val = mget(x,y)
-    return (not fget(val, 0))
-  end
-end
-
 function minimum_neighbor(start, goal)
   local map = {}
   map.x = 128
@@ -543,8 +387,8 @@ function minimum_neighbor(start, goal)
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
         if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
-          local current = node(nx, ny)
-          local cur_distance = current.distance(goal)
+          local current = enemy(nx, ny)
+          local cur_distance = distance(current, goal)
           if cur_distance < minimum_dist then
             minimum_dist = cur_distance
             min_node = current
@@ -988,6 +832,16 @@ function drop_item(e)
   end
 end
 
+function distance(n, d)
+  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
+end
+
+function loop_func(table, func)
+  for e in all(table) do
+    func(e)
+  end
+end
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
@@ -1141,6 +995,10 @@ function _draw()
 
   spr_r(player.sprite, player.x, player.y, player.angle, 2, 2)
 
+  if player.shield > 0 then -- draw shield.
+    circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
+  end
+
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
     delete_offscreen(enemy_spawned, e)
@@ -1159,7 +1017,7 @@ function _draw()
 
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) and player.shield == 0 then
         player.health = player.health - 1
         player.last_hit = time()
       end
@@ -1179,7 +1037,7 @@ function _draw()
 
   for e in all(exploding_enemies) do
     if step_explode_enemy(e) then
-      if node(e.x, e.y).distance(node(player.x, player.y)) <= 15 and ((time() - player.last_hit) > player.immune_time) then
+      if distance(e, player) <= 15 and ((time() - player.last_hit) > player.immune_time) and player.shield == 0 then
         player.health = player.health - 1
         player.last_hit = time()
       end
@@ -1188,9 +1046,10 @@ function _draw()
     end
   end
 
-  for d in all(destroyed_enemies) do
-    step_destroy_animation(d)
-  end
+  -- for d in all(destroyed_enemies) do
+  --   step_destroy_animation(d)
+  -- end
+  loop_func(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
 
@@ -1254,8 +1113,13 @@ function _draw()
     delete_offscreen(enemy_bullets, b)
 
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
-      player.health = player.health - 1
-      player.last_hit = time()
+      if player.shield == 0 then
+        player.health = player.health - 1
+        player.last_hit = time()
+      else
+        local colors = {8, 9}
+        circ(b.x+8, b.y+8, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+      end
       del(enemy_bullets, b)
       b = nil
     end
@@ -1276,12 +1140,14 @@ function _draw()
     boss1.update()
   end
 
-  for b in all(boss_hit_anims) do
-    boss_hit_animation(b)
-  end
-  for b in all(destroyed_bosses) do
-    step_boss_destroyed_animation(b)
-  end
+  -- for b in all(boss_hit_anims) do
+  --   boss_hit_animation(b)
+  -- end
+  loop_func(boss_hit_anims, boss_hit_animation)
+  -- for b in all(destroyed_bosses) do
+  --   step_boss_destroyed_animation(b)
+  -- end
+  loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
     print("game over", 48, 60, 8)
