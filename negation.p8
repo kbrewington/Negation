@@ -278,6 +278,14 @@ function boss(startx, starty, sprite)
                    if b.angle%b.bullet_spread == 0 then
                      add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
                    end
+
+                   --health bar
+                   if b.sprite == 128 then
+                     xoffset = 1
+                     b.full_health = 50
+                   end
+                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
+                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
                  end
                 --  local sx = 1
                 --  local sy = 1
@@ -294,12 +302,14 @@ end
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("sx: " .. map_.sx, 0, 0, 7)
-  print("sy: " .. map_.sy, 45, 0, 7)
-
-  print(map_.border.right + map_.sx - 120, 0, 6, 7)
+  print("px: " .. player.x, 0, 0, 7)
+  print("sx: " .. map_.sx, 45, 0, 7)
+  local map_right = map_.border.right + map_.sx - 120
+  local map_left = map_.border.left + map_.sx
+  print(map_right, 0, 6, 7)
   --print("mem: ".. stat(0), 45, 6, 7)
-  print("hp: ".. player.health, 45, 6, 7)
+  --print("hp: ".. player.health, 45, 6, 7)
+  print(map_left, 45, 6, 7)
 
   print(#player.inventory, 45, 12, 7)
   -- stat(33) = y stat(32) = x
@@ -606,32 +616,34 @@ end
 
 function screentransaction()
   local map_right = map_.border.right + map_.sx - 120
+  local map_left = map_.border.left + map_.sx
 
-  if player.x > 51 and map_right != 0 then
-    map_.sx -= 1
-    player.x -= 1
+  --when to transistion
+  if map_.sx < -78 and map_.sy == 0 then move_map = true end
 
-  elseif map_right != 0  and player.x > 50 and map_.sx > 128 - map_.border.right then
-    map_.sx = flr(map_.sx + player.current_speed * sin((player.angle - player.turn) / 360))
+  --if player.x > 50 and map_right > 0 then
+    --map_.sx -= 1
+    --player.x -= 1
+
+  --follow player if not all the way left, not all the way right, and player.x == 50
+  if map_right > 0 and (player.x > 50 or map_left < 0) and not move_map then
+    map_.sx = map_.sx + player.current_speed * sin((player.angle - player.turn) / 360)
     player.x = 50
   end
 
-  --player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
-
-  if map_.sx == -78 and map_right != 0 then move_map = true end
-
-  -- if map_.sx == next transition then move_map = true end
-
-
+  --if hit transistion trigger from above, move the map to center on new level
   if move_map then
-    if map_right != 0 then
-      wait.controls = true
-      map_.sx -= 1
-      player.x -= 1
+    if map_right > 0 then
+      map_.sx = flr(map_.sx) --reset so map lines up nicely
+      player.x -= 1 --move player sprite back along with
+      map_.sx -= 1 --moving map
+      wait.controls = true --pause player controls
     else
       move_map = nil
-      wait.controls = false
-      screen_transaction = false
+      wait.controls = false --resume player controls
+      screen_transaction = false --stop doing this functions checks
+      map_.sx = 120 - map_.border.right --make the new map bounds the new level
+      map_.border.left += 128
     end
   end
 end
@@ -1012,26 +1024,6 @@ function _update()
 
   if not wait.controls then
     --[[
-      left arrow
-    ]]
-    if (btn(c.left_arrow)) then
-      --dash_detect(c.left_arrow)
-      --player.angle -= player.turnspeed
-      player.turn = 90--85
-      player.current_speed = player.speed
-    end --end left button
-
-    --[[
-      right arrow
-    ]]
-    if (btn(c.right_arrow)) then
-      --dash_detect(c.right_arrow)
-      --player.angle += player.turnspeed
-      player.turn = -90--85
-      player.current_speed = player.speed
-    end --end right button
-
-    --[[
       up arrow
     ]]
     if (btn(c.up_arrow)) then
@@ -1060,6 +1052,26 @@ function _update()
         player.current_speed = -player.speed
       end
     end --end down button
+
+    --[[
+      left arrow
+    ]]
+    if (btn(c.left_arrow)) then
+      --dash_detect(c.left_arrow)
+      --player.angle -= player.turnspeed
+      player.turn = 85
+      player.current_speed = player.speed
+    end --end left button
+
+    --[[
+      right arrow
+    ]]
+    if (btn(c.right_arrow)) then
+      --dash_detect(c.right_arrow)
+      --player.angle += player.turnspeed
+      player.turn = -85
+      player.current_speed = player.speed
+    end --end right button
   end -- end wait.controls
 
   --[[
