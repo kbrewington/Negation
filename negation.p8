@@ -1,22 +1,21 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
---this is the new ver.
 --------------------------------------------------------------------------------
 --------------------------------- global variables  ----------------------------
 --------------------------------------------------------------------------------
 player = {}
 player.sprite = 0
-player.x = 8
+player.x = 80
 player.y = 8
 player.speed = 1
 player.current_speed = 0
 player.angle = 0
-player.turnspeed = 10
+--player.turnspeed = 10
 player.turn = 0
 player.current_dash_speed = 0
-player.dash_speed = 15
-player.dash_threshold = {.05, .2}
+--player.dash_speed = 15
+--player.dash_threshold = {.05, .2}
 player.bullet_spread = 5
 player.health = 10
 player.immune_time = 2
@@ -28,21 +27,18 @@ player.inv_max = 4
 player.shield_dur = 5
 player.shield = 0
 
-wall_fwd = false
-wall_bck = false
+--cheats = {}
+--cheats.noclip = false
+--cheats.god = false
 
-cheats = {}
-cheats.noclip = false
-cheats.god = false
-
-map_ = {}
-map_.border = {}
-map_.border.left = 0
-map_.border.up = 0
-map_.border.right = 120
-map_.border.down = 120
-map_.sx = 0
-map_.sy = 0
+level = {}
+level.border = {}
+level.border.left = 0
+level.border.up = 0
+level.border.right = 120
+level.border.down = 120
+level.sx = 0
+level.sy = 0
 
 wait = {}
 wait.controls = false
@@ -85,10 +81,10 @@ player.last_time = {[c.left_arrow] = 0,
                     [c.up_arrow] = 0,
                     [c.down_arrow] = 0}
 
-player.dashing = {[c.left_arrow] = false,
+--[[player.dashing = {[c.left_arrow] = false,
                   [c.right_arrow] = false,
                   [c.up_arrow] = false,
-                  [c.down_arrow] = false}
+                  [c.down_arrow] = false}]]
 
 enemy_table  = {}
 enemy_spawned = {}
@@ -257,29 +253,21 @@ end
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  print("px: " .. player.x, 0, 0, 7)
-  print("sx: " .. map_.sx, 45, 0, 7)
-  local map_right = map_.border.right + map_.sx - 120
-  local map_left = map_.border.left + map_.sx
-  print(map_right, 0, 6, 7)
-  --print("mem: ".. stat(0), 45, 6, 7)
-  --print("hp: ".. player.health, 45, 6, 7)
-  print(map_left, 45, 6, 7)
+  local debug_color = 7
+  print("px: " .. player.x, 0, 0, debug_color)
+  print("sx: " .. level.sx, 45, 0, debug_color)
 
-  print(#player.inventory, 45, 12, 7)
+  print("", 0, 6, debug_color)
+  print("mem: ".. stat(0), 45, 6, debug_color)
+
+  print(#player.inventory, 45, 12, debug_color)
   -- stat(33) = y stat(32) = x
-  -- print(costatus(game), 0, 12, 7)
-  -- if boss1 ~= nil then
-  --   print(boss1.health, 45, 12, 7)
-  -- else
-  --   print("dead", 45, 12, 7)
-  -- end
-
+  -- print(costatus(game), 0, 12, debug_color)
 end
 
 function bump(x, y)
-  local tx = flr((x - map_.sx) / 8)
-  local ty = flr((y - map_.sy) / 8)
+  local tx = flr((x - level.sx) / 8)
+  local ty = flr((y - level.sy) / 8)
   local map_id = mget(tx, ty)
 
   return fget(map_id, 0)
@@ -290,15 +278,37 @@ function bump_all(x, y)
 end
 
 function collision()
-  local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
-  local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
+  --local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
+  --local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
+  --local up_tempx = player.x + 5
+  --local up_tempy = player.y + 4
 
-  local bck_tempx = player.x + player.speed * sin(player.angle / 360)
-  local bck_tempy = player.y + player.speed * cos(player.angle / 360)
+  --local bck_tempx = player.x + player.speed * sin(player.angle / 360)
+  --local bck_tempy = player.y + player.speed * cos(player.angle / 360)
 
-  wall_fwd =  bump_all(fwd_tempx, fwd_tempy)
+  --[[pset(player.x + 3, player.y + 3, clr) --topleft
+  pset(player.x + 12, player.y + 3, clr) --topright
+  pset(player.x + 3, player.y + 12, clr) --bottomleft
+  pset(player.x + 12, player.y + 12, clr) --bottomright]]
 
-  wall_bck =  bump_all(bck_tempx, bck_tempy)
+  --[[topleft, topright, bottomleft, bottomright = {}, {}, {}, {}
+  topleft.x, topleft.y = player.x + 3, player.y + 3
+  topright.x, topright.y = player.x + 12, player.y + 3
+  bottomleft.x, bottomleft.y = player.x + 3, player.y + 12
+  bottomright.x, bottomright.y = player.x + 12, player.y + 12
+
+  local test = bump_all(topleft.x + 1, topleft.y + 1)
+  wall_up, wall_lft, wall_rgt, wall_dwn = test, test, test, test]]
+
+  --[[wall_up =  bump(topleft.x, topleft.y) or bump(topright.x, topright.y)
+  wall_lft = bump(topleft.x, topleft.y) or bump(bottomleft.x, bottomleft.y)
+  wall_rgt = bump(topright.x, topright.y) or bump(bottomright.x, bottomright.y)
+  wall_dwn = bump(bottomleft.x, bottomleft.y) or bump(bottomright.x, bottomright.y)]]
+
+  wall_up = bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) --done
+  wall_lft = bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) --done
+  wall_rgt = bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)
+  wall_dwn = bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) --done
 end
 
 function enemy_collision(e, p)
@@ -459,35 +469,42 @@ function kill_all_enemies()
 end
 
 function screentransaction()
-  local map_right = map_.border.right + map_.sx - 120
-  local map_left = map_.border.left + map_.sx
+  player.last_hit = time() - 0.5 --make player invulnerable so they dont get hit during transition
+  local map_right = level.border.right + level.sx - 120
+  local map_left = level.border.left + level.sx
 
   --when to transistion
-  if map_.sx < -78 and map_.sy == 0 then move_map = true end
+  --===========================================================
+  if level.sx < -78 and level.sy == 0 then move_map = true end
+  --===========================================================
 
-  --if player.x > 50 and map_right > 0 then
-    --map_.sx -= 1
-    --player.x -= 1
+  if level.sx - (player.x - 50) < level.sx then
+    wait.controls = true
+    level.sx -= 1
+    player.x -= 1
 
   --follow player if not all the way left, not all the way right, and player.x == 50
-  if map_right > 0 and (player.x > 50 or map_left < 0) and not move_map then
-    map_.sx = map_.sx + player.current_speed * sin((player.angle - player.turn) / 360)
+  elseif map_right > 0 and (player.x > 50 or map_left < 0) and not move_map then
+    --level.sx = level.sx + player.current_speed * sin((player.angle - player.turn) / 360)
+    wait.controls = false
     player.x = 50
+    if btn(c.left_arrow) and not wall_lft then level.sx += player.speed end
+    if btn(c.right_arrow) and not wall_rgt then level.sx -= player.speed end
   end
 
   --if hit transistion trigger from above, move the map to center on new level
   if move_map then
     if map_right > 0 then
-      map_.sx = flr(map_.sx) --reset so map lines up nicely
+      level.sx = flr(level.sx) --reset so map lines up nicely
       player.x -= 1 --move player sprite back along with
-      map_.sx -= 1 --moving map
+      level.sx -= 1 --moving map
       wait.controls = true --pause player controls
     else
       move_map = nil
       wait.controls = false --resume player controls
       screen_transaction = false --stop doing this functions checks
-      map_.sx = 120 - map_.border.right --make the new map bounds the new level
-      map_.border.left += 128
+      level.sx = 120 - level.border.right --make the new map bounds the new level
+      level.border.left += 128
     end
   end
 end
@@ -564,7 +581,7 @@ function draw_hud()
     invx = invx + 9
   end
   print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
-  rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color)
+  if player.shield > 0 then rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color) end
 end
 
 function draw_titlescreen()
@@ -648,16 +665,15 @@ function gameflow()
   -- start game
   seraph = {}
   seraph.brd_color = 12
-  seraph.text = "ready to get to work?"
+  seraph.text = "READY TO GET TO WORK?"
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
 
   titlescreen = true -- stop showing titlescreen
 
-
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "alright, i see a door. give mea minute and i'll try and openit."
+  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT."
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
@@ -687,13 +703,13 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "okay, that should do-"
+  seraph.text = "OKAY, THAT SHOULD DO-"
   drawdialog = true
   wait.controls = true
   yield()
 
   seraph = {}
-  seraph.text = "okay, that should do- wait    what's that?"
+  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
   drawdialog = true
   wait.controls = true
   yield()
@@ -706,7 +722,7 @@ function gameflow()
   yield()
 
   kill_all_enemies()
-  map_.border.right = 248
+  level.border.right = 248
   screen_transaction = true
 end
 
@@ -881,14 +897,10 @@ function _update()
       up arrow
     ]]
     if (btn(c.up_arrow)) then
-      if not cheats.noclip then
-        if not wall_fwd then
-          --dash_detect(c.up_arrow)
-          player.current_speed = player.speed
-        end
-      else
+      if not wall_up then
         --dash_detect(c.up_arrow)
-        player.current_speed = player.speed
+        --player.current_speed = player.speed
+        player.y -= player.speed
       end
     end --end up button
 
@@ -896,14 +908,10 @@ function _update()
       down arrow
     ]]
     if (btn(c.down_arrow)) then
-      if not cheats.noclip then
-        if not wall_bck then
-          --dash_detect(c.down_arrow)
-          player.current_speed = -player.speed
-        end
-      else
+      if not wall_dwn then
         --dash_detect(c.down_arrow)
-        player.current_speed = -player.speed
+        --player.current_speed = -player.speed
+        player.y += player.speed
       end
     end --end down button
 
@@ -911,21 +919,29 @@ function _update()
       left arrow
     ]]
     if (btn(c.left_arrow)) then
-      --dash_detect(c.left_arrow)
-      --player.angle -= player.turnspeed
-      player.turn = 85
-      player.current_speed = player.speed
+      if not wall_lft then
+        --dash_detect(c.left_arrow)
+        --player.angle -= player.turnspeed
+        --player.turn = 85
+        --player.current_speed = player.speed
+        player.x -= player.speed
+      end
     end --end left button
 
     --[[
       right arrow
     ]]
     if (btn(c.right_arrow)) then
-      --dash_detect(c.right_arrow)
-      --player.angle += player.turnspeed
-      player.turn = -85
-      player.current_speed = player.speed
+      if not wall_rgt then
+        --dash_detect(c.right_arrow)
+        --player.angle += player.turnspeed
+        --player.turn = -85
+        --player.current_speed = player.speed
+        player.x += player.speed
+      end
     end --end right button
+
+    player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   end -- end wait.controls
 
   --[[
@@ -935,8 +951,9 @@ function _update()
   --if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
   if (stat(34) == 1) then
-    if wait.controls and not wait.dialog_finish then
+    if wait.controls and not wait.dialog_finish and time() - (lastclick or time() - 2) > 1 then
       coresume(game)
+      lastclick = time()
     elseif not wait.controls then
       player.b_count = player.b_count + 1
       if player.b_count%player.bullet_spread == 0 then
@@ -945,6 +962,12 @@ function _update()
     end
   end --end z button
 
+  -- middle button
+  if (stat(34) == 4) and time() - (lastclick or time() - 2) > 0.5 then
+    coresume(game)
+    lastclick = time()
+  end
+
   --[[
     x button
   ]]
@@ -952,33 +975,19 @@ function _update()
     coresume(game)
   end --end x button
 
-  if not cheats.noclip then
-    player.x = player.x - player.current_speed * sin((player.angle - player.turn) / 360)
-    player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
-  --else
-    --map_.sx = map_.sx + player.current_speed * sin(player.angle / 360)
-    --map_.sy = map_.sy + player.current_speed * cos(player.angle / 360)
-    --player.x = 64
-    --player.y = 64
-  end
+  --player.x = player.x - player.current_speed * sin((player.angle - player.turn) / 360)
+  --player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
 
-  if screen_transaction then
-    screentransaction()
-  end
+  if screen_transaction then screentransaction() end
 
   player.current_speed = 0
   player.turn = 0
-  if player.x < -5 then player.x = -5 end
-  if player.y < -5 then player.y = -5 end
+  if player.x < -4 then player.x = -4 end
+  if player.y < -4 then player.y = -4 end
   if player.x > 116 then player.x = 116 end
   if player.y > 116 then player.y = 116 end
 
-  if not wait.controls then
-    player.angle = atan2(stat(32) - player.x - 3, stat(33) - player.y - 3) * -360 + 90
-  end
-  player.angle = player.angle % 360
-
-  if player.shield > 0 then
+  if player.shield > 0 and not wait.controls then
     player.shield = player.shield - .01
   elseif player.shield < 0 then
     player.shield = 0
@@ -991,7 +1000,7 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
-  map(0, 0, map_.sx, map_.sy, 128, 128)
+  map(0, 0, level.sx, level.sy, 128, 128)
 
   spr_r(player.sprite, player.x, player.y, player.angle, 2, 2)
 
@@ -1163,13 +1172,14 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
-  if (abs(time() - player.last_hit) < player.immune_time) then
+  if (abs(time() - player.last_hit) < 0.5) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
   end
 
   -- skilltree()
+
   debug() -- always on bottom
 end --end _draw()
 
@@ -1179,14 +1189,14 @@ __gfx__
 00000000000000000000000055555555555555555555555533777b3322aaa92252a99a256601106666011066660110666601106666c11c660000000000000000
 000000000000000000000000555555555555555555555555377bbbb32aa9999252a99a2566199166661991666619916666199166661991660000000000000000
 0000000000000000000000005555555555999a5999a5555537bbbbb32a99999252a99a2566199166661991666619916666199166661991660000000000000000
-0000000000000000000000005555555555aaa559aaaa55553bbbbbb329999992529aa92566199166661991666619916666199166661991660000000000000000
-00060000006000000000000055555555555555555555555537bbbbb32a999992529aa92500511500005115000051150000511500005115000000000000000000
-000660cc066000000000000055555555559a55599a59a55533bbbb3322999922522992250001100000c11c000c011000000110c0000110000000000000000000
-0006619916600000000000005555555555999a5aa55aaa555333333552222225555225550000000000c00c00c00000000000000c000000000000000000000000
-000661991660000000000000bb55555b555555555555555599555559000000005555555500000000000000000000000000000000000000000000000000000000
-00066199166000000000000053b555b555a5a99995559a5559955595000000005552255500000000000000000000000000000000000000000000000000000000
-000005115000000000000000553b55b555aa5aaaa55aaa5555999995000000005229922500000000000000000000000000000000000000000000000000000000
-000000110000000000000000553b55b555555555555555555559955500000000529aa92500000000000000000000000000000000000000000000000000000000
+0000600000060000000000005555555555aaa559aaaa55553bbbbbb329999992529aa92566199166661991666619916666199166661991660000000000000000
+0000660cc06600000000000055555555555555555555555537bbbbb32a999992529aa92500511500005115000051150000511500005115000000000000000000
+00006619916600000000000055555555559a55599a59a55533bbbb3322999922522992250001100000c11c000c011000000110c0000110000000000000000000
+0000661991660000000000005555555555999a5aa55aaa555333333552222225555225550000000000c00c00c00000000000000c000000000000000000000000
+000066199166000000000000bb55555b555555555555555599555559000000005555555500000000000000000000000000000000000000000000000000000000
+00000051150000000000000053b555b555a5a99995559a5559955595000000005552255500000000000000000000000000000000000000000000000000000000
+000000011000000000000000553b55b555aa5aaaa55aaa5555999995000000005229922500000000000000000000000000000000000000000000000000000000
+000000000000000000000000553b55b555555555555555555559955500000000529aa92500000000000000000000000000000000000000000000000000000000
 000000000000000000000000553b5b55555555999aa555555559995500000000529aa92500000000000000000000000000000000000000000000000000000000
 00000000000000000000000053bbbb55555555aaaa555555559959950000000052a99a2500000000000000000000000000000000000000000000000000000000
 0000000000000000000000003bb355b55555555555555555559555950000000052a99a2500000000000000000000000000000000000000000000000000000000
@@ -1310,11 +1320,11 @@ __gff__
 __map__
 3c060606060606060606063c3c3c3c2500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 3c03030303030303030303040503032500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-3c37033703030303130303141503032505000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-3c031603033c0313031303030303d30615000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-253216033c3c3c32130303030303c93c05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+3c37033703033203130303141503032505000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+3c031632323c3213031303030303d30615000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+253216323c3c3c32130303030303c93c05000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 06163216323c3232030405030303030715000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0613031303323232031415030303030705000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0613031332323232031415030303030705000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0622032203033203030303030303030803000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0603c303032a2b03030313030303031803000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0603ca03033a3b03032203130303030703000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
