@@ -255,7 +255,7 @@ function boss(startx, starty, sprite, level)
 
                  b.draw_healthbar()
                elseif b.level == 2 then
-                 if ((time() - b.shot_last) < 2) then
+                 if ((time() - b.shot_last) < 2) and flr(time()*50)%b.bullet_spread == 0 then
                    add(enemy_bullets, bullet(b.x, b.y, (b.shot_ang), 141, false))
                  end
                  b.draw_healthbar()
