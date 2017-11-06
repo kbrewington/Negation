@@ -16,7 +16,7 @@ player.turn = 0
 player.current_dash_speed = 0
 --player.dash_speed = 15
 --player.dash_threshold = {.05, .2}
-player.bullet_spread = 5
+player.fire_rate = 10
 player.health = 10
 player.max_health = 10
 player.immune_time = 2
@@ -98,10 +98,11 @@ boss_hit_anims = {}
 exploding_enemies = {}
 boss_table = {}
 dropped = {}
+shield_anims = {}
 
 highlighted = 10
 currently_selected = 1
-selection_set = {"speed", "health", "damage", "quit"}
+selection_set = {"speed", "health", "fire rate", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
 invalid = 0
@@ -134,12 +135,12 @@ end
 --[[
   enemy object
 ]]
-function enemy(spawn_x, spawn_y, type, time)
+function enemy(spawn_x, spawn_y, type, time_spwn)
   local e = {}
   e.x = spawn_x
   e.y = spawn_y
   e.speed = .35
-  e.time = time
+  e.time = time_spwn
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
@@ -149,7 +150,7 @@ function enemy(spawn_x, spawn_y, type, time)
   e.explode_distance = 15
   e.explode_wait = 15
   e.explode_step = 0
-  e.bullet_spread = 10
+  e.fire_rate = 5
   e.exploding = false
   e.dont_move = false
   e.sprite = 132
@@ -167,8 +168,8 @@ function enemy(spawn_x, spawn_y, type, time)
                     e.update_xy()
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    if flr(time()*100)%e.bullet_spread == 0 then
-                      add(enemy_bullets, bullet(e.x, e.y, e.angle, 133, false))
+                    if flr(time()*50)%e.fire_rate == 0 then
+                      shoot(e.x, e.y, e.angle, 133, false, false)
                     end
                   end
                 elseif type == "exploder" then
@@ -219,11 +220,11 @@ function boss(startx, starty, sprite, level)
   b.speed = .01
   b.angle = 0
   b.level = (level or 1)
-  b.shot_last = time()
+  b.shot_last = nil
   b.shot_ang = 0
   b.sprite = sprite
   b.bullet_speed = 2
-  b.bullet_spread = 7
+  b.fire_rate = 7
   b.destroyed_step = 0
   b.destroy_sequence = {135, 136, 135}
   b.destroy_anim_length = 30
@@ -242,8 +243,8 @@ function boss(startx, starty, sprite, level)
                if b.level == 1 then
                  b.angle = (b.angle+1)%360
                  for i=0,3 do
-                   if b.angle%b.bullet_spread == 0 then
-                     add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
+                   if b.angle%b.fire_rate == 0 then
+                     shoot(b.x, b.y, (b.angle + (90*i)), 130, false, true)
                    end
                  end
 
@@ -253,8 +254,9 @@ function boss(startx, starty, sprite, level)
 
                  b.draw_healthbar()
                elseif b.level == 2 then
-                 if ((time() - b.shot_last) < 2) and flr(time()*50)%b.bullet_spread == 0 then
-                   add(enemy_bullets, bullet(b.x, b.y, (b.shot_ang), 141, false))
+                 if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
+                   local ang = angle_btwn(player.x, player.y, b.x, b.y)
+                   shoot(b.x, b.y, ang, 141, false, true)
                  end
                  b.draw_healthbar()
                end
@@ -272,7 +274,7 @@ function debug()
   print("", 0, 6, debug_color)
   print("mem: ".. stat(0), 45, 6, debug_color)
 
-  print(#player.inventory, 45, 12, debug_color)
+  print(#enemy_bullets, 45, 12, debug_color)
   -- stat(33) = y stat(32) = x
   -- print(costatus(game), 0, 12, debug_color)
 end
@@ -446,7 +448,7 @@ end
 --[[
   shoot: create bullet objects and add them to the 'bullets' table
 ]]
-function shoot(x, y, a, spr, friendly)
+function shoot(x, y, a, spr, friendly, boss)
   if friendly then
     local offx = player.x + 5
     local offy = player.y + 5
@@ -454,8 +456,16 @@ function shoot(x, y, a, spr, friendly)
     offx = offx - 8*sin(ang / 360)
     offy = offy - 8*cos(ang / 360)
     add(player_bullets, bullet(offx, offy, ang, spr, friendly))
+  elseif boss then
+    local offx = x + 5
+    local offy = y + 5
+    offx = offx - 16*sin(a / 360)
+    offy = offy - 16*cos(a / 360)
+    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
   else
-    add(enemy_bullets, bullet(x, y, a, spr, friendly))
+    local offx = x - 8*sin(a / 360)
+    local offy = y - 8*cos(a / 360)
+    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
   end
 end
 
@@ -605,10 +615,8 @@ function draw_hud()
   print("sys",healthbar.tx-12, healthbar.ty, fnt_color)
   rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
   if player.health <= 1 and flr(time()*10000)%2==0 then
-    -- rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   elseif player.health > 1 then
-    -- rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   end
 
@@ -789,12 +797,12 @@ function skilltree()
     add(token_sprites, token_sprites[i])
   end
 
-  rectfill(0, 0, 127, 127, 0)
+  rectfill(-50, -50, 200, 200, 0)
   spr(token_sprites[flr(time()*8)%#token_sprites + 1], 20, 20, 2, 2)
   print(" - " .. player.tokens, 36, 26, 7)
 
   print("upgrade health - ".. player.tokens .." tokens ", 20, 52, 7)
-  print("upgrade damage - ".. player.tokens .." tokens ", 20, 44, 7)
+  print("upgrade fire rate - ".. player.tokens .." tokens ", 20, 44, 7)
   print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, 7)
   print("quit", 20, 68, 7)
 
@@ -802,7 +810,7 @@ function skilltree()
   if skills_selected[1] then
     print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, highlighted)
   elseif skills_selected[2] then
-    print("upgrade damage - ".. player.tokens .." tokens ", 20, 44, highlighted)
+    print("upgrade fire rate - ".. player.tokens .." tokens ", 20, 44, highlighted)
   elseif skills_selected[3] then
     print("upgrade health - ".. player.tokens .." tokens ", 20, 52, highlighted)
   elseif skills_selected[4] then
@@ -954,8 +962,8 @@ function _update()
         next_cost[currently_selected] = next_cost[currently_selected] + 1
         player.tokens = player.tokens - 1
         sfx(2, 1, 0)
-      elseif selection_set[currently_selected] == "damage" and player.tokens >= next_cost[currently_selected] then
-        --TODO==> implement this
+      elseif selection_set[currently_selected] == "fire rate" and player.tokens >= next_cost[currently_selected] then
+        player.fire_rate = player.fire_rate - 1
         next_cost[currently_selected] = next_cost[currently_selected] + 1
         player.tokens = player.tokens - 1
         sfx(2, 1, 0)
@@ -972,6 +980,12 @@ function _update()
     currently_selected = ((currently_selected+diff)%#skills_selected)
     if currently_selected == 0 then currently_selected = 4 end
     skills_selected[currently_selected] = true
+    if player.tokens == 0 then
+      for i=1,5 do
+        flip()
+      end
+      in_skilltree = false
+    end
     return
   end
 
@@ -1039,8 +1053,8 @@ function _update()
       lastclick = time()
     elseif not wait.controls then
       player.b_count = player.b_count + 1
-      if player.b_count%player.bullet_spread == 0 then
-        shoot(player.x, player.y, player.angle, 2, true)
+      if player.b_count%player.fire_rate == 0 then
+        shoot(player.x, player.y, player.angle, 2, true, false)
       end
     end
   end --end z button
@@ -1211,8 +1225,7 @@ function _draw()
         player.health = player.health - 1
         player.last_hit = time()
       else
-        local colors = {8, 9}
-        circ(b.x+8, b.y+8, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+        add(shield_anims, {b.x, b.y, 10})
       end
       del(enemy_bullets, b)
       b = nil
@@ -1229,6 +1242,14 @@ function _draw()
     end
   end
 
+  for s in all(shield_anims) do
+    local colors = {12, 13, 1}
+    s[3] = s[3]-1
+    circ(s[1]+8, s[2]+8, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+    if s[3] == 0 then
+      del(shield_anims, s)
+    end
+  end
 
   for b in all(boss_table) do
     spr(b.sprite, b.x, b.y, 2, 2)
