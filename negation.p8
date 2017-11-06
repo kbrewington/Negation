@@ -214,12 +214,15 @@ end
 --[[
   boss object
 ]]
-function boss(startx, starty, sprite)
+function boss(startx, starty, sprite, level)
   local b = {}
   b.x = startx
   b.y = starty
   b.speed = .01
   b.angle = 0
+  b.level = (level or 1)
+  b.shot_last = 0
+  b.shot_ang = 0
   b.sprite = sprite
   b.bullet_speed = 2
   b.bullet_spread = 7
@@ -228,24 +231,35 @@ function boss(startx, starty, sprite)
   b.destroy_anim_length = 30
   b.health = 50
   b.pattern = {90, 180, 270, 360}
+  b.draw_healthbar = function()
+                       --health bar
+                       if b.sprite == 128 then
+                         xoffset = 1
+                         b.full_health = 50
+                       end
+                       rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
+                       rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
+                     end
   b.update = function()
+               if b.level == 1 then
                  b.angle = (b.angle+1)%360
                  for i=0,3 do
                    if b.angle%b.bullet_spread == 0 then
                      add(enemy_bullets, bullet(b.x, b.y, (b.angle + (90*i)), 130, false))
                    end
-
-                   --health bar
-                   if b.sprite == 128 then
-                     xoffset = 1
-                     b.full_health = 50
-                   end
-                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
-                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
                  end
+
                  path = minimum_neighbor(b, player)
                  b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
                  b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
+
+                 b.draw_healthbar()
+               elseif b.level == 2 then
+                 if ((time() - b.shot_last) < 2) then
+                   add(enemy_bullets, bullet(b.x, b.y, (b.shot_ang), 141, false))
+                 end
+                 b.draw_healthbar()
+               end
              end
   return b
 end
@@ -561,11 +575,10 @@ function draw_hud()
   healthbar.tx = topx + 15
   healthbar.ty = topy + 3
   healthbar.bx = healthbar.tx + (player.health * 5)
+  healthbar.fx = healthbar.tx + (player.max_health * 5)
   healthbar.by = healthbar.ty + 4
-  if player.health == player.max_health then
+  if player.health >= 5 then
     healthbar.color = 11
-  elseif player.health >= 5 then
-    healthbar.color = 3
   elseif player.health >= 3 then
     healthbar.color = 9
   else
@@ -592,9 +605,12 @@ function draw_hud()
   pset(btmx, topy, brd_color)
 
   print("sys",healthbar.tx-12, healthbar.ty, fnt_color)
+  rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
   if player.health <= 1 and flr(time()*10000)%2==0 then
+    -- rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   elseif player.health > 1 then
+    -- rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   end
 
@@ -742,7 +758,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  boss1 = boss(56, 56, 128)
+  boss1 = boss(56, 56, 128, 2)
   drawboss = true
   yield()
 
@@ -1157,6 +1173,8 @@ function _draw()
     if drawboss and b~=nil then
       if boss_collision(boss1, b) then
         boss1.health -= 1
+        boss1.shot_last = time()
+        boss1.shot_ang = angle_btwn(player.x+5, player.y+5, boss1.x, boss1.y)
         del(player_bullets, b)
         add(boss_hit_anims, b)
         if (boss1.health <= 0) then
