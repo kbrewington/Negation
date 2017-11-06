@@ -96,6 +96,7 @@ destroyed_bosses = {}
 destroyed_enemies = {}
 boss_hit_anims = {}
 exploding_enemies = {}
+boss_table = {}
 dropped = {}
 
 highlighted = 10
@@ -149,7 +150,6 @@ function enemy(spawn_x, spawn_y, type, time)
   e.explode_wait = 15
   e.explode_step = 0
   e.bullet_spread = 10
-  e.bullet_count = 0
   e.exploding = false
   e.dont_move = false
   e.sprite = 132
@@ -167,10 +167,8 @@ function enemy(spawn_x, spawn_y, type, time)
                     e.update_xy()
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    e.bullet_count = e.bullet_count + 1
-                    if e.bullet_count%e.bullet_spread == 0 then
+                    if flr(time()*100)%e.bullet_spread == 0 then
                       add(enemy_bullets, bullet(e.x, e.y, e.angle, 133, false))
-                      e.bullet_count = e.bullet_count + 1
                     end
                   end
                 elseif type == "exploder" then
@@ -221,7 +219,7 @@ function boss(startx, starty, sprite, level)
   b.speed = .01
   b.angle = 0
   b.level = (level or 1)
-  b.shot_last = 0
+  b.shot_last = time()
   b.shot_ang = 0
   b.sprite = sprite
   b.bullet_speed = 2
@@ -500,10 +498,10 @@ function kill_all_enemies()
     del(enemy_spawned, e)
   end
 
-  if drawboss then
-    drawboss = false
-    add(destroyed_bosses, boss1)
-    boss1 = nil
+  for b in all(boss_table) do
+    add(destroyed_bosses, b)
+    del(boss_table, b)
+    b = nil
   end
 end
 
@@ -631,7 +629,18 @@ function draw_titlescreen()
   if title.title_step%title.width == 0 then
     title.row = title.row+1
   end
-
+  -- local nx = 0
+  -- local ny = 0
+  -- local nc = 0
+  -- for i=1,title.width do
+  --   nx = title.startx+(title.title_step%title.width)
+  --   ny = title.starty+title.row
+  --   nc = title.text[title.row][(title.title_step%title.width)+1]
+  --   title.drawn.x[#title.drawn.x+1] = nx
+  --   title.drawn.y[#title.drawn.y+1] = ny
+  --   title.drawn.colors[#title.drawn.colors+1] = nc
+  --   title.title_step = i
+  -- end
   local nx = title.startx+(title.title_step%title.width)
   local ny = title.starty+title.row
   local nc = title.text[title.row][(title.title_step%title.width)+1]
@@ -662,6 +671,11 @@ function dialog_seraph(dialog)
 
   if not titlescreen then
     draw_titlescreen()
+  else
+    title.drawn.x = {} -- free up this memory
+    title.drawn.y = {}
+    title.drawn.colors = {}
+    title.title_step = 1
   end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
@@ -758,8 +772,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  boss1 = boss(56, 56, 128, 2)
-  drawboss = true
+  add(boss_table, boss(56, 56, 128, 2))
   yield()
 
   kill_all_enemies()
@@ -1124,9 +1137,6 @@ function _draw()
     end
   end
 
-  -- for d in all(destroyed_enemies) do
-  --   step_destroy_animation(d)
-  -- end
   loop_func(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
@@ -1170,22 +1180,24 @@ function _draw()
       b.move()
     end
 
-    if drawboss and b~=nil then
-      if boss_collision(boss1, b) then
-        boss1.health -= 1
-        boss1.shot_last = time()
-        boss1.shot_ang = angle_btwn(player.x+5, player.y+5, boss1.x, boss1.y)
-        del(player_bullets, b)
-        add(boss_hit_anims, b)
-        if (boss1.health <= 0) then
-          drawboss = false
-          add(destroyed_bosses, boss1)
-          coin.x = boss1.x
-          coin.y = boss1.y
-          boss1 = nil
-          coresume(game)
+    if b~=nil then
+      for bos in all(boss_table) do
+        if boss_collision(bos, b) then
+          bos.health -= 1
+          bos.shot_last = time()
+          bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
+          del(player_bullets, b)
+          add(boss_hit_anims, b)
+          if (bos.health <= 0) then
+            add(destroyed_bosses, bos)
+            del(boss_table, bos)
+            coin.x = bos.x
+            coin.y = bos.y
+            bos = nil
+            coresume(game)
+          end
+          break
         end
-        break
       end
     end
   end
@@ -1217,18 +1229,14 @@ function _draw()
     end
   end
 
-  if drawboss then
-    spr(boss1.sprite, boss1.x, boss1.y, 2, 2)
-    boss1.update()
+
+  for b in all(boss_table) do
+    spr(b.sprite, b.x, b.y, 2, 2)
+    b.update()
   end
 
-  -- for b in all(boss_hit_anims) do
-  --   boss_hit_animation(b)
-  -- end
   loop_func(boss_hit_anims, boss_hit_animation)
-  -- for b in all(destroyed_bosses) do
-  --   step_boss_destroyed_animation(b)
-  -- end
+
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
