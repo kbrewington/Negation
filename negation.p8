@@ -18,6 +18,7 @@ player.current_dash_speed = 0
 --player.dash_threshold = {.05, .2}
 player.bullet_spread = 5
 player.health = 10
+player.max_health = 10
 player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
@@ -81,10 +82,11 @@ player.last_time = {[c.left_arrow] = 0,
                     [c.up_arrow] = 0,
                     [c.down_arrow] = 0}
 
---[[player.dashing = {[c.left_arrow] = false,
-                  [c.right_arrow] = false,
-                  [c.up_arrow] = false,
-                  [c.down_arrow] = false}]]
+coin = {}
+coin.dropped = false
+coin.x = nil
+coin.y = nil
+coin.sprites = {64, 66, 68, 70, 72}
 
 enemy_table  = {}
 enemy_spawned = {}
@@ -98,7 +100,10 @@ dropped = {}
 
 highlighted = 10
 currently_selected = 1
-skills_selected = {true, false, false}
+selection_set = {"speed", "health", "damage", "quit"}
+next_cost = {1, 1, 1}
+skills_selected = {true, false, false, false}
+invalid = 0
 
 -- define some constants
 pi = 3.14159265359
@@ -319,6 +324,9 @@ function bullet_collision(sp, b)
 end
 
 function boss_collision(sp, b)
+  if b == player then
+    return (b.x > sp.x+16 or b.x+8 < sp.x or b.y > sp.y+16 or b.y+8 < sp.y)==false
+  end
   return (b.x > sp.x+16 or b.x+4 < sp.x or b.y > sp.y+16 or b.y+4 < sp.y)==false
 end
 
@@ -554,7 +562,7 @@ function draw_hud()
   healthbar.ty = topy + 3
   healthbar.bx = healthbar.tx + (player.health * 5)
   healthbar.by = healthbar.ty + 4
-  if player.health == 10 then
+  if player.health == player.max_health then
     healthbar.color = 11
   elseif player.health >= 5 then
     healthbar.color = 3
@@ -747,7 +755,6 @@ end
     skill-tree menu (needs to be called continuously from draw to work)
 ]]
 function skilltree()
-  in_skilltree = true
   local token_sprites = {64, 66, 68, 70, 72}
   for i=#token_sprites,0,-1 do -- reverse list and add it to token_sprites animation
     add(token_sprites, token_sprites[i])
@@ -757,17 +764,20 @@ function skilltree()
   spr(token_sprites[flr(time()*8)%#token_sprites + 1], 20, 20, 2, 2)
   print(" - " .. player.tokens, 36, 26, 7)
 
-  print("upgrade health ", 20, 52, 7)
-  print("upgrade damage ", 20, 44, 7)
-  print("upgrade speed ", 20, 36, 7)
+  print("upgrade health - ".. player.tokens .." tokens ", 20, 52, 7)
+  print("upgrade damage - ".. player.tokens .." tokens ", 20, 44, 7)
+  print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, 7)
+  print("quit", 20, 68, 7)
 
 
   if skills_selected[1] then
-    print("upgrade speed ", 20, 36, highlighted)
+    print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, highlighted)
   elseif skills_selected[2] then
-    print("upgrade damage ", 20, 44, highlighted)
+    print("upgrade damage - ".. player.tokens .." tokens ", 20, 44, highlighted)
   elseif skills_selected[3] then
-    print("upgrade health ", 20, 52, highlighted)
+    print("upgrade health - ".. player.tokens .." tokens ", 20, 52, highlighted)
+  elseif skills_selected[4] then
+    print("quit", 20, 68, highlighted)
   end
 end
 
@@ -829,6 +839,7 @@ function step_boss_destroyed_animation(b)
     end
   else
     del(destroyed_bosses, b)
+    coin.dropped = true
   end
 
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
@@ -901,12 +912,38 @@ function _update()
     local diff = 0
     if btnp((c.up_arrow)) then
       diff = -1
+      sfx(4, 1, 0)
     elseif btnp(c.down_arrow) then
       diff = 1
+      sfx(4, 1, 0)
+    elseif btnp(c.x_button) then
+      if selection_set[currently_selected] == "quit" then
+        in_skilltree = false
+        sfx(2, 1, 0)
+      elseif selection_set[currently_selected] == "health" and player.tokens >= next_cost[currently_selected] then
+        player.max_health = player.max_health + 1
+        next_cost[currently_selected] = next_cost[currently_selected] + 1
+        player.tokens = player.tokens - 1
+        sfx(2, 1, 0)
+      elseif selection_set[currently_selected] == "damage" and player.tokens >= next_cost[currently_selected] then
+        --TODO==> implement this
+        next_cost[currently_selected] = next_cost[currently_selected] + 1
+        player.tokens = player.tokens - 1
+        sfx(2, 1, 0)
+      elseif selection_set[currently_selected] == "speed" and player.tokens >= next_cost[currently_selected] then
+        player.speed = player.speed + .5
+        next_cost[currently_selected] = next_cost[currently_selected] + 1
+        player.tokens = player.tokens - 1
+        sfx(2, 1, 0)
+      else
+        invalid = time()
+        sfx(3, 1, 0)
+      end
     end
     currently_selected = ((currently_selected+diff)%#skills_selected)
-    if currently_selected == 0 then currently_selected = 3 end
+    if currently_selected == 0 then currently_selected = 4 end
     skills_selected[currently_selected] = true
+    return
   end
 
   if not wait.controls then
@@ -1011,7 +1048,6 @@ function _update()
   end
 end --end _update()
 
-
 --------------------------------------------------------------------------------
 --------------------------------- draw buffer ----------------------------------
 --------------------------------------------------------------------------------
@@ -1080,7 +1116,7 @@ function _draw()
   for d in all(dropped) do
 
     if enemy_collision(d) then
-      if d.type == "heart" and player.health < 10 then
+      if d.type == "heart" and player.health < player.max_health then
         player.health = player.health+1
         del(dropped, d)
       elseif d.type == "shield" then
@@ -1126,6 +1162,8 @@ function _draw()
         if (boss1.health <= 0) then
           drawboss = false
           add(destroyed_bosses, boss1)
+          coin.x = boss1.x
+          coin.y = boss1.y
           boss1 = nil
           coresume(game)
         end
@@ -1186,16 +1224,26 @@ function _draw()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
+  if coin.dropped then
+     spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x, coin.y, 2, 2)
+     if boss_collision(coin, player) then
+       player.tokens = player.tokens + 1
+       coin.dropped = false
+       in_skilltree = true
+     end
+  end
 
   if drawdialog then dialog_seraph(seraph) end
 
-  if (abs(time() - player.last_hit) < 0.5) then
+  if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
   end
 
-  -- skilltree()
+  if in_skilltree then
+    skilltree()
+  end
 
   debug() -- always on bottom
 end --end _draw()
@@ -1370,9 +1418,9 @@ __map__
 __sfx__
 000100000000000000000000000000000000000000006000190100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0010000024050180001d0001c0001c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000001c0500f0501a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000001c0501c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1433,7 +1481,7 @@ __sfx__
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
-04 41424344
+07 41020304
 00 41424344
 00 41424344
 00 41424344
