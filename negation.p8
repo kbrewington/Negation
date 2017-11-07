@@ -141,6 +141,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.y = spawn_y
   e.speed = .35
   e.time = time_spwn
+  e.b_count = 0
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
@@ -150,7 +151,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.explode_distance = 15
   e.explode_wait = 15
   e.explode_step = 0
-  e.fire_rate = 5
+  e.fire_rate = 10
   e.exploding = false
   e.dont_move = false
   e.sprite = 132
@@ -168,7 +169,8 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
                     e.update_xy()
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    if flr(time()*50)%e.fire_rate == 0 then
+                    e.b_count = e.b_count + 1
+                    if e.b_count%e.fire_rate == 0 then
                       shoot(e.x, e.y, e.angle, 133, false, false)
                     end
                   end
@@ -597,7 +599,7 @@ function draw_hud()
   local fnt_color = 6
   local topx = 1
   local topy = 112
-  local btmx = 126
+  local btmx = 70--126
   local btmy = 126
   local healthbar = {}
   healthbar.tx = topx + 15
@@ -614,8 +616,8 @@ function draw_hud()
   end
 
   local shield = {}
-  shield.tx = healthbar.tx+12
-  shield.ty = healthbar.ty+6
+  shield.tx = healthbar.tx
+  shield.ty = healthbar.ty
   shield.bx = shield.tx + (player.shield * 5)
   shield.by = shield.ty + 4
   shield.color = 12
@@ -640,14 +642,14 @@ function draw_hud()
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   end
 
-  print("inv",healthbar.tx+55, healthbar.ty+6, fnt_color)
-  local invx = healthbar.tx+67
+  print("inv",healthbar.tx-12--[[+55]], healthbar.ty+6, fnt_color)
+  local invx = healthbar.tx--+67
   local invy = healthbar.ty+5
   for sp in all(player.inventory) do
     spr(sp, invx, invy)
     invx = invx + 9
   end
-  print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
+  -- print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
   if player.shield > 0 then rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color) end
 end
 
@@ -1106,8 +1108,18 @@ function _update()
   end --end z button
 
   -- middle button
-  if (stat(34) == 4) and time() - (lastclick or time() - 2) > 0.5 then
-    coresume(game)
+  if (stat(34) == 4) and time() - (lastclick or time() - 2) > 0.25 then -- cycle inventory
+    local temp = 0
+    for i=1,#player.inventory do
+      if i == 1 then
+        temp = player.inventory[i]
+      elseif i == #player.inventory then
+        player.inventory[i] = temp
+        break
+      end
+      player.inventory[i] = player.inventory[i+1]
+    end
+    -- coresume(game)
     lastclick = time()
   end
 
@@ -1184,10 +1196,14 @@ function _draw()
 
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) and player.shield == 0 then
-        player.health = player.health - 1
-        sfx(2,2)
-        player.last_hit = time()
+      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+        if player.shield <= 0 then
+          player.health = player.health - 1
+          sfx(2,2)
+          player.last_hit = time()
+        else
+          player.shield = player.shield - .15
+        end
       end
 
       if e.exploding and flr(time()*500)%2==0 then
@@ -1205,10 +1221,14 @@ function _draw()
 
   for e in all(exploding_enemies) do
     if step_explode_enemy(e) then
-      if distance(e, player) <= 15 and ((time() - player.last_hit) > player.immune_time) and player.shield == 0 then
-        player.health = player.health - 1
+      if distance(e, player) <= 15 and ((time() - player.last_hit) > player.immune_time) then
+        if player.shield <= 0 then
+          player.health = player.health - 1
           sfx(2,2)
-        player.last_hit = time()
+          player.last_hit = time()
+        else
+          player.shield = player.shield - .15
+        end
       end
       del(enemy_spawned, e)
       del(exploding_enemies, e)
@@ -1293,12 +1313,13 @@ function _draw()
     delete_offscreen(enemy_bullets, b)
 
     if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
-      if player.shield == 0 then
+      if player.shield <= 0 then
         player.health = player.health - 1
         sfx(2,2)
         player.last_hit = time()
       else
         add(shield_anims, {b.x, b.y, 10})
+        player.shield = player.shield - .15
       end
       del(enemy_bullets, b)
       b = nil
@@ -1341,7 +1362,7 @@ function _draw()
 
   spr(96, stat(32) - 3, stat(33) - 3)
 
-  --draw_hud()
+  draw_hud()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
@@ -1508,7 +1529,7 @@ feefefefefefefefefefefefefefefff3c060606060606060606063c3c3c3c250000000000000000
 fe0303030303030303030303030303ff3c030303030303030303030405030325000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 fe0303030303030303030303030303ff3c370337030332031303031415030325050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 fe030303cefdfdcf03030303030303ff3c031632323c3213031303030303d306150000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe320303cdfbfbfc03030303030303ff253216323c3c3c32130303030303c93c050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe030303cdfbfbfc03030303030303ff253216323c3c3c32130303030303c93c050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 fe030303deddfbfc03030303030303cedd163216323c32320304050303030307150000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 fe03030303cdfbfc03030303030303cddd130313323232320314150303030307050000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 fe03030303deeddf03030303030303cddd220322030332030303030303030308030000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
