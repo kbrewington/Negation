@@ -51,6 +51,7 @@ c.x_button = 5
 
 title = {}
 title.drawn = nil
+title.init = nil
 title.startx = 23
 title.starty = 50
 title.text = {   "14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14",
@@ -751,11 +752,17 @@ function draw_titlescreen()
 
   for i=1,#title.drawn do
     for j=1,#title.drawn[i] do
-      pset(j+title.startx, i+title.starty, title.drawn[i][j])
+      if title.init > (flr(time()) - 1) then
+        if title.drawn[i][j] ~= 0 then
+          pset(j+title.startx, i+title.starty, (title.drawn[i][j]+(flr(time()*(i*5))%15)))
+        end
+      else
+        pset(j+title.startx, i+title.starty, (title.drawn[i][j]))
+      end
     end
   end
 
-  print("press \x8e/\x97 to start", 20, 100, flr(time()*10)%15+1)
+  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
 
 end
 
@@ -1078,7 +1085,7 @@ function _init()
   poke(0x5f2d, 1)
 
   player.last_hit = time() - player.immune_time
-
+  title.init = time()
   game = cocreate(gameflow)
   coresume(game)
 end --end _init()
