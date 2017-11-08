@@ -204,13 +204,13 @@ end
 --[[
   boss object
 ]]
-function boss(startx, starty, sprite)
+function boss(startx, starty, sprite, lvl)
   local b = {}
   b.x = startx
   b.y = starty
   b.speed = .01
   b.angle = 0
-  --b.level = (level or 1)
+  b.level = lvl or 1
   b.shot_last = nil
   b.shot_ang = 0
   b.sprite = sprite
@@ -231,8 +231,7 @@ function boss(startx, starty, sprite)
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
            end
   b.update = function()
-           --if level.lvl == 1 then
-           if b.sprite == 128 then
+           if b.level == 1 then
              b.angle = (b.angle+1)%360
              for i=0,3 do
                if b.angle%b.fire_rate == 0 then
@@ -245,7 +244,7 @@ function boss(startx, starty, sprite)
              b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
 
              --b.draw_healthbar()
-           elseif b.sprite == 139 then
+           elseif b.level == 2 then
              if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
                local ang = angle_btwn(player.x, player.y, b.x, b.y)
                shoot(b.x, b.y, ang, 141, false, true)
@@ -858,7 +857,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(56, 56, 128))
+  add(boss_table, boss(56, 56, 128, 1))
   yield()
 
   kill_all_enemies()
@@ -872,7 +871,7 @@ function gameflow()
   wait.controls = false
   yield()
 
-  add(boss_table, boss(56, 56, 139))
+  add(boss_table, boss(56, 56, 139, 2))
   yield()
 
   kill_all_enemies()
