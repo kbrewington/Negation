@@ -477,6 +477,14 @@ end
 
 function spawnenemies()
   for enemy in all(enemy_table) do
+    if enemy.x == nil then
+      -- if not within player.x 20?
+      -- if not bump
+      -- while loop?
+    end
+    if enemy.y == nil then
+
+    end
     if time() - wait.start_time >= enemy.time then
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -484,7 +492,7 @@ function spawnenemies()
   end
 
   if #enemy_table == 0 then
-    spawn_enmies = false
+    spawn_enemies = false
     if not wait.timer then detect_killed_enemies = true end
   end
 end
@@ -827,7 +835,7 @@ function gameflow()
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
 
-  -- add list of enemies to spawn_enmies
+  -- add list of enemies to enemy_table
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
   -- add(enemy_table, enemy(100, 100, "exploder", 4))
   -- add(enemy_table, enemy(50, 50, "basic", 4))
