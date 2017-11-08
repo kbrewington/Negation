@@ -135,7 +135,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  e.drop_prob = 100--%
+  e.drop_prob = 10--%
   e.shoot_distance = 50
   e.explode_distance = 15
   e.explode_wait = 15
@@ -477,14 +477,6 @@ end
 
 function spawnenemies()
   for enemy in all(enemy_table) do
-    if enemy.x == nil then
-      -- if not within player.x 20?
-      -- if not bump
-      -- while loop?
-    end
-    if enemy.y == nil then
-
-    end
     if time() - wait.start_time >= enemy.time then
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -492,7 +484,7 @@ function spawnenemies()
   end
 
   if #enemy_table == 0 then
-    spawn_enemies = false
+    spawn_enmies = false
     if not wait.timer then detect_killed_enemies = true end
   end
 end
@@ -789,7 +781,7 @@ function fill_enemy_table(level, lvl_timer)
   local types = {"shooter", "basic", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(2))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
   end
 end
 
@@ -835,7 +827,7 @@ function gameflow()
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
 
-  -- add list of enemies to enemy_table
+  -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
   -- add(enemy_table, enemy(100, 100, "exploder", 4))
   -- add(enemy_table, enemy(50, 50, "basic", 4))
@@ -1438,9 +1430,12 @@ function _draw()
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
-    print("game over", 48, 60, 8)
+    titlescreen = false
+    player.health = player.max_health
+    _init()
+    -- print("game over", 48, 60, 8)
     sfx(9,1)--this doesn't fire because stop() activates immediately.
-    stop()
+    -- stop()
   end
 
   spr(96, stat(32) - 3, stat(33) - 3)
