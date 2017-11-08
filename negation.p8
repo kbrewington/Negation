@@ -51,20 +51,19 @@ c.x_button = 5
 
 title = {}
 title.drawn = nil
-title.startx = 10
-title.starty = 0
-
-                --  "14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14",
-                --  "14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14",
-                --  "14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14",
-                --  "14, 1,14,14, 1, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0, 0, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14,14, 1, 1,14,14, 1,14",
-                --  "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
-                --  "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0, 0, 14, 1,14, 0,14, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
-                --  "14, 1,14, 0, 0,14, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0,14, 1, 1, 1,14",
-                --  "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
-                --  "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14,14,14, 1,14,14,14, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
-                --  "14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14",
-                --  "14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14"}
+title.startx = 23
+title.starty = 50
+title.text = {   "14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14",
+                 "14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14",
+                 "14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14",
+                 "14, 1,14,14, 1, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0, 0, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14,14, 1, 1,14,14, 1,14",
+                 "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
+                 "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0, 0, 14, 1,14, 0,14, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
+                 "14, 1,14, 0, 0,14, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0,14, 1, 1, 1,14",
+                 "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
+                 "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14,14,14, 1,14,14,14, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
+                 "14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14",
+                 "14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14"}
 
 
 player.last_time = {[c.left_arrow] = 0,
@@ -96,6 +95,7 @@ selection_set = {"speed", "health", "fire rate", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
 invalid = 0
+titlescreen = nil
 
 -- define some constants
 pi = 3.14159265359
@@ -284,7 +284,7 @@ function debug()
   print("", 45, 12, debug_color)
 
   print("", 0, 18, debug_color)
-  print("", 45, 18, debug_color)
+  print(#enemy_table, 45, 18, debug_color)
 end
 
 function bump(x, y)
@@ -748,27 +748,21 @@ function draw_titlescreen()
     end
   end
 
+  print("press \x8e/\x97 to start", 20, 100, flr(time()*10)%15+1)
+
 end
 
 --[[
   print seraph dialog
 ]]
 function dialog_seraph(dialog)
+
   wait.dialog_finish = true
 
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
   local d = dialog.text
-
-  --[[if not titlescreen then
-    draw_titlescreen()
-  else
-    title.drawn.x = {} -- free up this memory
-    title.drawn.y = {}
-    title.drawn.colors = {}
-    title.title_step = 1
-  end]]
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -806,6 +800,16 @@ function dialog_seraph(dialog)
 
   --print("z/x to continue", 69, 123, 7)
   wait.dialog_finish = false
+
+end
+
+
+function fill_enemy_table(level, lvl_timer)
+  local types = {"shooter", "basic", "exploder"}
+  local baseline = 20
+  for i=1,(baseline*level) do
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(2))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
+  end
 end
 
 function gameflow()
@@ -852,15 +856,17 @@ function gameflow()
 
   -- add list of enemies to enemy_table
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "exploder", 4))
-  add(enemy_table, enemy(50, 50, "basic", 4))
+  -- add(enemy_table, enemy(100, 100, "exploder", 4))
+  -- add(enemy_table, enemy(50, 50, "basic", 4))
+  --
+  -- add(enemy_table, enemy(100, 100, "shooter", 5))
+  -- add(enemy_table, enemy(50, 50, "exploder", 5))
+  --
+  -- add(enemy_table, enemy(100, 100, "shooter", 6))
+  -- add(enemy_table, enemy(50, 50, "basic", 6))
+  -- wait.end_time = 65 -- how long the timer should run for in seconds
 
-  add(enemy_table, enemy(100, 100, "shooter", 5))
-  add(enemy_table, enemy(50, 50, "exploder", 5))
-
-  add(enemy_table, enemy(100, 100, "shooter", 6))
-  add(enemy_table, enemy(50, 50, "basic", 6))
-
+  fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
   wait.end_time = 65 -- how long the timer should run for in seconds
@@ -1076,6 +1082,13 @@ function _update()
   collision()
   collide_all_enemies()
 
+  if not titlescreen then
+    if btnp(c.x_button) or btnp(c.z_button) then
+      titlescreen = true
+    end
+    return
+  end
+
   if in_skilltree then
     skills_selected[currently_selected] = false
     local diff = 0
@@ -1179,7 +1192,7 @@ function _update()
     z button
     -- shoot for now, this can be changed later
   ]]
-  --if (btn(c.z_button)) then
+  -- if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
   if (stat(34) == 1) then
     if drawdialog and not wait.dialog_finish and time() - (lastclick or time() - 2) > 1 then
@@ -1273,6 +1286,12 @@ end --end _update()
 function _draw()
   cls()
   map(0, 0, level.sx, level.sy, 128, 128)
+
+  if not titlescreen then
+    draw_titlescreen()
+    return
+  end
+
 
   if level_sprites ~= nil then
     palt(5, true)
