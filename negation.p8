@@ -4,6 +4,7 @@ __lua__
 --------------------------------------------------------------------------------
 --------------------------------- global variables  ----------------------------
 --------------------------------------------------------------------------------
+--tri gendered pyrofox
 scrollast = 0
 player = {}
 player.sprite = 0
@@ -151,8 +152,8 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
-                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xFFFF)
-                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xFFFF)
+                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xffff)
+                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xffff)
                 end
   e.move = function()
                 if type == "shooter" then
@@ -434,8 +435,8 @@ function minimum_neighbor(start, goal)
   map.y = 120
   local minimum_dist = inf
   local min_node = start
-    for i=0xFFFF,1 do
-      for j=0xFFFF,1 do
+    for i=0xffff,1 do
+      for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
         if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
@@ -617,7 +618,7 @@ function levelchange()
   if flr(level.sx) == -215 and level.sy == 0 then move_map = true end
   --===========================================================
 
-  --TODO add map centering on player in the beginning
+  --todo add map centering on player in the beginning
 
   if btn(c.left_arrow) and not wall_lft and not move_map and map_left < 0 and player.x < farx then
     level.sx += player.speed
@@ -843,7 +844,7 @@ function gameflow()
   seraph = {}
 
   seraph.brd_color = 12
-  seraph.text = "READY TO GET TO WORK?"
+  seraph.text = "ready to get to work?"
   music(11,1)
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
@@ -872,7 +873,7 @@ function gameflow()
   titlescreen = true -- stop showing titlescreen
 
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT."
+  seraph.text = "alright, i see a door. give mea minute and i'll try and openit."
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
@@ -904,7 +905,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
+  seraph.text = "okay, that should do- wait    what's that?"
   drawdialog = true
   wait.controls = true
   yield()
@@ -943,7 +944,7 @@ end
 ]]
 function skilltree()
   local token_sprites = {64, 66, 68, 70, 72}
-  for i=#token_sprites,0,0xFFFF do -- reverse list and add it to token_sprites animation
+  for i=#token_sprites,0,0xffff do -- reverse list and add it to token_sprites animation
     add(token_sprites, token_sprites[i])
   end
 
@@ -1011,8 +1012,8 @@ end
 ]]
 function step_boss_destroyed_animation(b)
   local s = 1 s1 = 1
-  if flr(rnd(10))%2 == 0 then s = 0xFFFF end
-  if flr(rnd(10))%2 == 0 then s1 = 0xFFFF end
+  if flr(rnd(10))%2 == 0 then s = 0xffff end
+  if flr(rnd(10))%2 == 0 then s1 = 0xffff end
   if b.destroyed_step <= b.destroy_anim_length then
     if b.destroyed_step < flr(b.destroy_anim_length/3) then
       spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
@@ -1117,7 +1118,7 @@ function _update()
     skills_selected[currently_selected] = false
     local diff = 0
     if btnp((c.up_arrow)) then
-      diff = 0xFFFF
+      diff = 0xffff
       sfx(4, 1, 0)
     elseif btnp(c.down_arrow) then
       diff = 1
@@ -1325,7 +1326,7 @@ function _draw()
       local y = level_sprites[i+2] + level.sy
       --spr_r(level_sprites[i], level_sprites[i+1] + level.sx, level_sprites[i+2] + level.sy, level_sprites[i+3], 1, 1)
       spr(level_sprites[i], x, y)
-      --if x < 128 then del(level_sprites, ) end TODO make this delete offscreen sprites
+      --if x < 128 then del(level_sprites, ) end todo make this delete offscreen sprites
     end
   end
   palt()
