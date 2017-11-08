@@ -273,7 +273,7 @@ function debug()
   print("", 45, 12, debug_color)
 
   print("", 0, 18, debug_color)
-  print("", 45, 18, debug_color)
+  print(#enemy_table, 45, 18, debug_color)
 end
 
 function bump(x, y)
@@ -776,6 +776,15 @@ function dialog_seraph(dialog)
 
 end
 
+
+function fill_enemy_table(level, lvl_timer)
+  local types = {"shooter", "basic", "exploder"}
+  local baseline = 20
+  for i=1,(baseline*level) do
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(2))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
+  end
+end
+
 function gameflow()
   -- start game
   seraph = {}
@@ -820,15 +829,17 @@ function gameflow()
 
   -- add list of enemies to spawn_enmies
   --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "exploder", 4))
-  add(enemy_table, enemy(50, 50, "basic", 4))
+  -- add(enemy_table, enemy(100, 100, "exploder", 4))
+  -- add(enemy_table, enemy(50, 50, "basic", 4))
+  --
+  -- add(enemy_table, enemy(100, 100, "shooter", 5))
+  -- add(enemy_table, enemy(50, 50, "exploder", 5))
+  --
+  -- add(enemy_table, enemy(100, 100, "shooter", 6))
+  -- add(enemy_table, enemy(50, 50, "basic", 6))
+  -- wait.end_time = 65 -- how long the timer should run for in seconds
 
-  add(enemy_table, enemy(100, 100, "shooter", 5))
-  add(enemy_table, enemy(50, 50, "exploder", 5))
-
-  add(enemy_table, enemy(100, 100, "shooter", 6))
-  add(enemy_table, enemy(50, 50, "basic", 6))
-
+  fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
   wait.end_time = 65 -- how long the timer should run for in seconds
