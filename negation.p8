@@ -642,6 +642,7 @@ function levelchange()
       move_map = false
       level_change = false
       level.lvl += 1
+      coin.dropped = false
       coresume(game)
     end
   end
@@ -842,7 +843,7 @@ function gameflow()
   seraph = {}
 
   seraph.brd_color = 12
-  seraph.text = "ready to get to work?"
+  seraph.text = "READY TO GET TO WORK?"
   music(11,1)
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
@@ -871,7 +872,7 @@ function gameflow()
   titlescreen = true -- stop showing titlescreen
 
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "alright, i see a door. give mea minute and i'll try and openit."
+  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT."
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
@@ -903,13 +904,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "okay, that should do-"
-  drawdialog = true
-  wait.controls = true
-  yield()
-
-  seraph = {}
-  seraph.text = "okay, that should do- wait    what's that?"
+  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
   drawdialog = true
   wait.controls = true
   yield()
@@ -933,7 +928,7 @@ function gameflow()
 
   fill_enemy_table(2, 20)
   wait.start_time = time()
-  wait.timer = true
+  --wait.timer = true
   spawn_enemies = true
   add(boss_table, boss(56, 56, 139, 2))
   yield()
@@ -1431,9 +1426,9 @@ function _draw()
     local live = abs(time() - d.init_time) <= d.drop_duration
     if live then
       if live and abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
-        spr(d.sprite, d.x, d.y)
+        spr(d.sprite, d.x+level.sx, d.y+level.sy)
       elseif live and flr(time()*1000)%2==0 then
-        spr(d.sprite, d.x, d.y)
+        spr(d.sprite, d.x+level.sx, d.y+level.sy)
       end
     else
       del(dropped, d)
