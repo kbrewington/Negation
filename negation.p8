@@ -136,7 +136,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  e.drop_prob = 100--%
+  e.drop_prob = 10--%
   e.shoot_distance = 50
   e.explode_distance = 15
   e.explode_wait = 15
@@ -259,6 +259,8 @@ function boss(startx, starty, sprite, lvl)
              if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
                local ang = angle_btwn(player.x, player.y, b.x, b.y)
                shoot(b.x, b.y, ang, 141, false, true)
+               b.x = b.x - 5*sin(ang/360)
+               b.y = b.y - 5*cos(ang/360)
              end
              --b.draw_healthbar()
            end
@@ -808,7 +810,7 @@ function fill_enemy_table(level, lvl_timer)
   local types = {"shooter", "basic", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(2))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
   end
 end
 
@@ -906,6 +908,10 @@ function gameflow()
   wait.controls = false
   yield()
 
+  fill_enemy_table(2, 20)
+  wait.start_time = time()
+  wait.timer = true
+  spawn_enemies = true
   add(boss_table, boss(56, 56, 139, 2))
   yield()
 
@@ -1499,9 +1505,12 @@ function _draw()
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
-    print("game over", 48, 60, 8)
+    titlescreen = false
+    player.health = player.max_health
+    _init()
+    -- print("game over", 48, 60, 8)
     sfx(9,1)--this doesn't fire because stop() activates immediately.
-    stop()
+    -- stop()
   end
 
   spr(96, stat(32) - 3, stat(33) - 3)
