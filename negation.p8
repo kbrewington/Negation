@@ -210,6 +210,7 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
      if b.sprite == 48 then
         b.acceleration += 0.5
      end
+
      if b.shotgun then
        b.duration = b.duration - 1
      end
@@ -515,6 +516,11 @@ function spawnenemies()
 
   if #enemy_table == 0 then
     spawn_enemies = false
+    if not wait.timer then detect_killed_enemies = true end
+  end
+
+  if #enemy_table == 0 then
+    spawn_enmies = false
     if not wait.timer then detect_killed_enemies = true end
   end
 
