@@ -1263,8 +1263,7 @@ function _update()
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time() - scrollast > 0.3 then
-      scrollast = time()
+    if #player.inventory > 1 and time() - (scrollast or (time()-2)) > 0.3 then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1275,6 +1274,7 @@ function _update()
         player.inventory[i] = player.inventory[i+1]
       end
     end
+    scrollast = time()
   end
 
   --[[
@@ -1866,4 +1866,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
