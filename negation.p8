@@ -926,7 +926,7 @@ function gameflow()
   wait.controls = false
   yield()
 
-  fill_enemy_table(2, 20)
+  fill_enemy_table(2, 60)
   wait.start_time = time()
   --wait.timer = true
   spawn_enemies = true
@@ -1861,4 +1861,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
