@@ -399,8 +399,13 @@ end
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
- sx=(s%8)*8 --
- sy=(s%8)*8 --
+ if s == 48 then
+   sx = 0
+   sy = 25
+ else
+   sx=(s%8)*8 --
+   sy=(s%8)*8 --
+ end
  x0=flr(0.5*sw)
  y0=flr(0.5*sh)
  a=a/360
