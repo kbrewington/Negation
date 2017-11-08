@@ -248,6 +248,8 @@ function boss(startx, starty, sprite, lvl)
              if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
                local ang = angle_btwn(player.x, player.y, b.x, b.y)
                shoot(b.x, b.y, ang, 141, false, true)
+               b.x = b.x - 5*sin(ang/360)
+               b.y = b.y - 5*cos(ang/360)
              end
              --b.draw_healthbar()
            end
@@ -879,6 +881,10 @@ function gameflow()
   wait.controls = false
   yield()
 
+  fill_enemy_table(2, 20)
+  wait.start_time = time()
+  wait.timer = true
+  spawn_enemies = true
   add(boss_table, boss(56, 56, 139, 2))
   yield()
 
