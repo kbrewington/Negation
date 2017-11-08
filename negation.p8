@@ -136,7 +136,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  e.drop_prob = 10--%
+  e.drop_prob = 100--%
   e.shoot_distance = 50
   e.explode_distance = 15
   e.explode_wait = 15
@@ -184,13 +184,15 @@ end
 --[[
   bullet object
 ]]
-function bullet(startx, starty, angle, sprite, friendly)
+function bullet(startx, starty, angle, sprite, friendly, shotgun)
   local b = {}
   b.x = startx
   b.y = starty
   b.angle = angle
   b.sprite = sprite
   b.friendly = friendly
+  b.duration = 15
+  b.shotgun = (shotgun or false)
   b.speed = 2
   if b.sprite == 48 then
     b.acceleration = 0.5
@@ -206,6 +208,9 @@ function bullet(startx, starty, angle, sprite, friendly)
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
      if b.sprite == 48 then
         b.acceleration += 0.5
+     end
+     if b.shotgun then
+       b.duration = b.duration - 1
      end
    end
 
@@ -458,7 +463,7 @@ end
 --[[
   shoot: create bullet objects and add them to the 'bullets' table
 ]]
-function shoot(x, y, a, spr, friendly, boss)
+function shoot(x, y, a, spr, friendly, boss, shotgun)
   if friendly then
     local offx = player.x + 5
     local offy = player.y + 5
@@ -468,7 +473,7 @@ function shoot(x, y, a, spr, friendly, boss)
     end
     offx = offx - 8*sin(ang / 360)
     offy = offy - 8*cos(ang / 360)
-    add(player_bullets, bullet(offx, offy, ang, spr, friendly))
+    add(player_bullets, bullet(offx, offy, ang, spr, friendly, shotgun))
   elseif boss then
     local offx = x + 5
     local offy = y + 5
@@ -1211,15 +1216,16 @@ function _update()
     if player.inventory[1] == 48 and rocket_count == 0 then
       shoot(player.x,player.y, 0, 48, true, false)
       rocket_count += 1
+      del(player.inventory, player.inventory[1])
       sfx(10,1)
     end
 
     if player.inventory[1] == 33 then
-    player.b_count = player.b_count + 1
+      player.b_count = player.b_count + 1
       if player.b_count%player.fire_rate == 0 then
-        shoot(player.x, player.y, player.angle, 50, true, false)
-        shoot(player.x, player.y, 45, 50, true, false)
-        shoot(player.x, player.y, -45, 50, true, false)
+        shoot(player.x, player.y, player.angle, 50, true, false, true)
+        shoot(player.x, player.y, 45, 50, true, false, true)
+        shoot(player.x, player.y, -45, 50, true, false, true)
         sfx(1,1)
       end
     end
@@ -1420,6 +1426,10 @@ function _draw()
     if b ~= nil then
       spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
       b.move()
+      if b.duration <= 0 then
+        del(player_bullets, b)
+        b = nil
+      end
     end
 
     if b~=nil then
