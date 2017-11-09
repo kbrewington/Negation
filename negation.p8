@@ -147,7 +147,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
-  e.drops = {48}--{32, 33, 48, 49} -- sprites of drops
+  e.drops = {32, 33, 48, 49} -- sprites of drops
   e.drop_prob = 100--%
   e.shoot_distance = 50
   e.explode_distance = 15
@@ -1499,7 +1499,7 @@ function _draw()
       end
     end
 
-    local live = true --abs(time() - d.init_time) <= d.drop_duration
+    local live = abs(time() - d.init_time) <= d.drop_duration
     if live then
       if live and abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
         spr(d.sprite, d.x, d.y)
