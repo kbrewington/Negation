@@ -4,8 +4,7 @@ __lua__
 --------------------------------------------------------------------------------
 --------------------------------- global variables  ----------------------------
 --------------------------------------------------------------------------------
-scrollast = 0
-rocket_count = 0
+
 player = {}
 player.sprite = 0
 --player.x = 80
@@ -25,6 +24,9 @@ player.b_count = 0
 --player.inventory = {}
 player.inv_max = 4
 player.shield_dur = 5
+player.last_right = nil
+player.last_click = nil
+player.killed = 0
 --player.shield = 0
 
 level = {}
@@ -72,6 +74,8 @@ player.last_time = {[c.left_arrow] = 0,
                     [c.right_arrow] = 0,
                     [c.up_arrow] = 0,
                     [c.down_arrow] = 0}
+
+_load = {}
 
 coin = {}
 --coin.dropped = false
@@ -295,8 +299,50 @@ function debug()
   print(#title.text, 0, 12, debug_color)
   print("", 45, 12, debug_color)
 
-  print("", 0, 18, debug_color)
+  print(#_load, 0, 18, debug_color)
   print("", 45, 18, debug_color)
+end
+
+function init_mem()
+  for i=0,53 do -- 53 - 63 = leaderboard data
+    dset(i, -1)
+  end
+end
+
+function save_leaderboard()
+  local idx = 53
+  while dget(idx) ~= 0 do
+    idx = idx + 1
+  end
+  dset(idx, player.killed)
+end
+
+function save_data()
+  local save = {player.x, player.y, level.sx, level.sy, level.lvl, player.tokens} -- missing: player.inventory, and current skill values/costs
+  for i=0,(#save-1) do
+    dset(i, save[i+1])
+  end
+  -- dset(#save, -5) -- save inventory items
+  -- for i=(#save+1),(#player.inventory) do
+  --   dset(i, player.inventory[i+1])
+  -- end
+end
+
+function load_data()
+  local idx = 0
+  _load = {}
+  while dget(idx) ~= -1 do
+    _load[#_load+1] = dget(idx)
+    idx = idx + 1
+  end
+end
+
+function show_leaderboard()
+  rectfill(0,0,128,128,0)
+  print("Killed: "..player.killed,20,20,5)
+  for i=1,90 do
+    flip()
+  end
 end
 
 function bump(x, y)
@@ -1091,11 +1137,16 @@ function loop_func(table, func)
   end
 end
 
+function time_diff(time_var, thresh)
+  return ((time() - (time_var or (time()-2))) > thresh)
+end
+
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+  init_mem()
   poke(0x5f2d, 1)
 
   player.last_hit = time() - player.immune_time
@@ -1107,7 +1158,7 @@ function _init()
   player.y = 8
   player.speed = 1
   player.fire_rate = 10
-  player.health = 10
+  player.health = 1
   player.tokens = 0
   player.inventory = {}
   player.shield = 0
@@ -1261,13 +1312,14 @@ function _update()
   -- if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
   if (stat(34) == 1) then
-    if drawdialog and not wait.dialog_finish and time() - (lastclick or time() - 2) > 1 then
-      lastclick = time()
+    if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
+      player.last_click = time()
       coresume(game)
 
     elseif not drawdialog and not wait.controls then
       player.b_count = player.b_count + 1
-      if player.b_count%player.fire_rate == 0 then
+      if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
+        player.last_click = time()
         shoot(player.x, player.y, player.angle, 2, true, false)
         sfx(1,1)
       end
@@ -1276,35 +1328,30 @@ function _update()
 
   -- right mouse button
   if (stat(34) == 2) then
-    if player.inventory[1] == 48 and rocket_count == 0 then
+    save_data()
+    load_data()
+    if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
       shoot(player.x,player.y, 0, 48, true, false)
-      rocket_count += 1
       del(player.inventory, player.inventory[1])
       sfx(10,1)
+      player.last_right = time()
     end
-
-    if player.inventory[1] == 33 then
+    if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
       player.b_count = player.b_count + 1
-      if player.b_count%player.fire_rate == 0 then
+      if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
         shoot(player.x, player.y, player.angle, 50, true, false, true)
-        shoot(player.x, player.y, 45, 50, true, false, true)
-        shoot(player.x, player.y, -45, 50, true, false, true)
+        shoot(player.x, player.y, 30, 50, true, false, true)
+        shoot(player.x, player.y, -30, 50, true, false, true)
         sfx(1,1)
       end
-    end
-  end
-
-  if rocket_count > 0 then
-    rocket_count += 1
-    if rocket_count == 15 then
-    rocket_count = 0
+      player.last_right = time()
     end
   end
 
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time() - (scrollast or (time()-2)) > 0.3 then
+    if #player.inventory > 1 and time_diff(player.last_click, .15) then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1315,7 +1362,7 @@ function _update()
         player.inventory[i] = player.inventory[i+1]
       end
     end
-    scrollast = time()
+    player.last_click = time()
   end
 
   --[[
@@ -1391,6 +1438,7 @@ function _draw()
     -- check if this sprite has been shot
     for b in all(player_bullets) do
       if bullet_collision(e, b) then
+        player.killed = player.killed + 1
         del(enemy_spawned, e)
         sfx(5,1)
         add(destroyed_enemies, e)
@@ -1403,7 +1451,7 @@ function _draw()
 
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) then
+      if time_diff(player.last_hit, player.immune_time) and enemy_collision(e) then
         if player.shield <= 0 then
           player.health = player.health - 1
           sfx(2,2)
@@ -1440,7 +1488,7 @@ function _draw()
 
   for e in all(exploding_enemies) do
     if step_explode_enemy(e) then
-      if distance(e, player) <= 15 and ((time() - player.last_hit) > player.immune_time) then
+      if distance(e, player) <= 15 and time_diff(player.last_hit, player.immune_time) then
         if player.shield <= 0 then
           player.health = player.health - 1
           sfx(2,2)
@@ -1480,9 +1528,9 @@ function _draw()
     local live = abs(time() - d.init_time) <= d.drop_duration
     if live then
       if live and abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
-        spr(d.sprite, d.x+level.sx, d.y+level.sy)
+        spr(d.sprite, d.x, d.y)
       elseif live and flr(time()*1000)%2==0 then
-        spr(d.sprite, d.x+level.sx, d.y+level.sy)
+        spr(d.sprite, d.x, d.y)
       end
     else
       del(dropped, d)
@@ -1523,6 +1571,7 @@ function _draw()
           if (bos.health <= 0) then
             sfx(5,1)
             add(destroyed_bosses, bos)
+            player.killed = player.killed+1
             del(boss_table, bos)
             coin.x = bos.x - level.sx
             coin.y = bos.y - level.sy
@@ -1539,7 +1588,7 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
+    if time_diff(player.last_hit, player.immune_time) and bullet_collision(player, b) then
       if player.shield <= 0 then
         player.health = player.health - 1
         sfx(2,2)
@@ -1573,7 +1622,7 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if ((time() - player.last_hit) > player.immune_time) and boss_collision(b, player) then
+    if time_diff(player.last_hit, player.immune_time) and boss_collision(b, player) then
       player.health = player.health - 2
       player.last_hit = time()
     end
@@ -1588,9 +1637,11 @@ function _draw()
   if player.health <= 0 then
     --titlescreen = false
     --player.health = player.max_health
-    _init()
+    sfx(9,1)
+    show_leaderboard()
+    run()
     -- print("game over", 48, 60, 8)
-    sfx(9,1)--this doesn't fire because stop() activates immediately.
+    --this doesn't fire because stop() activates immediately.
     -- stop()
   end
 
