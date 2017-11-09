@@ -38,6 +38,11 @@ level.border.down = 120
 level.lvl = 1
 level.sx = 0
 level.sy = 0
+level.x = 0
+level.y = 0
+level.transition = {1, 0, 0,
+                    2, 16, 0,
+                    3, 39, 0}
 
 wait = {}
 wait.controls = false
@@ -298,7 +303,7 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print(#title.text, 0, 12, debug_color)
+  print("", 0, 12, debug_color)
   print("", 45, 12, debug_color)
 
   print(#_load, 0, 18, debug_color)
@@ -395,7 +400,7 @@ end
 
 function enemy_collision(e, p)
   local other = (p or player)
-  return (e.x > other.x+8 or e.x+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
+  return (e.x+level.sx > other.x+8 or e.x+level.sx+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
 end
 
 function bullet_collision(sp, b)
@@ -594,9 +599,6 @@ function detect_kill_enemies()
 end
 
 function kill_all_enemies(no_drop_items)
-  --[[for e in all(enemy_table) do
-    del(enemy_table, e)
-  end]]
   enemy_table = {}
 
   for e in all(enemy_spawned) do
@@ -607,11 +609,9 @@ function kill_all_enemies(no_drop_items)
 
   for b in all(boss_table) do
     del(boss_table, b)
-    if not drop_items then
-      add(destroyed_bosses, b)
-      coin.x = b.x - level.sx
-      coin.y = b.y - level.sy
-    end
+    add(destroyed_bosses, b)
+    coin.x = b.x - level.sx
+    coin.y = b.y - level.sy
     b = nil
   end
 end
@@ -630,68 +630,50 @@ end
     wait.controls = true
     level.sx -= 1
     player.x -= 1
+]]
 
-  --follow player if not all the way left, not all the way right, and player.x == 50
-  if map_right > 0 and (player.x == 80 or map_left < 0) and not move_map then
-    --level.sx = level.sx + player.current_speed * sin((player.angle - player.turn) / 360)
-    wait.controls = false
-    player.x = 80
-    if btn(c.left_arrow) and not wall_lft then level.sx += player.speed end
-    if btn(c.right_arrow) and not wall_rgt then level.sx -= player.speed end
-  else
-    level.sx = flr(level.sx)
-  end
-
-  --if hit transistion trigger from above, move the map to center on new level
-  if move_map then
-    if map_right > 0 then
-      level.sx = flr(level.sx) --reset so map lines up nicely
-      player.x -= 1 --move player sprite back along with
-      level.sx -= 1 --moving map
-      wait.controls = true --pause player controls
-    else
-      move_map = nil
-      wait.controls = false --resume player controls
-      screentransaction = false --stop doing this functions checks
-      level.sx = 120 - level.border.right --make the new map bounds the new level
-      level.border.left += 128
-      coresume(game)
-    end
-  end
-end]]
 
 function levelchange()
   local farx = 100
   --local farleft
-  local map_right = level.border.right + level.sx - 120
-  local map_left = level.border.left + level.sx
 
-  --when to transistion
-  --===========================================================
-  if flr(level.sx) == -29 and level.sy == 0 then move_map = true end
-  if flr(level.sx) == -215 and level.sy == 0 then move_map = true end
-  --===========================================================
+  level.i = 3*level.lvl+1
+  if level.transition[level.i] == level.lvl+1
+  and (level.transition[level.i+1] - 12) * 8 < abs(level.sx - ((level.lvl-1) * 128))
+  --[[and transition[level.i+2] == flr(level.sy)]] then
+    move_map = true
+  end
 
   --TODO add map centering on player in the beginning
 
-  if btn(c.left_arrow) and not wall_lft and not move_map and map_left < 0 and player.x < farx then
-    level.sx += player.speed
-    if player.x < farx then player.x = farx end
-  end
-  if btn(c.right_arrow) and not wall_rgt and not move_map and map_right > 0 and player.x > farx then
-    level.sx -= player.speed
-    if player.x > farx then player.x = farx end
+  if not move_map then
+    if btn(c.left_arrow) and not wall_lft and abs(level.sx - ((level.lvl-1) * 128)) > level.x*8 and player.x < farx then
+      level.sx += player.speed
+      if player.x < farx then player.x = farx end
+    end
+    if btn(c.right_arrow) and not wall_rgt --[[and level.sx - ((level.lvl-1) * 128) <= (level.transition[level.i+1])*8]]  and player.x > farx then
+      level.sx -= player.speed
+      if player.x > farx then player.x = farx end
+    end
   end
 
   if move_map ~= nil and move_map then
     wait.controls = true
 
-    if map_right > 0 and map_left < 0 then
+    if level.transition[level.i+1]*8 > abs(level.sx - ((level.lvl-1) * 128)) then
       level.sx = flr(level.sx) - 1
       player.x -= 1
 
+    --[[elseif check we go down then]]
+
     else
-      level.border.left += 128
+      dropped = {}
+      level_sprites = {}
+      open_door = false
+      level.sx = 0
+      level.sy = 0
+      level.x = level.transition[level.i+1]
+      level.y = level.transition[level.i+2]
 
       wait.controls = false
       move_map = false
@@ -720,7 +702,6 @@ function drawcountdown()
 end
 
 function opendoor()
-  --player.last_hit = abs(time() - player.immune_time) --make player invulnerable so they dont get hit during transition
   if doorh == nil then doorh = 1 end
   rectfill(126+level.sx, 63+level.sy, 127+level.sx, 63-doorh+level.sy, 13)
   rectfill(126+level.sx, 64+level.sy, 127+level.sx, 64+doorh+level.sy, 13)
@@ -1175,7 +1156,7 @@ end --end _init()
 ---------------------------------- update --------------------------------------
 --------------------------------------------------------------------------------
 function _update()
-
+  --player.last_hit = abs(time() - 0.5) --uncomment for god mode
   collision()
   collide_all_enemies()
 
@@ -1379,7 +1360,7 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
-  map(0, 0, level.sx, level.sy, 128, 128)
+  map(level.x, level.y, level.sx, level.sy, 128, 128)
 
   if not titlescreen then
     draw_titlescreen()
@@ -1518,7 +1499,7 @@ function _draw()
       end
     end
 
-    local live = abs(time() - d.init_time) <= d.drop_duration
+    local live = true --abs(time() - d.init_time) <= d.drop_duration
     if live then
       if live and abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
         spr(d.sprite, d.x, d.y)
