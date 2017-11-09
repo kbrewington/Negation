@@ -7,27 +7,27 @@ __lua__
 
 player = {}
 player.sprite = 0
---player.x = 80
---player.y = 8
---player.speed = 1
+player.x = 80
+player.y = 8
+player.speed = 1
 player.current_speed = 0
 player.angle = 0
 player.turn = 0
 player.current_dash_speed = 0
---player.fire_rate = 10
---player.health = 10
+player.fire_rate = 10
+player.health = 10
 player.max_health = 10
 player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
---player.tokens = 0
---player.inventory = {}
+player.tokens = 0
+player.inventory = {}
 player.inv_max = 4
 player.shield_dur = 5
 player.last_right = nil
 player.last_click = nil
 player.killed = 0
---player.shield = 0
+player.shield = 0
 
 level = {}
 level.border = {}
@@ -35,13 +35,13 @@ level.border.left = 0
 level.border.up = 0
 level.border.right = 120
 level.border.down = 120
---level.lvl = 1
+level.lvl = 1
 level.sx = 0
 level.sy = 0
 
 wait = {}
---wait.controls = false
---wait.dialog_finish = false
+wait.controls = false
+wait.dialog_finish = false
 
 -- controls
 c = {}
@@ -78,7 +78,7 @@ player.last_time = {[c.left_arrow] = 0,
 _load = {}
 
 coin = {}
---coin.dropped = false
+coin.dropped = false
 coin.x = nil
 coin.y = nil
 coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
@@ -86,8 +86,8 @@ coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
 
 enemy_table  = {}
 enemy_spawned = {}
---player_bullets = {}
---enemy_bullets = {}
+player_bullets = {}
+enemy_bullets = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
 boss_hit_anims = {}
@@ -97,12 +97,12 @@ dropped = {}
 shield_anims = {}
 
 highlighted = 10
---currently_selected = 1
+currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
---next_cost = {1, 1, 1}
---skills_selected = {true, false, false, false}
+next_cost = {1, 1, 1}
+skills_selected = {true, false, false, false}
 invalid = 0
---titlescreen = nil
+titlescreen = nil
 
 -- define some constants
 pi = 3.14159265359
@@ -1152,40 +1152,6 @@ function _init()
   player.last_hit = time() - player.immune_time
   title.init = time()
 
-  kill_all_enemies(true)
-
-  player.x = 80
-  player.y = 8
-  player.speed = 1
-  player.fire_rate = 10
-  player.health = 1
-  player.tokens = 0
-  player.inventory = {}
-  player.shield = 0
-
-  level.border.left = 0
-  level.border.up = 0
-  level.border.right = 120
-  level.border.down = 120
-  level.lvl = 1
-  level.sx = 0
-  level.sy = 0
-
-  wait.controls = false
-  wait.dialog_finish = false
-
-  coin.dropped = false
-
-  player_bullets = {}
-  enemy_bullets = {}
-
-  currently_selected = 1
-  next_cost = {1, 1, 1}
-  skills_selected = {true, false, false, false}
-
-  titlescreen = nil
-
-  game = nil
   game = cocreate(gameflow)
   coresume(game)
 end --end _init()
