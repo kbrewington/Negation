@@ -142,7 +142,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
-  e.drops = {32, 33, 48, 49} -- sprites of drops
+  e.drops = {48}--{32, 33, 48, 49} -- sprites of drops
   e.drop_prob = 100--%
   e.shoot_distance = 50
   e.explode_distance = 15
@@ -202,16 +202,18 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   b.duration = 15
   b.shotgun = (shotgun or false)
   b.speed = 2
-  if b.sprite == 48 then
-    b.acceleration = 0.5
-  else
-    b.acceleration = 0
-  end
+  b.acceleration = 0
   b.current_step = 0
   b.max_anim_steps = 5
+  b.rocket = false
+
+  if b.sprite == 48 then
+    b.acceleration = 0.5
+    b.max_anim_steps = 15
+    b.rocket = true
+  end
+
   b.move = function()
-
-
      b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
      if b.sprite == 48 then
@@ -1052,7 +1054,19 @@ function boss_hit_animation(bul)
   local colors = {8, 9}
 
   if bul.current_step <= bul.max_anim_steps then
-    circ(bul.x, bul.y, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+    local c = colors[flr(time()*100)%(#colors) + 1]
+    local s = flr(time()*100)%4
+    local r = 1
+    if rnd(1) > .5 then r = 0xFFFF end
+    if not bul.rocket then
+      circ(bul.x, bul.y, s, c)
+    else
+      for i=1,3 do
+        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, (r*rnd(bul.max_anim_steps/2))+bul.y, rnd(4), c)
+        circfill((r*rnd(bul.max_anim_steps))+bul.x, (r*rnd(bul.max_anim_steps))+bul.y, .1, c)
+      end
+      circ(bul.x, bul.y, bul.current_step, c)
+    end
   else
     del(boss_hit_anims, bul)
   end
@@ -1409,6 +1423,19 @@ function _draw()
         sfx(5,1)
         add(destroyed_enemies, e)
         del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if b.rocket then
+          for en in all(enemy_spawned) do
+            if distance(en, b) <= b.max_anim_steps then
+              player.killed = player.killed + 1
+              del(enemy_spawned, en)
+              sfx(5,1)
+              add(destroyed_enemies, en)
+              del(player_bullets, b)
+              add(boss_hit_anims, b)
+            end
+          end
+        end
         b = nil
         e = nil
         break
@@ -1509,6 +1536,19 @@ function _draw()
 
     if bump(b.x, b.y) then
       del(player_bullets, b)
+      add(boss_hit_anims, b)
+      if b.rocket then
+        for e in all(enemy_spawned) do
+          if distance(e, b) <= b.max_anim_steps then
+            player.killed = player.killed + 1
+            del(enemy_spawned, e)
+            sfx(5,1)
+            add(destroyed_enemies, e)
+            del(player_bullets, b)
+            add(boss_hit_anims, b)
+          end
+        end
+      end
       b = nil
     end
 
@@ -1534,6 +1574,18 @@ function _draw()
           bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
           del(player_bullets, b)
           add(boss_hit_anims, b)
+          if b.rocket then
+            for e in all(enemy_spawned) do
+              if distance(e, b) <= b.max_anim_steps then
+                player.killed = player.killed + 1
+                del(enemy_spawned, e)
+                sfx(5,1)
+                add(destroyed_enemies, e)
+                del(player_bullets, b)
+                add(boss_hit_anims, b)
+              end
+            end
+          end
           if (bos.health <= 0) then
             sfx(5,1)
             add(destroyed_bosses, bos)
@@ -1636,6 +1688,7 @@ function _draw()
   end
 
   if in_skilltree then skilltree() end
+  if in_leaderboard then draw_leaderboard() end
 
   debug() -- always on bottom
 end --end _draw()
