@@ -19,7 +19,7 @@ player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
-player.inventory = {}
+player.inventory = {48, 33, 33}
 player.inv_max = 4
 player.shield_dur = 5
 player.last_right = nil
@@ -363,33 +363,6 @@ function bump_all(x, y)
 end
 
 function collision()
-  --local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
-  --local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
-  --local up_tempx = player.x + 5
-  --local up_tempy = player.y + 4
-
-  --local bck_tempx = player.x + player.speed * sin(player.angle / 360)
-  --local bck_tempy = player.y + player.speed * cos(player.angle / 360)
-
-  --[[pset(player.x + 3, player.y + 3, clr) --topleft
-  pset(player.x + 12, player.y + 3, clr) --topright
-  pset(player.x + 3, player.y + 12, clr) --bottomleft
-  pset(player.x + 12, player.y + 12, clr) --bottomright]]
-
-  --[[topleft, topright, bottomleft, bottomright = {}, {}, {}, {}
-  topleft.x, topleft.y = player.x + 3, player.y + 3
-  topright.x, topright.y = player.x + 12, player.y + 3
-  bottomleft.x, bottomleft.y = player.x + 3, player.y + 12
-  bottomright.x, bottomright.y = player.x + 12, player.y + 12
-
-  local test = bump_all(topleft.x + 1, topleft.y + 1)
-  wall_up, wall_lft, wall_rgt, wall_dwn = test, test, test, test]]
-
-  --[[wall_up =  bump(topleft.x, topleft.y) or bump(topright.x, topright.y)
-  wall_lft = bump(topleft.x, topleft.y) or bump(bottomleft.x, bottomleft.y)
-  wall_rgt = bump(topright.x, topright.y) or bump(bottomright.x, bottomright.y)
-  wall_dwn = bump(bottomleft.x, bottomleft.y) or bump(bottomright.x, bottomright.y)]]
-
   wall_up = bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) --done
   wall_lft = bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) --done
   wall_rgt = bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)
@@ -604,23 +577,6 @@ function kill_all_enemies(no_drop_items)
   end
 end
 
---[[function screentransaction_backup()
-  player.last_hit = time() - 0.5 --make player invulnerable so they dont get hit during transition
-  local map_right = level.border.right + level.sx - 120
-  local map_left = level.border.left + level.sx
-
-  --when to transistion
-  --===========================================================
-  if level.sx == -78 and level.sy == 0 then move_map = true end
-  --===========================================================
-
-  --[[if level.sx - (player.x - 80) < level.sx then
-    wait.controls = true
-    level.sx -= 1
-    player.x -= 1
-]]
-
-
 function levelchange()
   local farx = 100
   --local farleft
@@ -698,66 +654,6 @@ function opendoor()
      coresume(game)
      doorh += 1
   end
-end
-
-function draw_hud()
-  local bck_color = 1
-  local brd_color = 10
-  local fnt_color = 6
-  local topx = 1
-  local topy = 112
-  local btmx = 70--126
-  local btmy = 126
-  local healthbar = {}
-  healthbar.tx = topx + 15
-  healthbar.ty = topy + 3
-  healthbar.bx = healthbar.tx + (player.health * 5)
-  healthbar.fx = healthbar.tx + (player.max_health * 5)
-  healthbar.by = healthbar.ty + 4
-  if player.health >= 5 then
-    healthbar.color = 11
-  elseif player.health >= 3 then
-    healthbar.color = 9
-  else
-    healthbar.color = 8
-  end
-
-  local shield = {}
-  shield.tx = healthbar.tx
-  shield.ty = healthbar.ty
-  shield.bx = shield.tx + (player.shield * 5)
-  shield.by = shield.ty + 4
-  shield.color = 12
-
-  --main
-  rectfill(topx, topy, btmx, btmy, bck_color)
-  --brd
-  rectfill(topx-1, topy+1, topx-1, btmy-1, brd_color)
-  rectfill(btmx+1, topy+1, btmx+1, btmy-1, brd_color)
-  rectfill(topx+1, topy-1, btmx-1, topy-1, brd_color)
-  rectfill(topx+1, btmy+1, btmx-1, btmy+1, brd_color)
-  pset(topx, topy, brd_color)
-  pset(btmx, btmy, brd_color)
-  pset(topx, btmy, brd_color)
-  pset(btmx, topy, brd_color)
-
-  print("sys",healthbar.tx-12, healthbar.ty, fnt_color)
-  rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
-  if player.health <= 1 and flr(time()*10000)%2==0 then
-    rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
-  elseif player.health > 1 then
-    rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
-  end
-
-  print("inv",healthbar.tx-12--[[+55]], healthbar.ty+6, fnt_color)
-  local invx = healthbar.tx--+67
-  local invy = healthbar.ty+5
-  for sp in all(player.inventory) do
-    spr(sp, invx, invy)
-    invx = invx + 9
-  end
-  -- print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
-  if player.shield > 0 then rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color) end
 end
 
 function draw_titlescreen()
@@ -1114,12 +1010,6 @@ function distance(n, d)
   return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
 end
 
-function loop_func(table, func)
-  for e in all(table) do
-    func(e)
-  end
-end
-
 function time_diff(time_var, thresh)
   return ((time() - (time_var or (time()-2))) > thresh)
 end
@@ -1127,6 +1017,8 @@ end
 function draw_playerhp()
   local hpcolor = 11
   local hpratio = player.health/player.max_health
+  local invtx = player.x - 5
+  local invtcolr = 5
 
   if hpratio >= .5 then
     hpcolor = 11
@@ -1140,7 +1032,33 @@ function draw_playerhp()
 
   rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
   rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
-  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 1)--[[shield]] end
+  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
+
+  if not time_diff(player.last_middle_click, .5) or not time_diff(player.last_right, .5) then
+    if #player.inventory > 0 then
+      spr(player.inventory[1], player.x + 4, player.y + 14)
+    end
+    if #player.inventory > 1 then
+      spr(player.inventory[2], player.x + 13, player.y + 14)
+    end
+
+    --if pget(player.x + 4, player.y + 12) == 5 then invtcolr = 6 end
+    pset(player.x + 3, player.y + 14, invtcolr)
+    pset(player.x + 4, player.y + 14, invtcolr)
+    pset(player.x + 3, player.y + 15, invtcolr)
+
+    pset(player.x + 12, player.y + 14, invtcolr)
+    pset(player.x + 11, player.y + 14, invtcolr)
+    pset(player.x + 12, player.y + 15, invtcolr)
+
+    pset(player.x + 3, player.y + 21, invtcolr)
+    pset(player.x + 4, player.y + 21, invtcolr)
+    pset(player.x + 3, player.y + 20, invtcolr)
+
+    pset(player.x + 12, player.y + 21, invtcolr)
+    pset(player.x + 11, player.y + 21, invtcolr)
+    pset(player.x + 12, player.y + 20, invtcolr)
+  end
 end
 
 
@@ -1225,8 +1143,6 @@ function _update()
     ]]
     if (btn(c.up_arrow)) then
       if not wall_up then
-        --dash_detect(c.up_arrow)
-        --player.current_speed = player.speed
         player.y -= player.speed
       end
     end --end up button
@@ -1236,8 +1152,6 @@ function _update()
     ]]
     if (btn(c.down_arrow)) then
       if not wall_dwn then
-        --dash_detect(c.down_arrow)
-        --player.current_speed = -player.speed
         player.y += player.speed
       end
     end --end down button
@@ -1247,10 +1161,6 @@ function _update()
     ]]
     if (btn(c.left_arrow)) then
       if not wall_lft then
-        --dash_detect(c.left_arrow)
-        --player.angle -= player.turnspeed
-        --player.turn = 85
-        --player.current_speed = player.speed
         player.x -= player.speed
       end
     end --end left button
@@ -1260,10 +1170,6 @@ function _update()
     ]]
     if (btn(c.right_arrow)) then
       if not wall_rgt then
-        --dash_detect(c.right_arrow)
-        --player.angle += player.turnspeed
-        --player.turn = -85
-        --player.current_speed = player.speed
         player.x += player.speed
       end
     end --end right button
@@ -1319,7 +1225,7 @@ function _update()
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time_diff(player.last_click, .15) then
+    if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1330,7 +1236,7 @@ function _update()
         player.inventory[i] = player.inventory[i+1]
       end
     end
-    player.last_click = time()
+    player.last_middle_click = time()
   end
 
   --[[
@@ -1388,10 +1294,6 @@ function _draw()
   palt()
 
   if open_door then opendoor() end
-
---[[    spr_r(255, 0 + level.sx, 0 + level.sy, 180, 1, 1)
-    spr_r(255, 0 + level.sx, 0 + level.sy, 270, 1, 1)
-    spr_r(255, 0 + level.sx, 8 + level.sy, 180, 1, 1)]]
 
   spr_r(player.sprite, player.x, player.y, player.angle, 2, 2)
 
@@ -1654,7 +1556,7 @@ function _draw()
   draw_playerhp()
   spr(96, stat(32) - 3, stat(33) - 3)
 
-  draw_hud()
+  --draw_hud()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
