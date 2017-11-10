@@ -20,7 +20,7 @@ player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
-player.inventory = {48, 33, 33}
+player.inventory = {}
 player.inv_max = 4
 player.shield_dur = 5
 player.last_right = nil
@@ -73,12 +73,6 @@ title.text = {   "14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,1
                  "14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14",
                  "14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14"}
 
-
-player.last_time = {[c.left_arrow] = 0,
-                    [c.right_arrow] = 0,
-                    [c.up_arrow] = 0,
-                    [c.down_arrow] = 0}
-
 _load = {}
 
 coin = {}
@@ -87,7 +81,6 @@ coin.size = 16
 coin.x = nil
 coin.y = nil
 coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
-
 
 enemy_table  = {}
 enemy_spawned = {}
@@ -101,17 +94,12 @@ boss_table = {}
 dropped = {}
 shield_anims = {}
 
-highlighted = 10
 currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
 invalid = 0
 titlescreen = nil
-
--- define some constants
-pi = 3.14159265359
-inf = 32767.99 -- max number as defined in https://neko250.github.io/pico8-api/
 
 --------------------------------------------------------------------------------
 ------------------------ object-like structures --------------------------------
@@ -169,7 +157,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
                     e.y = e.y + ((e.y-path.y)*e.speed)*(0xFFFF)
                 end
   e.move = function()
-                if type == "shooter" then
+                if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
                   else
@@ -179,7 +167,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
                       shoot(e.x, e.y, e.angle, 133, false, false)
                     end
                   end
-                elseif type == "exploder" then
+                elseif e.type == "exploder" then
                   if distance(e, player) >= e.explode_distance and not e.dont_move then
                     e.update_xy()
                   else
@@ -187,7 +175,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
                     e.exploding = true
                     e.explode_step = e.explode_step + 1
                   end
-                elseif type == "basic" then
+                elseif e.type == "basic" then
                   e.update_xy()
                 end
            end
@@ -375,25 +363,6 @@ function collision()
   wall_dwn = bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) --done
 end
 
---[[function enemy_collision(e, p)
-  local other = (p or player)
-  return (e.x+level.sx > other.x+8 or e.x+level.sx+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
-end
-
-function bullet_collision(sp, b)
-  if sp == player then
-    return (b.x > sp.x+4+5 or b.x+4 < sp.x+5 or b.y > sp.y+4+5 or b.y+4<sp.y+5) == false
-  end
-  return (b.x > sp.x+4 or b.x+4 < sp.x or b.y > sp.y+4 or b.y+4<sp.y) == false
-end
-
-function boss_collision(sp, b)
-  if b == player then
-    return (b.x+4 > sp.x+level.sx+16 or b.x+11 < sp.x+level.sx or b.y+3 > sp.y+16 or b.y+10 < sp.y)==false
-  end
-  return (b.x > sp.x+16 or b.x+4 < sp.x or b.y > sp.y+16 or b.y+4 < sp.y)==false
-end]]
-
 function ent_collide(firstent, secondent)
   secondent = secondent or player
   if firstent == player then offset = 4 else offset = 0 end
@@ -404,7 +373,6 @@ end
 function collide_all_enemies()
   local e = enemy_spawned[1]
   for o in all(enemy_spawned) do
-    --if o~=e and enemy_collision(e, o) then
     if o~=e and ent_collide(e, o) then
       fix_enemy(o, e)
     end
@@ -412,22 +380,17 @@ function collide_all_enemies()
 end
 
 function fix_enemy(o, e)
-  if (o.x - e.x) < 0 then
-    o.x = o.x - 8
-  elseif (o.x - e.x) > 0 then
-    o.x = o.x + 8
-  elseif (o.x == e.y) then
-    o.x = o.x + 8
+  local function fix_coord(o,e,c)
+    if (o[c] - e[c]) < 0 then
+      o[c] = o[c] - 8
+    elseif (o[c] - e[c]) > 0 then
+      o[c] = o[c] + 8
+    elseif (o[c] == e[c]) then
+      o[c] = o[c] + 8
+    end
   end
-
-  if (o.y - e.y) < 0 then
-    o.y = o.y - 8
-  elseif (o.y - e.y) > 0 then
-    o.y = o.y + 8
-  elseif (o.y == e.y) then
-    o.y = o.y + 8
-  end
-  --bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
+  fix_coord(o,e,'x')
+  fix_coord(o,e,'y')
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -473,7 +436,7 @@ function minimum_neighbor(start, goal)
   local map = {}
   map.x = 128
   map.y = 120
-  local minimum_dist = inf
+  local minimum_dist = 8000
   local min_node = start
     for i=0xFFFF,1 do
       for j=0xFFFF,1 do
@@ -670,6 +633,66 @@ function opendoor()
   end
 end
 
+function draw_hud()
+  local bck_color = 1
+  local brd_color = 10
+  local fnt_color = 6
+  local topx = 1
+  local topy = 112
+  local btmx = 70--126
+  local btmy = 126
+  local healthbar = {}
+  healthbar.tx = topx + 15
+  healthbar.ty = topy + 3
+  healthbar.bx = healthbar.tx + (player.health * 5)
+  healthbar.fx = healthbar.tx + (player.max_health * 5)
+  healthbar.by = healthbar.ty + 4
+  if player.health >= 5 then
+    healthbar.color = 11
+  elseif player.health >= 3 then
+    healthbar.color = 9
+  else
+    healthbar.color = 8
+  end
+
+  local shield = {}
+  shield.tx = healthbar.tx
+  shield.ty = healthbar.ty
+  shield.bx = shield.tx + (player.shield * 5)
+  shield.by = shield.ty + 4
+  shield.color = 12
+
+  --main
+  rectfill(topx, topy, btmx, btmy, bck_color)
+  --brd
+  rectfill(topx-1, topy+1, topx-1, btmy-1, brd_color)
+  rectfill(btmx+1, topy+1, btmx+1, btmy-1, brd_color)
+  rectfill(topx+1, topy-1, btmx-1, topy-1, brd_color)
+  rectfill(topx+1, btmy+1, btmx-1, btmy+1, brd_color)
+  pset(topx, topy, brd_color)
+  pset(btmx, btmy, brd_color)
+  pset(topx, btmy, brd_color)
+  pset(btmx, topy, brd_color)
+
+  print("sys",healthbar.tx-12, healthbar.ty, fnt_color)
+  rectfill(healthbar.tx, healthbar.ty, healthbar.fx, healthbar.by, 6)
+  if player.health <= 1 and flr(time()*10000)%2==0 then
+    rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
+  elseif player.health > 1 then
+    rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
+  end
+
+  print("inv",healthbar.tx-12--[[+55]], healthbar.ty+6, fnt_color)
+  local invx = healthbar.tx--+67
+  local invy = healthbar.ty+5
+  for sp in all(player.inventory) do
+    spr(sp, invx, invy)
+    invx = invx + 9
+  end
+  -- print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
+  if player.shield > 0 then rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color) end
+end
+
 function draw_titlescreen()
   rectfill(0, 0, 127, 127, 0)
 
@@ -768,7 +791,7 @@ function fill_enemy_table(level, lvl_timer)
   local types = {"shooter", "basic", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))--flr(rnd(lvl_timer-(baseline*level - i))))
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
   end
 end
 
@@ -813,18 +836,6 @@ function gameflow()
 
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
-
-  -- add list of enemies to enemy_table
-  --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  -- add(enemy_table, enemy(100, 100, "exploder", 4))
-  -- add(enemy_table, enemy(50, 50, "basic", 4))
-  --
-  -- add(enemy_table, enemy(100, 100, "shooter", 5))
-  -- add(enemy_table, enemy(50, 50, "exploder", 5))
-  --
-  -- add(enemy_table, enemy(100, 100, "shooter", 6))
-  -- add(enemy_table, enemy(50, 50, "basic", 6))
-  -- wait.end_time = 65 -- how long the timer should run for in seconds
 
   fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
@@ -876,31 +887,16 @@ end
     skill-tree menu (needs to be called continuously from draw to work)
 ]]
 function skilltree()
-  --[[local  token_sprites = {64, 66, 68, 70, 72}
-
-  for i=#token_sprites,0,0xFFFF do -- reverse list and add it to token_sprites animation
-    add(token_sprites, token_sprites[i])
-  end]]
 
   rectfill(-50, -50, 200, 200, 0)
   spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], 20, 20, 2, 2)
   print(" - " .. player.tokens, 36, 26, 7)
 
-  print("upgrade speed - ".. next_cost[1] .." tokens ", 10, 36, 7)
-  print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, 7)
-  print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, 7)
-  print("quit", 10, 68, 7)
+  print("upgrade speed - ".. next_cost[1] .." tokens ", 10, 36, 7+((skills_selected[1] and 1 or 0)*3))
+  print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, 7+((skills_selected[2] and 1 or 0)*3))
+  print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, 7+((skills_selected[3] and 1 or 0)*3))
+  print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
 
-
-  if skills_selected[1] then
-    print("upgrade speed - ".. next_cost[1] .." tokens ", 10, 36, highlighted)
-  elseif skills_selected[2] then
-    print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, highlighted)
-  elseif skills_selected[3] then
-    print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, highlighted)
-  elseif skills_selected[4] then
-    print("quit", 10, 68, highlighted)
-  end
 end
 
 --[[
@@ -909,13 +905,7 @@ end
 function step_destroy_animation(e)
 
   if e.destroyed_step <= e.destroy_anim_length then
-    if e.destroyed_step < 5 then
-      spr(e.destroy_sequence[1], e.x, e.y)
-    elseif e.destroyed_step <= 10 then
-      spr(e.destroy_sequence[2], e.x, e.y)
-    elseif e.destroyed_step <= 15 then
-      spr(e.destroy_sequence[3], e.x, e.y)
-    end
+    spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
   else
     drop_item(e)
     del(destroyed_enemies, e)
@@ -924,6 +914,17 @@ function step_destroy_animation(e)
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step = e.destroyed_step + 1
 
+  if e.type == "exploder" then
+    circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+    e.destroyed_step = e.destroyed_step + 1
+    if e.destroyed_step >= e.destroy_anim_length then
+      del(destroyed_enemies, e)
+      del(exploding_enemies, e)
+      del(enemy_spawned, e)
+      return true
+    end
+    return false
+  end
 end
 
 --[[
@@ -961,16 +962,8 @@ function step_boss_destroyed_animation(b)
   if flr(rnd(10))%2 == 0 then s = 0xFFFF end
   if flr(rnd(10))%2 == 0 then s1 = 0xFFFF end
   if b.destroyed_step <= b.destroy_anim_length then
-    if b.destroyed_step < flr(b.destroy_anim_length/3) then
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    elseif b.destroyed_step <= flr(b.destroy_anim_length/3)*2 then
-      spr(b.destroy_sequence[2], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    elseif b.destroyed_step <= b.destroy_anim_length then
-      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    end
+    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
   else
     del(destroyed_bosses, b)
     coin.dropped = true
@@ -979,28 +972,6 @@ function step_boss_destroyed_animation(b)
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
   b.destroyed_step = b.destroyed_step + 1
 
-end
-
-function step_explode_enemy(e)
-  if e.destroyed_step <= e.destroy_anim_length then
-    if e.destroyed_step < 5 then
-      spr(e.destroy_sequence[1], e.x, e.y)
-    elseif e.destroyed_step <= 10 then
-      spr(e.destroy_sequence[2], e.x, e.y)
-    elseif e.destroyed_step <= 15 then
-      spr(e.destroy_sequence[3], e.x, e.y)
-    end
-  else
-    drop_item(e)
-    del(destroyed_enemies, e)
-  end
-
-  circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
-  e.destroyed_step = e.destroyed_step + 1
-  if e.destroyed_step == e.destroy_anim_length then
-    return true
-  end
-  return false
 end
 
 function drop_item(e)
@@ -1020,19 +991,30 @@ function loop_func(table, func)
   end
 end
 
-function distance(n, d)
-  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
-end
-
 function time_diff(time_var, thresh)
   return ((time() - (time_var or (time()-2))) > thresh)
+end
+
+function inc(var)
+  return var + 1
+end
+
+function rocket_kill(rocket)
+  for enemy in all(enemy_spawned) do
+    if distance(enemy, rocket) <= rocket.max_anim_steps then
+      player.killed = inc(player.killed)
+      del(enemy_spawned, enemy)
+      sfx(5,1)
+      add(destroyed_enemies, enemy)
+      del(player_bullets, rocket)
+      add(boss_hit_anims, rocket)
+    end
+  end
 end
 
 function draw_playerhp()
   local hpcolor = 11
   local hpratio = player.health/player.max_health
-  local invtx = player.x - 5
-  local invtcolr = 6
 
   if hpratio >= .5 then
     hpcolor = 11
@@ -1046,33 +1028,7 @@ function draw_playerhp()
 
   rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
   rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
-  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
-
-  if not time_diff(player.last_middle_click, .5) or not time_diff(player.last_right, .5) then
-    if #player.inventory > 0 then
-      spr(player.inventory[1], player.x + 4, player.y + 14)
-    end
-    if #player.inventory > 1 then
-      spr(player.inventory[2], player.x + 13, player.y + 14)
-    end
-
-    --if pget(player.x + 4, player.y + 12) == 5 then invtcolr = 6 end
-    pset(player.x + 3, player.y + 14, invtcolr)
-    pset(player.x + 4, player.y + 14, invtcolr)
-    pset(player.x + 3, player.y + 15, invtcolr)
-
-    pset(player.x + 12, player.y + 14, invtcolr)
-    pset(player.x + 11, player.y + 14, invtcolr)
-    pset(player.x + 12, player.y + 15, invtcolr)
-
-    pset(player.x + 3, player.y + 21, invtcolr)
-    pset(player.x + 4, player.y + 21, invtcolr)
-    pset(player.x + 3, player.y + 20, invtcolr)
-
-    pset(player.x + 12, player.y + 21, invtcolr)
-    pset(player.x + 11, player.y + 21, invtcolr)
-    pset(player.x + 12, player.y + 20, invtcolr)
-  end
+  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 1)--[[shield]] end
 end
 
 
@@ -1109,6 +1065,12 @@ function _update()
   if in_skilltree then
     skills_selected[currently_selected] = false
     local diff = 0
+    local function update_selec()
+            player.max_health = inc(player.max_health)
+            next_cost[currently_selected] = next_cost[currently_selected] + 1
+            player.tokens = player.tokens - 1
+            sfx(2, 1, 0)
+          end
     if btnp((c.up_arrow)) then
       diff = 0xFFFF
       sfx(4, 1, 0)
@@ -1120,20 +1082,11 @@ function _update()
         in_skilltree = false
         sfx(2, 1, 0)
       elseif selection_set[currently_selected] == "health" and player.tokens >= next_cost[currently_selected] then
-        player.max_health = player.max_health + 1
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       elseif selection_set[currently_selected] == "fire rate" and player.tokens >= next_cost[currently_selected] then
-        player.fire_rate = player.fire_rate - 1
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       elseif selection_set[currently_selected] == "speed" and player.tokens >= next_cost[currently_selected] then
-        player.speed = player.speed + .5
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       else
         invalid = time()
         sfx(3, 1, 0)
@@ -1157,6 +1110,8 @@ function _update()
     ]]
     if (btn(c.up_arrow)) then
       if not wall_up then
+        --dash_detect(c.up_arrow)
+        --player.current_speed = player.speed
         player.y -= player.speed
       end
     end --end up button
@@ -1166,6 +1121,8 @@ function _update()
     ]]
     if (btn(c.down_arrow)) then
       if not wall_dwn then
+        --dash_detect(c.down_arrow)
+        --player.current_speed = -player.speed
         player.y += player.speed
       end
     end --end down button
@@ -1175,6 +1132,10 @@ function _update()
     ]]
     if (btn(c.left_arrow)) then
       if not wall_lft then
+        --dash_detect(c.left_arrow)
+        --player.angle -= player.turnspeed
+        --player.turn = 85
+        --player.current_speed = player.speed
         player.x -= player.speed
       end
     end --end left button
@@ -1184,6 +1145,10 @@ function _update()
     ]]
     if (btn(c.right_arrow)) then
       if not wall_rgt then
+        --dash_detect(c.right_arrow)
+        --player.angle += player.turnspeed
+        --player.turn = -85
+        --player.current_speed = player.speed
         player.x += player.speed
       end
     end --end right button
@@ -1205,7 +1170,7 @@ function _update()
       coresume(game)
 
     elseif not drawdialog and not wait.controls then
-      player.b_count = player.b_count + 1
+      player.b_count = inc(player.b_count)
       if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
         player.last_click = time()
         shoot(player.x, player.y, player.angle, 2, true, false)
@@ -1225,7 +1190,7 @@ function _update()
       player.last_right = time()
     end
     if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
-      player.b_count = player.b_count + 1
+      player.b_count = inc(player.b_count)
       if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
         shoot(player.x, player.y, player.angle, 50, true, false, true)
         shoot(player.x, player.y, 30, 50, true, false, true)
@@ -1239,7 +1204,7 @@ function _update()
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
+    if #player.inventory > 1 and time_diff(player.last_click, .15) then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1250,7 +1215,7 @@ function _update()
         player.inventory[i] = player.inventory[i+1]
       end
     end
-    player.last_middle_click = time()
+    player.last_click = time()
   end
 
   --[[
@@ -1321,25 +1286,15 @@ function _draw()
 
     -- check if this sprite has been shot
     for b in all(player_bullets) do
-      --if bullet_collision(e, b) then
       if ent_collide(e, b) then
-        player.killed = player.killed + 1
+        player.killed = inc(player.killed)
         del(enemy_spawned, e)
         sfx(5,1)
         add(destroyed_enemies, e)
         del(player_bullets, b)
         add(boss_hit_anims, b)
         if b.rocket then
-          for en in all(enemy_spawned) do
-            if distance(en, b) <= b.max_anim_steps then
-              player.killed = player.killed + 1
-              del(enemy_spawned, en)
-              sfx(5,1)
-              add(destroyed_enemies, en)
-              del(player_bullets, b)
-              add(boss_hit_anims, b)
-            end
-          end
+          rocket_kill(b)
         end
         b = nil
         e = nil
@@ -1385,7 +1340,7 @@ function _draw()
   end
 
   for e in all(exploding_enemies) do
-    if step_explode_enemy(e) then
+    if step_destroy_animation(e) then
       if distance(e, player) <= 15 and time_diff(player.last_hit, player.immune_time) then
         if player.shield <= 0 then
           player.health = player.health - 1
@@ -1395,19 +1350,13 @@ function _draw()
           player.shield = player.shield - .15
         end
       end
-      del(enemy_spawned, e)
-      del(exploding_enemies, e)
     end
   end
 
-  -- for d in all(destroyed_enemies) do
-  --   step_destroy_animation(d)
-  -- end
   loop_func(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
 
-    --if enemy_collision(d) then
     if ent_collide(d) then
       if d.type == "heart" and player.health < player.max_health then
         player.health = player.health+1
@@ -1444,16 +1393,7 @@ function _draw()
       del(player_bullets, b)
       add(boss_hit_anims, b)
       if b.rocket then
-        for e in all(enemy_spawned) do
-          if distance(e, b) <= b.max_anim_steps then
-            player.killed = player.killed + 1
-            del(enemy_spawned, e)
-            sfx(5,1)
-            add(destroyed_enemies, e)
-            del(player_bullets, b)
-            add(boss_hit_anims, b)
-          end
-        end
+        rocket_kill(b)
       end
       b = nil
     end
@@ -1469,7 +1409,6 @@ function _draw()
 
     if b~=nil then
       for bos in all(boss_table) do
-        --if boss_collision(bos, b) then
         if ent_collide(bos, b) then
           sfx(6,1)
           if b.sprite == 48 then
@@ -1482,16 +1421,7 @@ function _draw()
           del(player_bullets, b)
           add(boss_hit_anims, b)
           if b.rocket then
-            for e in all(enemy_spawned) do
-              if distance(e, b) <= b.max_anim_steps then
-                player.killed = player.killed + 1
-                del(enemy_spawned, e)
-                sfx(5,1)
-                add(destroyed_enemies, e)
-                del(player_bullets, b)
-                add(boss_hit_anims, b)
-              end
-            end
+            rocket_kill(b)
           end
           if (bos.health <= 0) then
             sfx(5,1)
@@ -1513,7 +1443,6 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    --if time_diff(player.last_hit, player.immune_time) and bullet_collision(player, b) then
     if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
       if player.shield <= 0 then
         player.health = player.health - 1
@@ -1527,14 +1456,13 @@ function _draw()
       b = nil
     end
 
-    if b~=nil and bump(b.x, b.y) then
-      del(enemy_bullets, b)
-      b = nil
-    end
-
-    if b ~= nil then
+    if b~=nil then
       spr(b.sprite, b.x, b.y)
       b.move()
+      if bump(b.x, b.y) then
+        del(enemy_bullets, b)
+        b = nil
+      end
     end
   end
 
@@ -1548,7 +1476,6 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    --if time_diff(player.last_hit, player.immune_time) and boss_collision(b, player) then
     if time_diff(player.last_hit, player.immune_time) and ent_collide(b, player) then
       player.health = player.health - 2
       player.last_hit = time()
@@ -1562,26 +1489,20 @@ function _draw()
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
-    --titlescreen = false
-    --player.health = player.max_health
     sfx(9,1)
     show_leaderboard()
     run()
-    -- print("game over", 48, 60, 8)
-    --this doesn't fire because stop() activates immediately.
-    -- stop()
   end
 
   draw_playerhp()
   spr(96, stat(32) - 3, stat(33) - 3)
 
-  --draw_hud()
+  draw_hud()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
   if coin.dropped then
      spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x+level.sx, coin.y+level.sy, 2, 2)
-     --if boss_collision(coin, player) then
      if ent_collide(coin, player) then
        player.tokens = player.tokens + 1
        coin.dropped = false
