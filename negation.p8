@@ -1015,6 +1015,8 @@ end
 function draw_playerhp()
   local hpcolor = 11
   local hpratio = player.health/player.max_health
+  if invtx == nil then invtx = 4 end
+  if invtx > 4 then invtx -= 1 end
 
   if hpratio >= .5 then
     hpcolor = 11
@@ -1028,7 +1030,35 @@ function draw_playerhp()
 
   rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
   rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
-  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 1)--[[shield]] end
+  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
+
+  if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
+    if #player.inventory > 0 then
+      spr(player.inventory[1], player.x + invtx, player.y + 14)
+    end
+    if #player.inventory > 1 then
+      spr(player.inventory[2], player.x + invtx + 9, player.y + 14)
+    end
+    if #player.inventory > 2 then
+      spr(player.inventory[#player.inventory], player.x + invtx - 9, player.y + 14)
+    end
+
+    pset(player.x + 3, player.y + 14, 6)
+    pset(player.x + 4, player.y + 14, 6)
+    pset(player.x + 3, player.y + 15, 6)
+
+    pset(player.x + 12, player.y + 14, 6)
+    pset(player.x + 11, player.y + 14, 6)
+    pset(player.x + 12, player.y + 15, 6)
+
+    pset(player.x + 3, player.y + 21, 6)
+    pset(player.x + 4, player.y + 21, 6)
+    pset(player.x + 3, player.y + 20, 6)
+
+    pset(player.x + 12, player.y + 21, 6)
+    pset(player.x + 11, player.y + 21, 6)
+    pset(player.x + 12, player.y + 20, 6)
+  end
 end
 
 
@@ -1188,6 +1218,7 @@ function _update()
       del(player.inventory, player.inventory[1])
       sfx(10,1)
       player.last_right = time()
+      player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
     end
     if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
       player.b_count = inc(player.b_count)
@@ -1215,7 +1246,8 @@ function _update()
         player.inventory[i] = player.inventory[i+1]
       end
     end
-    player.last_click = time()
+    player.last_middle_click = time()
+    invtx = 13
   end
 
   --[[
