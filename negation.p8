@@ -1097,6 +1097,7 @@ function _update()
     local diff = 0
     local function update_selec()
             player.max_health = inc(player.max_health)
+            player.health += 1
             next_cost[currently_selected] = next_cost[currently_selected] + 1
             player.tokens = player.tokens - 1
             sfx(2, 1, 0)
@@ -1527,9 +1528,12 @@ function _draw()
   end
 
   draw_playerhp()
-  spr(96, stat(32) - 3, stat(33) - 3)
 
-  draw_hud()
+  if pget(stat(32), stat(33)) == 8 or pget(stat(32), stat(33)) == 2 then pal(8, 6) end
+  spr(96, stat(32) - 3, stat(33) - 3)
+  pal()
+
+  --draw_hud()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
