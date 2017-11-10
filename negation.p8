@@ -10,10 +10,8 @@ player.sprite = 0
 player.x = 80
 player.y = 8
 player.speed = 1
-player.current_speed = 0
 player.angle = 0
 player.turn = 0
-player.current_dash_speed = 0
 player.fire_rate = 10
 player.health = 10
 player.max_health = 10
@@ -579,16 +577,6 @@ function spawnenemies()
     spawn_enemies = false
     if not wait.timer then detect_killed_enemies = true end
   end
-
-  if #enemy_table == 0 then
-    spawn_enmies = false
-    if not wait.timer then detect_killed_enemies = true end
-  end
-
-  if #enemy_table == 0 then
-    spawn_enmies = false
-    if not wait.timer then detect_killed_enemies = true end
-  end
 end
 
 function detect_kill_enemies()
@@ -1136,6 +1124,25 @@ function time_diff(time_var, thresh)
   return ((time() - (time_var or (time()-2))) > thresh)
 end
 
+function draw_playerhp()
+  local hpcolor = 11
+  local hpratio = player.health/player.max_health
+
+  if hpratio >= .5 then
+    hpcolor = 11
+  elseif hpratio >= .3 then
+    hpcolor = 9
+  elseif player.health == 1 and flr(time()*10000)%2==0 then
+    hpcolor = 6
+  else
+    hpcolor = 8
+  end
+
+  rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
+  rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
+  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 1)--[[shield]] end
+end
+
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -1644,6 +1651,7 @@ function _draw()
     -- stop()
   end
 
+  draw_playerhp()
   spr(96, stat(32) - 3, stat(33) - 3)
 
   draw_hud()
