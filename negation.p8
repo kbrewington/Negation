@@ -15,6 +15,7 @@ player.turn = 0
 player.fire_rate = 10
 player.health = 10
 player.max_health = 10
+player.size = 8
 player.immune_time = 2
 player.last_hit = 0
 player.b_count = 0
@@ -82,6 +83,7 @@ _load = {}
 
 coin = {}
 coin.dropped = false
+coin.size = 16
 coin.x = nil
 coin.y = nil
 coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
@@ -122,6 +124,7 @@ function drop_obj(sx, sy, sprite)
   d.x = sx
   d.y = sy
   d.sprite = sprite
+  d.size = 8
   d.drop_duration = 5
   d.init_time = time()
   d.types = {[32] = "heart",
@@ -154,6 +157,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.fire_rate = 10
   e.exploding = false
   e.dont_move = false
+  e.size = 8
   e.sprite = 132
   e.angle = 360
   e.speed = .35
@@ -209,6 +213,7 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   b.current_step = 0
   b.max_anim_steps = 5
   b.rocket = false
+  b.size = 3
 
   if b.sprite == 48 then
     b.acceleration = 0.5
@@ -244,6 +249,7 @@ function boss(startx, starty, sprite, lvl)
   b.shot_last = nil
   b.shot_ang = 0
   b.sprite = sprite
+  b.size = 16
   b.bullet_speed = 2
   b.fire_rate = 7
   b.destroyed_step = 0
@@ -369,7 +375,7 @@ function collision()
   wall_dwn = bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) --done
 end
 
-function enemy_collision(e, p)
+--[[function enemy_collision(e, p)
   local other = (p or player)
   return (e.x+level.sx > other.x+8 or e.x+level.sx+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
 end
@@ -386,12 +392,20 @@ function boss_collision(sp, b)
     return (b.x+4 > sp.x+level.sx+16 or b.x+11 < sp.x+level.sx or b.y+3 > sp.y+16 or b.y+10 < sp.y)==false
   end
   return (b.x > sp.x+16 or b.x+4 < sp.x or b.y > sp.y+16 or b.y+4 < sp.y)==false
+end]]
+
+function ent_collide(firstent, secondent)
+  secondent = secondent or player
+  if firstent == player then offset = 4 else offset = 0 end
+  return (firstent.x + offset > secondent.x + level.sx + secondent.size or firstent.x + offset + player.size < secondent.x + level.sx
+    or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
 end
 
 function collide_all_enemies()
   local e = enemy_spawned[1]
   for o in all(enemy_spawned) do
-    if o~=e and enemy_collision(e, o) then
+    --if o~=e and enemy_collision(e, o) then
+    if o~=e and ent_collide(e, o) then
       fix_enemy(o, e)
     end
   end
@@ -1018,7 +1032,7 @@ function draw_playerhp()
   local hpcolor = 11
   local hpratio = player.health/player.max_health
   local invtx = player.x - 5
-  local invtcolr = 5
+  local invtcolr = 6
 
   if hpratio >= .5 then
     hpcolor = 11
@@ -1307,7 +1321,8 @@ function _draw()
 
     -- check if this sprite has been shot
     for b in all(player_bullets) do
-      if bullet_collision(e, b) then
+      --if bullet_collision(e, b) then
+      if ent_collide(e, b) then
         player.killed = player.killed + 1
         del(enemy_spawned, e)
         sfx(5,1)
@@ -1334,7 +1349,7 @@ function _draw()
 
 
     if e ~= nil then
-      if time_diff(player.last_hit, player.immune_time) and enemy_collision(e) then
+      if time_diff(player.last_hit, player.immune_time) and ent_collide(e) then
         if player.shield <= 0 then
           player.health = player.health - 1
           sfx(2,2)
@@ -1392,7 +1407,8 @@ function _draw()
 
   for d in all(dropped) do
 
-    if enemy_collision(d) then
+    --if enemy_collision(d) then
+    if ent_collide(d) then
       if d.type == "heart" and player.health < player.max_health then
         player.health = player.health+1
         sfx(7,1)
@@ -1453,7 +1469,8 @@ function _draw()
 
     if b~=nil then
       for bos in all(boss_table) do
-        if boss_collision(bos, b) then
+        --if boss_collision(bos, b) then
+        if ent_collide(bos, b) then
           sfx(6,1)
           if b.sprite == 48 then
             bos.health -= 3
@@ -1496,7 +1513,8 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    if time_diff(player.last_hit, player.immune_time) and bullet_collision(player, b) then
+    --if time_diff(player.last_hit, player.immune_time) and bullet_collision(player, b) then
+    if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
       if player.shield <= 0 then
         player.health = player.health - 1
         sfx(2,2)
@@ -1530,7 +1548,8 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if time_diff(player.last_hit, player.immune_time) and boss_collision(b, player) then
+    --if time_diff(player.last_hit, player.immune_time) and boss_collision(b, player) then
+    if time_diff(player.last_hit, player.immune_time) and ent_collide(b, player) then
       player.health = player.health - 2
       player.last_hit = time()
     end
@@ -1562,7 +1581,8 @@ function _draw()
   if wait.timer then drawcountdown() end
   if coin.dropped then
      spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x+level.sx, coin.y+level.sy, 2, 2)
-     if boss_collision(coin, player) then
+     --if boss_collision(coin, player) then
+     if ent_collide(coin, player) then
        player.tokens = player.tokens + 1
        coin.dropped = false
        direction = nil
