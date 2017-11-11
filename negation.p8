@@ -345,8 +345,8 @@ function show_leaderboard()
 end
 
 function bump(x, y)
-  local tx = flr((x - level.sx) / 8)
-  local ty = flr((y - level.sy) / 8)
+  local tx = flr((x - level.sx + (level.x*8)) / 8)
+  local ty = flr((y - level.sy + (level.y*8)) / 8)
   local map_id = mget(tx, ty)
 
   return fget(map_id, 0)
@@ -1236,7 +1236,7 @@ function _update()
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time_diff(player.last_click, .15) then
+    if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1246,9 +1246,9 @@ function _update()
         end
         player.inventory[i] = player.inventory[i+1]
       end
+      invtx = 13 --inventory animation
     end
     player.last_middle_click = time()
-    invtx = 13
   end
 
   --[[
@@ -1509,7 +1509,7 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if time_diff(player.last_hit, player.immune_time) and ent_collide(b, player) then
+    if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
       player.health = player.health - 2
       player.last_hit = time()
     end
@@ -1539,7 +1539,7 @@ function _draw()
   if wait.timer then drawcountdown() end
   if coin.dropped then
      spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x+level.sx, coin.y+level.sy, 2, 2)
-     if ent_collide(coin, player) then
+     if ent_collide(player, coin) then
        player.tokens = player.tokens + 1
        coin.dropped = false
        direction = nil
