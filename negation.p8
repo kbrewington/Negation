@@ -25,6 +25,7 @@ player.inv_max = 4
 player.shield_dur = 5
 player.last_right = nil
 player.last_click = nil
+player.last_middle_click = nil
 player.killed = 0
 player.shield = 0
 
@@ -276,6 +277,10 @@ function boss(startx, starty, sprite, lvl)
                b.y = b.y - 5*cos(ang/360)
              end
              --b.draw_healthbar()
+           elseif b.level == 3 then
+              local ang = (angle_btwn(60,60,b.x,b.y)+.1)%360
+              b.x = b.x - 60*sin(ang/360)
+              b.y = b.y - 60*cos(ang/360)
            end
            b.draw_healthbar()
           end
@@ -403,13 +408,8 @@ end
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
- if s == 48 then
-   sx = 0
-   sy = 25
- else
-   sx=(s%8)*8 --
-   sy=(s%8)*8 --
- end
+ sx=(s%8)*8
+ sy=flr(s/8)*4
  x0=flr(0.5*sw)
  y0=flr(0.5*sh)
  a=a/360
@@ -857,7 +857,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(56, 56, 128, 1))
+  add(boss_table, boss(56, 56, 128, 3))
   yield()
 
   kill_all_enemies()
@@ -1204,7 +1204,7 @@ function _update()
       player.b_count = inc(player.b_count)
       if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
         player.last_click = time()
-        shoot(player.x, player.y, player.angle, 2, true, false)
+        shoot(player.x, player.y, player.angle, 34, true, false)
         sfx(1,1)
       end
     end
@@ -1224,9 +1224,9 @@ function _update()
     if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
       player.b_count = inc(player.b_count)
       if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
-        shoot(player.x, player.y, player.angle, 50, true, false, true)
-        shoot(player.x, player.y, 30, 50, true, false, true)
-        shoot(player.x, player.y, -30, 50, true, false, true)
+        shoot(player.x, player.y, player.angle, 34, true, false, true)
+        shoot(player.x, player.y, 30, 34, true, false, true)
+        shoot(player.x, player.y, -30, 34, true, false, true)
         sfx(1,1)
       end
       player.last_right = time()
