@@ -17,15 +17,15 @@ player.health = 10
 player.max_health = 10
 player.size = 8
 player.immune_time = 2
-player.last_hit = 0
+--player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
 player.inventory = {}
 player.inv_max = 4
 player.shield_dur = 5
-player.last_right = nil
-player.last_click = nil
-player.last_middle_click = nil
+--player.last_right = nil
+--player.last_click = nil
+--player.last_middle_click = nil
 player.killed = 0
 player.shield = 0
 
@@ -47,6 +47,12 @@ level.transition = {1, 0, 0,
 wait = {}
 wait.controls = false
 wait.dialog_finish = false
+
+timers = {leveltimer = 0,
+          playerlasthit = 0,
+          leftclick = 0,
+          middleclick = 0,
+          rightclick = 0}
 
 -- controls
 c = {}
@@ -300,10 +306,10 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print("", 0, 12, debug_color)
   print("", 45, 12, debug_color)
+  print(timers["playerlasthit"], 0, 12, debug_color)
 
-  print(#_load, 0, 18, debug_color)
+  print(timers["rightclick"], 0, 18, debug_color)
   print("", 45, 18, debug_color)
 end
 
@@ -403,6 +409,7 @@ function round(num, numdecimalplaces)
   local mult = 10^(numdecimalplaces or 0)
   return flr(num * mult + 0.5) / mult
 end
+function ceil(x) return -flr(-x) end
 
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
@@ -608,10 +615,15 @@ end
 
 function drawcountdown()
   local x, y, clr = 57, 15, 12
-  local countdown = flr((wait.start_time + wait.end_time) - time())
+  --local countdown = flr((wait.start_time + wait.end_time) - time())
+  local countdown = timers["leveltimer"]
   local hours = flr(countdown/3600);
   local mins = flr(countdown/60 - (hours * 60));
-  local secs = flr(countdown - hours * 3600 - mins * 60);
+  local secs = ceil(countdown - hours * 3600 - mins * 60);
+  if secs == 60 then
+    mins += 1
+    secs = 0
+  end
   if secs < 10 then secs = "0" .. secs end
 
   print(mins .. ":" .. secs, x, y, clr)
@@ -840,7 +852,7 @@ function gameflow()
   fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
-  wait.end_time = 65 -- how long the timer should run for in seconds
+  timers["leveltimer"] = 65
   wait.timer = true -- tells the game we want to wait for the timer to finish
   yield()
 
@@ -867,7 +879,7 @@ function gameflow()
   level_change = true
   yield()
 
-  level.border.right = 248
+  --level.border.right = 248
   wait.controls = false
   yield()
 
@@ -878,8 +890,8 @@ function gameflow()
   add(boss_table, boss(56, 56, 139, 2))
   yield()
 
-  kill_all_enemies(true )
-  level.border.right = 432
+  kill_all_enemies(true)
+  --level.border.right = 432
   level_change = true
 end
 
@@ -1032,7 +1044,8 @@ function draw_playerhp()
   rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
   if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
 
-  if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
+  --if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
+  if timers["middleclick"] > 0 then
     if #player.inventory > 0 then
       spr(player.inventory[1], player.x + invtx, player.y + 14)
     end
@@ -1042,22 +1055,7 @@ function draw_playerhp()
     if #player.inventory > 2 then
       spr(player.inventory[#player.inventory], player.x + invtx - 9, player.y + 14)
     end
-
-    pset(player.x + 3, player.y + 14, 6)
-    pset(player.x + 4, player.y + 14, 6)
-    pset(player.x + 3, player.y + 15, 6)
-
-    pset(player.x + 12, player.y + 14, 6)
-    pset(player.x + 11, player.y + 14, 6)
-    pset(player.x + 12, player.y + 15, 6)
-
-    pset(player.x + 3, player.y + 21, 6)
-    pset(player.x + 4, player.y + 21, 6)
-    pset(player.x + 3, player.y + 20, 6)
-
-    pset(player.x + 12, player.y + 21, 6)
-    pset(player.x + 11, player.y + 21, 6)
-    pset(player.x + 12, player.y + 20, 6)
+    spr(112, player.x + 4, player.y + 14)
   end
 end
 
@@ -1069,7 +1067,7 @@ function _init()
   init_mem()
   poke(0x5f2d, 1)
 
-  player.last_hit = time() - player.immune_time
+  --player.last_hit = time() - player.immune_time
   title.init = time()
 
   game = cocreate(gameflow)
@@ -1084,6 +1082,10 @@ function _update()
   --player.last_hit = abs(time() - 0.5) --uncomment for god mode
   collision()
   collide_all_enemies()
+
+  for k,t in pairs(timers) do
+    timers[k] = max(0, timers[k] - (1/30))
+  end
 
   if not titlescreen then
     if btnp(c.x_button) or btnp(c.z_button) then
@@ -1186,7 +1188,8 @@ function _update()
 
     player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   else
-    player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
+    -- player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
+    timers["playerlasthit"] = 0.1 --make player invulnerable so they dont get hit when they can't move
   end -- end wait.controls
 
   --[[
@@ -1196,14 +1199,18 @@ function _update()
   -- if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
   if (stat(34) == 1) then
-    if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
-      player.last_click = time()
+    --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
+    if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
+      --player.last_click = time()
+      timers["leftclick"] = 1
       coresume(game)
 
     elseif not drawdialog and not wait.controls then
       player.b_count = inc(player.b_count)
-      if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
-        player.last_click = time()
+      --if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
+      if timers["leftclick"] == 0 or player.b_count%player.fire_rate == 0 then
+        --player.last_click = time()
+        timers["leftclick"] = .25
         shoot(player.x, player.y, player.angle, 34, true, false)
         sfx(1,1)
       end
@@ -1214,29 +1221,36 @@ function _update()
   if (stat(34) == 2) then
     save_data()
     load_data()
-    if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
+    --if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
+    if player.inventory[1] == 48 and timers["rightclick"] == 0 then
       shoot(player.x,player.y, 0, 48, true, false)
       del(player.inventory, player.inventory[1])
       sfx(10,1)
-      player.last_right = time()
-      player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
+      --player.last_right = time()
+      --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
+      timers["rightclick"] = .25
+      timers["middleclick"] = .25
     end
-    if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
+    --if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
+    if player.inventory[1] == 33 or timers["rightclick"] == 0 then
       player.b_count = inc(player.b_count)
-      if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
+      --if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
+      if player.b_count%player.fire_rate == 0 and timers["leftclick"] == 0 then
         shoot(player.x, player.y, player.angle, 34, true, false, true)
         shoot(player.x, player.y, 30, 34, true, false, true)
         shoot(player.x, player.y, -30, 34, true, false, true)
         sfx(1,1)
       end
-      player.last_right = time()
+      --player.last_right = time()
+      timers["rightclick"] = .25
     end
   end
 
   -- middle mouse button
   if (stat(34) == 4) then -- cycle inventory
     local temp = 0
-    if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
+    --if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
+    if #player.inventory > 1 and timers["middleclick"] == 0 then
       for i=1,#player.inventory do
         if i == 1 then
           temp = player.inventory[i]
@@ -1246,9 +1260,11 @@ function _update()
         end
         player.inventory[i] = player.inventory[i+1]
       end
-      invtx = 13 --inventory animation
+      if #player.inventory == 2 then invtx = 7
+      else invtx = 13 --[[inventory animation]] end
     end
-    player.last_middle_click = time()
+    --player.last_middle_click = time()
+    timers["middleclick"] = .25
   end
 
   --[[
@@ -1337,11 +1353,13 @@ function _draw()
 
 
     if e ~= nil then
-      if time_diff(player.last_hit, player.immune_time) and ent_collide(e) then
+      -- if time_diff(player.last_hit, player.immune_time) and ent_collide(e) then
+      if timers["playerlasthit"] == 0 and ent_collide(e) then
         if player.shield <= 0 then
           player.health = player.health - 1
           sfx(2,2)
-          player.last_hit = time()
+          --player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
         else
           player.shield = player.shield - .15
         end
@@ -1374,11 +1392,13 @@ function _draw()
 
   for e in all(exploding_enemies) do
     if step_destroy_animation(e) then
-      if distance(e, player) <= 15 and time_diff(player.last_hit, player.immune_time) then
+      -- if distance(e, player) <= 15 and time_diff(player.last_hit, player.immune_time) then
+      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
         if player.shield <= 0 then
           player.health = player.health - 1
           sfx(2,2)
-          player.last_hit = time()
+          -- player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
         else
           player.shield = player.shield - .15
         end
@@ -1392,7 +1412,7 @@ function _draw()
 
     if ent_collide(d) then
       if d.type == "heart" and player.health < player.max_health then
-        player.health = player.health+1
+        player.health = min(player.max_health, player.health+3)
         sfx(7,1)
         del(dropped, d)
       elseif d.type == "shield" then
@@ -1476,14 +1496,18 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
-      if player.shield <= 0 then
-        player.health = player.health - 1
-        sfx(2,2)
-        player.last_hit = time()
-      else
-        add(shield_anims, {b.x, b.y, 10})
-        player.shield = player.shield - .15
+    -- if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
+    if ent_collide(player, b) then
+      if timers["playerlasthit"] == 0 then
+        if player.shield <= 0 then
+          player.health = player.health - 1
+          sfx(2,2)
+          -- player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
+        else
+          add(shield_anims, {b.x, b.y, 10})
+          player.shield = player.shield - .15
+        end
       end
       del(enemy_bullets, b)
       b = nil
@@ -1509,9 +1533,11 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
+    -- if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
+    if timers["playerlasthit"] == 0 and ent_collide(player, b) then
       player.health = player.health - 2
-      player.last_hit = time()
+      --player.last_hit = time()
+      timers["playerlasthit"] = player.immune_time
     end
     spr(b.sprite, b.x, b.y, 2, 2)
     b.update()
@@ -1549,7 +1575,8 @@ function _draw()
 
   if drawdialog then dialog_seraph(seraph) end
 
-  if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
+  -- if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
+  if (timers["playerlasthit"] > player.immune_time - 0.5) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
@@ -1619,14 +1646,14 @@ e888888e0440044000000000530bb03500899800b333333b25555552000000000000000000000000
 00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0300000000000300000a000000000000200000200000000099090990000000009090090988080880000000000c0000111000000c000700000000000000000000
 00300000000030000009000000000000020202000000000009090900000990000909909008080800000000000110011111000011007670000000000000000000
 0003000000030000000a00000000000002222200008880000999990000999900009aa90008888800000000000011011111000110076167000000000000000000
