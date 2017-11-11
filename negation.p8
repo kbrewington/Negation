@@ -1098,8 +1098,14 @@ function _update()
     skills_selected[currently_selected] = false
     local diff = 0
     local function update_selec()
-            player.max_health = inc(player.max_health)
-            player.health += 1
+            if selection_set[currently_selected] == "health" then
+              player.max_health = inc(player.max_health)
+              player.health += 1
+            elseif selection_set[currently_selected] == "fire rate" then
+
+            elseif selection_set[currently_selected] == "speed" then
+              player.speed += .2
+            end
             next_cost[currently_selected] = next_cost[currently_selected] + 1
             player.tokens = player.tokens - 1
             sfx(2, 1, 0)
@@ -1189,7 +1195,11 @@ function _update()
     player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   else
     -- player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
+<<<<<<< HEAD
     timers["playerlasthit"] = 0.1 --make player invulnerable so they dont get hit when they can't move
+=======
+    timers["playerlasthit"] = 0x.0001 --make player invulnerable so they dont get hit when they can't move
+>>>>>>> KBedit
   end -- end wait.controls
 
   --[[
