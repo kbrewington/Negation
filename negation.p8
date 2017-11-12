@@ -1080,8 +1080,11 @@ end --end _init()
 --------------------------------------------------------------------------------
 function _update()
   --player.last_hit = abs(time() - 0.5) --uncomment for god mode
-  collision()
+  --collision()
   collide_all_enemies()
+
+  local previousx = player.x
+  local previousy = player.y
 
   for k,t in pairs(timers) do
     timers[k] = max(0, timers[k] - (1/30))
@@ -1148,10 +1151,9 @@ function _update()
       up arrow
     ]]
     if (btn(c.up_arrow)) then
-      if not wall_up then
-        --dash_detect(c.up_arrow)
-        --player.current_speed = player.speed
-        player.y -= player.speed
+      player.y -= player.speed
+      if bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) then
+        player.y = previousy
       end
     end --end up button
 
@@ -1159,10 +1161,9 @@ function _update()
       down arrow
     ]]
     if (btn(c.down_arrow)) then
-      if not wall_dwn then
-        --dash_detect(c.down_arrow)
-        --player.current_speed = -player.speed
-        player.y += player.speed
+      player.y += player.speed
+      if bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) then
+        player.y = previousy
       end
     end --end down button
 
@@ -1170,12 +1171,9 @@ function _update()
       left arrow
     ]]
     if (btn(c.left_arrow)) then
-      if not wall_lft then
-        --dash_detect(c.left_arrow)
-        --player.angle -= player.turnspeed
-        --player.turn = 85
-        --player.current_speed = player.speed
-        player.x -= player.speed
+      player.x -= player.speed
+      if bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) then
+        player.x = previousx
       end
     end --end left button
 
@@ -1183,23 +1181,16 @@ function _update()
       right arrow
     ]]
     if (btn(c.right_arrow)) then
-      if not wall_rgt then
-        --dash_detect(c.right_arrow)
-        --player.angle += player.turnspeed
-        --player.turn = -85
-        --player.current_speed = player.speed
-        player.x += player.speed
+      player.x += player.speed
+      if bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11) then
+        player.x = previousx
       end
     end --end right button
 
     player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   else
     -- player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
-<<<<<<< HEAD
-    timers["playerlasthit"] = 0.1 --make player invulnerable so they dont get hit when they can't move
-=======
     timers["playerlasthit"] = 0x.0001 --make player invulnerable so they dont get hit when they can't move
->>>>>>> KBedit
   end -- end wait.controls
 
   --[[
@@ -1291,10 +1282,10 @@ function _update()
 
   --player.current_speed = 0
   --player.turn = 0
-  if player.x < -4 then player.x = -4 end
-  if player.y < -4 then player.y = -4 end
-  if player.x > 116 then player.x = 116 end
-  if player.y > 116 then player.y = 116 end
+  if player.x < 0 then player.x = 0 end
+  if player.y < 0 then player.y = 0 end
+  if player.x > 112 then player.x = 112 end
+  if player.y > 112 then player.y = 112 end
 
   if player.shield > 0 and not wait.controls then
     player.shield = player.shield - .01
