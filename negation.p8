@@ -12,7 +12,8 @@ player.y = 8
 player.speed = 1
 player.angle = 0
 player.turn = 0
-player.fire_rate = 10
+player.fire_rate = .75
+player.power_fire_rate = 1
 player.health = 10
 player.max_health = 10
 player.size = 8
@@ -30,11 +31,11 @@ player.killed = 0
 player.shield = 0
 
 level = {}
-level.border = {}
-level.border.left = 0
-level.border.up = 0
-level.border.right = 120
-level.border.down = 120
+-- level.border = {}
+-- level.border.left = 0
+-- level.border.up = 0
+-- level.border.right = 120
+-- level.border.down = 120
 level.lvl = 1
 level.sx = 0
 level.sy = 0
@@ -49,10 +50,13 @@ wait.controls = false
 wait.dialog_finish = false
 
 timers = {leveltimer = 0,
+          showinv = 0,
           playerlasthit = 0,
           leftclick = 0,
           middleclick = 0,
-          rightclick = 0}
+          rightclick = 0,
+          firerate = 0,
+          invalid = 0}
 
 -- controls
 c = {}
@@ -105,7 +109,7 @@ currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
-invalid = 0
+--invalid = 0
 titlescreen = nil
 
 --------------------------------------------------------------------------------
@@ -126,7 +130,10 @@ function drop_obj(sx, sy, sprite)
              [33] = "shotgun",
              [48] = "rockets",
              [49] = "shield"}
+  d.ammos = {[33] = 10,
+             [48] = 1}
   d.type = d.types[sprite]
+  if d.ammos[sprite] ~= nil then d.ammo = d.ammos[sprite] end
   return d
 end
 
@@ -306,7 +313,7 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print("", 45, 12, debug_color)
+  if #player.inventory > 0 then print(player.inventory[1].ammo, 45, 12, debug_color) end
   print(timers["playerlasthit"], 0, 12, debug_color)
 
   print(timers["rightclick"], 0, 18, debug_color)
@@ -365,13 +372,6 @@ end
 
 function bump_all(x, y)
   return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
-end
-
-function collision()
-  wall_up = bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) --done
-  wall_lft = bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) --done
-  wall_rgt = bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)
-  wall_dwn = bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) --done
 end
 
 function ent_collide(firstent, secondent)
@@ -575,11 +575,11 @@ function levelchange()
   --TODO add map centering on player in the beginning
 
   if not move_map then
-    if btn(c.left_arrow) and not wall_lft and abs(level.sx - ((level.lvl-1) * 128)) > level.x*8 and player.x < farx then
+    if btn(c.left_arrow) and abs(level.sx - ((level.lvl-1) * 128)) > level.x*8 and player.x < farx then
       level.sx += player.speed
       if player.x < farx then player.x = farx end
     end
-    if btn(c.right_arrow) and not wall_rgt --[[and level.sx - ((level.lvl-1) * 128) <= (level.transition[level.i+1])*8]]  and player.x > farx then
+    if btn(c.right_arrow) --[[and level.sx - ((level.lvl-1) * 128) <= (level.transition[level.i+1])*8]]  and player.x > farx then
       level.sx -= player.speed
       if player.x > farx then player.x = farx end
     end
@@ -795,7 +795,7 @@ function dialog_seraph(dialog)
 
   --print("z/x to continue", 69, 123, 7)
   wait.dialog_finish = false
-
+  timers["leftclick"] = 1
 end
 
 
@@ -861,7 +861,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO- WAIT    WHAT'S THAT?"
+  seraph.text = "OKAY, THAT SHOULD DO-"
   drawdialog = true
   wait.controls = true
   yield()
@@ -1045,15 +1045,15 @@ function draw_playerhp()
   if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
 
   --if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
-  if timers["middleclick"] > 0 then
+  if timers["showinv"] > 0 then
     if #player.inventory > 0 then
-      spr(player.inventory[1], player.x + invtx, player.y + 14)
+      spr(player.inventory[1].sprite, player.x + invtx, player.y + 14)
     end
     if #player.inventory > 1 then
-      spr(player.inventory[2], player.x + invtx + 9, player.y + 14)
+      spr(player.inventory[2].sprite, player.x + invtx + 9, player.y + 14)
     end
     if #player.inventory > 2 then
-      spr(player.inventory[#player.inventory], player.x + invtx - 9, player.y + 14)
+      spr(player.inventory[#player.inventory].sprite, player.x + invtx - 9, player.y + 14)
     end
     spr(112, player.x + 4, player.y + 14)
   end
@@ -1130,7 +1130,8 @@ function _update()
       elseif selection_set[currently_selected] == "speed" and player.tokens >= next_cost[currently_selected] then
         update_selec()
       else
-        invalid = time()
+        --invalid = time()
+        timers["invalid"] = 0.5
         sfx(3, 1, 0)
       end
     end
@@ -1187,6 +1188,54 @@ function _update()
       end
     end --end right button
 
+    -- middle mouse button
+    if (stat(34) == 4) then -- cycle inventory
+      local temp = 0
+      --if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
+      if timers["middleclick"] == 0 then
+        if #player.inventory > 1 then
+          for i=1,#player.inventory do
+            if i == 1 then
+              temp = player.inventory[i]
+            elseif i == #player.inventory then
+              player.inventory[i] = temp
+              break
+            end
+            player.inventory[i] = player.inventory[i+1]
+          end
+        end
+
+        timers["middleclick"] = .25
+        timers["showinv"] = .5
+        if #player.inventory == 2 then invtx = 7
+        elseif #player.inventory > 2 then invtx = 13 --[[inventory animation]] end
+      end
+      --player.last_middle_click = time()
+    end
+
+    --right mouse button
+    if (stat(34) == 2) and #player.inventory > 0 and timers["rightclick"] == 0 then
+      timers["rightclick"] = player.power_fire_rate
+
+      if player.inventory[1].type == "shotgun" then
+        shoot(player.x, player.y, player.angle, 34, true, false, true)
+        shoot(player.x, player.y, 30, 34, true, false, true)
+        shoot(player.x, player.y, -30, 34, true, false, true)
+        --timers["rightclick"] = .1 --allows for custom firespeed
+        --sfx(1,1)
+
+      elseif player.inventory[1].type == "rockets" then
+        shoot(player.x, player.y, 0, 48, true, false)
+        --sfx(10,1)
+      end
+
+      if player.inventory[1].ammo == 1 then
+        del(player.inventory, player.inventory[1])
+        timers["showinv"] = .5
+        timers["rightclick"] = 1
+      else player.inventory[1].ammo -= 1 end
+    end
+
     player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   else
     -- player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
@@ -1199,74 +1248,74 @@ function _update()
   ]]
   -- if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
+  -- if (stat(34) == 1) then
+  --   --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
+  --   if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
+  --     --player.last_click = time()
+  --     timers["leftclick"] = 1
+  --     coresume(game)
+  --
+  --   elseif not drawdialog and not wait.controls then
+  --     player.b_count = inc(player.b_count)
+  --     --if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
+  --     if timers["leftclick"] == 0 or player.b_count%player.fire_rate == 0 then
+  --       --player.last_click = time()
+  --       timers["leftclick"] = .25
+  --       shoot(player.x, player.y, player.angle, 34, true, false)
+  --       sfx(1,1)
+  --     end
+  --   end
+  -- end --end z button
   if (stat(34) == 1) then
-    --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
     if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
-      --player.last_click = time()
-      timers["leftclick"] = 1
       coresume(game)
+      timers["leftclick"] = 1
 
-    elseif not drawdialog and not wait.controls then
-      player.b_count = inc(player.b_count)
-      --if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
-      if timers["leftclick"] == 0 or player.b_count%player.fire_rate == 0 then
-        --player.last_click = time()
-        timers["leftclick"] = .25
-        shoot(player.x, player.y, player.angle, 34, true, false)
-        sfx(1,1)
-      end
+    elseif not wait.controls and timers["firerate"] == 0 then
+      shoot(player.x, player.y, player.angle, 34, true, false)
+      --sfx(1,1)
+      timers["firerate"] = player.fire_rate
     end
-  end --end z button
+  end
 
   -- right mouse button
-  if (stat(34) == 2) then
-    save_data()
-    load_data()
-    --if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
-    if player.inventory[1] == 48 and timers["rightclick"] == 0 then
-      shoot(player.x,player.y, 0, 48, true, false)
-      del(player.inventory, player.inventory[1])
-      sfx(10,1)
-      --player.last_right = time()
-      --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
-      timers["rightclick"] = .25
-      timers["middleclick"] = .25
-    end
-    --if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
-    if player.inventory[1] == 33 or timers["rightclick"] == 0 then
-      player.b_count = inc(player.b_count)
-      --if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
-      if player.b_count%player.fire_rate == 0 and timers["leftclick"] == 0 then
-        shoot(player.x, player.y, player.angle, 34, true, false, true)
-        shoot(player.x, player.y, 30, 34, true, false, true)
-        shoot(player.x, player.y, -30, 34, true, false, true)
-        sfx(1,1)
-      end
-      --player.last_right = time()
-      timers["rightclick"] = .25
-    end
-  end
-
-  -- middle mouse button
-  if (stat(34) == 4) then -- cycle inventory
-    local temp = 0
-    --if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
-    if #player.inventory > 1 and timers["middleclick"] == 0 then
-      for i=1,#player.inventory do
-        if i == 1 then
-          temp = player.inventory[i]
-        elseif i == #player.inventory then
-          player.inventory[i] = temp
-          break
-        end
-        player.inventory[i] = player.inventory[i+1]
-      end
-      if #player.inventory == 2 then invtx = 7
-      else invtx = 13 --[[inventory animation]] end
-    end
-    --player.last_middle_click = time()
-    timers["middleclick"] = .25
-  end
+  -- if (stat(34) == 2) and #player.inventory > 0 then
+  --   save_data()
+  --   load_data()
+  --   --if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
+  --   if player.inventory[1].sprite == 48 and timers["rightclick"] == 0 then
+  --     shoot(player.x,player.y, 0, 48, true, false)
+  --     sfx(10,1)
+  --     if player.inventory[1].ammo == 1 then
+  --       del(player.inventory, player.inventory[1])
+  --     else
+  --       player.inventory[1].ammo -= 1
+  --     end
+  --     --player.last_right = time()
+  --     --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
+  --     timers["rightclick"] = .25
+  --     timers["middleclick"] = .25
+  --   end
+  --   --if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
+  --   if player.inventory[1].sprite == 33 and timers["rightclick"] == 0 then
+  --     player.b_count = inc(player.b_count)
+  --     --if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
+  --     if --[[player.b_count%player.fire_rate == 0 and]] timers["leftclick"] == 0 then
+  --       shoot(player.x, player.y, player.angle, 34, true, false, true)
+  --       shoot(player.x, player.y, 30, 34, true, false, true)
+  --       shoot(player.x, player.y, -30, 34, true, false, true)
+  --       sfx(1,1)
+  --     end
+  --
+  --     if player.inventory[1].ammo == 1 then
+  --       del(player.inventory, player.inventory[1])
+  --     else
+  --       player.inventory[1].ammo -= 1
+  --     end
+  --     --player.last_right = time()
+  --     timers["rightclick"] = 1
+  --   end
+  -- end
 
   --[[
     x button
@@ -1421,7 +1470,7 @@ function _draw()
         sfx(7,1)
         del(dropped, d)
       elseif d.type ~= "heart" and #player.inventory < player.inv_max then
-        add(player.inventory, d.sprite)
+        add(player.inventory, d)
         sfx(7,1)
         del(dropped, d)
       end
@@ -1577,7 +1626,7 @@ function _draw()
   if drawdialog then dialog_seraph(seraph) end
 
   -- if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
-  if (timers["playerlasthit"] > player.immune_time - 0.5) then
+  if (timers["playerlasthit"] > player.immune_time - 0.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
