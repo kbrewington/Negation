@@ -259,6 +259,7 @@ function boss(startx, starty, sprite, lvl)
   b.destroy_anim_length = 30
   b.health = 50
   b.pattern = {90, 180, 270, 360}
+  b.circs = {}
   b.draw_healthbar = function()
              --health bar
              if b.sprite == 128 or 139 then
@@ -269,6 +270,7 @@ function boss(startx, starty, sprite, lvl)
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
            end
   b.update = function()
+           local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
            if b.level == 1 then
              b.angle = (b.angle+1)%360
              for i=0,3 do
@@ -281,25 +283,42 @@ function boss(startx, starty, sprite, lvl)
              b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
              b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
 
-             --b.draw_healthbar()
            elseif b.level == 2 then
              if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
-               local ang = angle_btwn(player.x, player.y, b.x, b.y)
-               shoot(b.x, b.y, ang, 141, false, true)
-               b.x = b.x - 5*sin(ang/360)
-               b.y = b.y - 5*cos(ang/360)
+               shoot(b.x, b.y, p_ang, 141, false, true)
+               b.x = b.x - 5*sin(p_ang/360)
+               b.y = b.y - 5*cos(p_ang/360)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
-              -- local ang = (angle_btwn(60,60,b.x,b.y)+.1)%360
-              local ang = (360/(time()))*(10%(time()))
-              b.x = 60 - 55*cos(ang)--ang/360)
-              b.y = 60 - 55*sin(ang)--ang/360)
-              local p_ang = (angle_btwn(player.x,player.y,b.x,b.y))
-              line((b.x+8),(b.y+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
+              local ang = (360/(abs(time())/3))*(10%(abs(time())/3))
+              b.x = 60 - 55*cos(ang)
+              b.y = 60 - 55*sin(ang)
+              line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
               if distance(player, b) <= 30+8 then
                 shoot(b.x, b.y, p_ang, 141, false, true)
               end
+           elseif b.level == 4 then
+             if abs(time())%3 == 0 then
+               b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
+             end
+             for c in all(b.circs) do
+               for i=12,c[3],-1 do
+                 circ(c[1], c[2], i, 8)
+               end
+               if abs(time()*100)%2 == 0 then
+                 c[3] -= 1
+                 if c[3] <= 0 then
+                   circfill(c[1], c[2], 12, 9)
+                   if distance(player, {["x"]=c[1],["y"]=c[2]}) <= 15 then
+                      player.health = player.health - 1
+                      sfx(2,2)
+                      timers["playerlasthit"] = player.immune_time
+                   end
+                   del(b.circs, c)
+                 end
+               end
+             end
            end
            b.draw_healthbar()
           end
@@ -875,7 +894,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(60, 60, 128, 3))
+  add(boss_table, boss(60, 60, 128, 4))
   yield()
 
   kill_all_enemies()
