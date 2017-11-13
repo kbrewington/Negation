@@ -104,6 +104,7 @@ exploding_enemies = {}
 boss_table = {}
 dropped = {}
 shield_anims = {}
+moves = {}
 
 currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
@@ -224,8 +225,6 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   end
 
   b.move = function()
-     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
-     b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
      if b.sprite == 48 then
         b.acceleration += 0.5
      end
@@ -233,6 +232,8 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
      if b.shotgun then
        b.duration = b.duration - 1
      end
+     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
+     b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
    end
 
   return b
@@ -258,7 +259,6 @@ function boss(startx, starty, sprite, lvl)
   b.destroy_sequence = {135, 136, 135}
   b.destroy_anim_length = 30
   b.health = 50
-  b.pattern = {90, 180, 270, 360}
   b.circs = {}
   b.draw_healthbar = function()
              --health bar
@@ -291,7 +291,7 @@ function boss(startx, starty, sprite, lvl)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
-              local ang = (360/(abs(time())/3))*(10%(abs(time())/3))
+              local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
@@ -318,6 +318,11 @@ function boss(startx, starty, sprite, lvl)
                    del(b.circs, c)
                  end
                end
+             end
+           elseif b.level == 6 then
+             -- b.x = b.x - 5*sin(abs(time())%10)
+             for i=-2,2 do
+               shoot(b.x, b.y, p_ang+i*4, 141, false, true)
              end
            end
            b.draw_healthbar()
@@ -522,7 +527,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
     local offy = y + 5
     offx = offx - 16*sin(a / 360)
     offy = offy - 16*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
+    add(enemy_bullets, bullet(offx, offy, a, spr, friendly, shotgun))
   else
     local offx = x - 8*sin(a / 360)
     local offy = y - 8*cos(a / 360)
@@ -894,7 +899,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(60, 60, 128, 4))
+  add(boss_table, boss(60, 60, 128, 3))
   yield()
 
   kill_all_enemies()
@@ -1034,6 +1039,12 @@ end
 
 function inc(var)
   return var + 1
+end
+
+function move_anim(l)
+  for i=1,5 do
+    pset(rnd(5)+(l[1]+8) +6*sin(player.angle / 360), rnd(5)+(l[2]+8) +6*cos(player.angle / 360), 9)
+  end
 end
 
 function rocket_kill(rocket)
@@ -1178,6 +1189,7 @@ function _update()
     ]]
     if (btn(c.up_arrow)) then
       player.y -= player.speed
+      add(moves, {player.x, player.y})
       if bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) then
         player.y = previousy
       end
@@ -1188,6 +1200,7 @@ function _update()
     ]]
     if (btn(c.down_arrow)) then
       player.y += player.speed
+      add(moves, {player.x, player.y})
       if bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) then
         player.y = previousy
       end
@@ -1198,6 +1211,7 @@ function _update()
     ]]
     if (btn(c.left_arrow)) then
       player.x -= player.speed
+      add(moves, {player.x, player.y})
       if bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) then
         player.x = previousx
       end
@@ -1208,6 +1222,7 @@ function _update()
     ]]
     if (btn(c.right_arrow)) then
       player.x += player.speed
+      add(moves, {player.x, player.y})
       if bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11) then
         player.x = previousx
       end
@@ -1399,6 +1414,8 @@ function _draw()
   if open_door then opendoor() end
 
   spr_r(player.sprite, player.x, player.y, player.angle, 2, 2)
+  loop_func(moves, move_anim)
+  moves = {}
 
   if player.shield > 0 then -- draw shield.
     circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
