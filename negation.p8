@@ -4,46 +4,60 @@ __lua__
 --------------------------------------------------------------------------------
 --------------------------------- global variables  ----------------------------
 --------------------------------------------------------------------------------
+
 player = {}
 player.sprite = 0
 player.x = 80
 player.y = 8
 player.speed = 1
-player.current_speed = 0
 player.angle = 0
---player.turnspeed = 10
 player.turn = 0
-player.current_dash_speed = 0
---player.dash_speed = 15
---player.dash_threshold = {.05, .2}
-player.fire_rate = 10
+player.fire_rate = .75
+player.power_fire_rate = 1
 player.health = 10
 player.max_health = 10
+player.size = 8
 player.immune_time = 2
-player.last_hit = 0
+--player.last_hit = 0
 player.b_count = 0
 player.tokens = 0
 player.inventory = {}
 player.inv_max = 4
 player.shield_dur = 5
+--player.last_right = nil
+--player.last_click = nil
+--player.last_middle_click = nil
+player.killed = 0
 player.shield = 0
 
---cheats = {}
---cheats.noclip = false
---cheats.god = false
-
 level = {}
-level.border = {}
-level.border.left = 0
-level.border.up = 0
-level.border.right = 120
-level.border.down = 120
+-- level.border = {}
+-- level.border.left = 0
+-- level.border.up = 0
+-- level.border.right = 120
+-- level.border.down = 120
+level.lvl = 1
 level.sx = 0
 level.sy = 0
+level.x = 0
+level.y = 0
+level.transition = {1, 0, 0,
+                    2, 16, 0,
+                    3, 39, 0,
+                    4, 58,0}
 
 wait = {}
 wait.controls = false
 wait.dialog_finish = false
+
+timers = {leveltimer = 0,
+          showinv = 0,
+          playerlasthit = 0,
+          leftclick = 0,
+          middleclick = 0,
+          rightclick = 0,
+          firerate = 0,
+          invalid = 0}
 
 -- controls
 c = {}
@@ -55,38 +69,30 @@ c.z_button = 4
 c.x_button = 5
 
 title = {}
-title.title_step = 0
-title.startx = 20
-title.starty = 20
-title.text =    {{14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14},
-                 {14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14},
-                 {14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14},
-                 {14, 1,14,14, 1, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0, 0, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14,14, 1, 1,14,14, 1,14},
-                 {14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14},
-                 {14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0, 0, 14, 1,14, 0,14, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14},
-                 {14, 1,14, 0, 0,14, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0,14, 1, 1, 1,14},
-                 {14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14},
-                 {14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14,14,14, 1,14,14,14, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14},
-                 {14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14},
-                 {14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14}}
-title.height = #title.text
-title.width = #title.text[1]
-title.drawn = {}
-title.row = 0
-title.drawn.x = {}
-title.drawn.y = {}
-title.drawn.colors = {}
+title.drawn = nil
+title.init = nil
+title.startx = 23
+title.starty = 50
+title.text = {   "14,14,14,14, 0, 0, 0,14,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0, 0,14,14,14,14,14, 0, 0,14,14,14,14,14,14,14, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14,14, 0, 0, 0,14,14,14",
+                 "14, 1, 1, 1,14, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0,14, 1,14",
+                 "14, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0,14,14,14, 1,14,14,14, 0,14,14,14, 1,14,14, 0, 0,14, 1,14,14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14",
+                 "14, 1,14,14, 1, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0, 0, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14,14, 1, 1,14,14, 1,14",
+                 "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14,14,14, 0,14, 1, 1,14, 1, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
+                 "14, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1, 1, 1,14, 0, 0, 0, 14, 1,14, 0,14, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0,14, 1, 1, 1, 1,14",
+                 "14, 1,14, 0, 0,14, 1, 1, 1,14, 0,14, 1,14,14,14, 0, 0, 0, 14, 1,14, 0,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0,14, 1, 1, 1,14",
+                 "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0, 0, 14, 1,14, 0, 0,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
+                 "14, 1,14, 0, 0, 0,14, 1, 1,14, 0,14, 1,14,14,14,14,14, 0, 14, 1,14,14,14,14, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14,14,14, 1,14,14,14, 0,14, 1,14,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1, 1,14",
+                 "14, 1,14, 0, 0, 0, 0,14, 1,14, 0,14, 1, 1, 1, 1, 1,14, 0, 14, 1, 1, 1, 1, 1, 1,14, 0,14, 1,14, 0,14, 1,14, 0, 0, 0,14, 1,14, 0, 0, 0,14, 1, 1, 1, 1, 1,14, 0,14, 1, 1, 1, 1,14, 0,14, 1,14, 0, 0, 0, 0,14, 1,14",
+                 "14,14,14, 0, 0, 0, 0, 0,14,14, 0,14,14,14,14,14,14,14, 0, 14,14,14,14,14,14,14,14, 0,14,14,14, 0,14,14,14, 0, 0, 0,14,14,14, 0, 0, 0,14,14,14,14,14,14,14, 0, 0,14,14,14,14, 0, 0,14,14,14, 0, 0, 0, 0, 0,14,14"}
 
-player.last_time = {[c.left_arrow] = 0,
-                    [c.right_arrow] = 0,
-                    [c.up_arrow] = 0,
-                    [c.down_arrow] = 0}
+_load = {}
 
 coin = {}
 coin.dropped = false
+coin.size = 16
 coin.x = nil
 coin.y = nil
-coin.sprites = {64, 66, 68, 70, 72}
+coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
 
 enemy_table  = {}
 enemy_spawned = {}
@@ -99,17 +105,14 @@ exploding_enemies = {}
 boss_table = {}
 dropped = {}
 shield_anims = {}
+moves = {}
 
-highlighted = 10
 currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
-invalid = 0
-
--- define some constants
-pi = 3.14159265359
-inf = 32767.99 -- max number as defined in https://neko250.github.io/pico8-api/
+--invalid = 0
+titlescreen = nil
 
 --------------------------------------------------------------------------------
 ------------------------ object-like structures --------------------------------
@@ -122,13 +125,17 @@ function drop_obj(sx, sy, sprite)
   d.x = sx
   d.y = sy
   d.sprite = sprite
+  d.size = 8
   d.drop_duration = 5
   d.init_time = time()
   d.types = {[32] = "heart",
              [33] = "shotgun",
              [48] = "rockets",
              [49] = "shield"}
+  d.ammos = {[33] = 10,
+             [48] = 1}
   d.type = d.types[sprite]
+  if d.ammos[sprite] ~= nil then d.ammo = d.ammos[sprite] end
   return d
 end
 
@@ -141,6 +148,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.y = spawn_y
   e.speed = .35
   e.time = time_spwn
+  e.b_count = 0
   e.destroy_anim_length = 15
   e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
@@ -150,29 +158,32 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
   e.explode_distance = 15
   e.explode_wait = 15
   e.explode_step = 0
-  e.fire_rate = 5
+  e.fire_rate = 10
   e.exploding = false
   e.dont_move = false
+  e.size = 8
   e.sprite = 132
   e.angle = 360
   e.speed = .35
+  e.type = type
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
-                    e.x = e.x + ((e.x-path.x)*e.speed)*(-1)
-                    e.y = e.y + ((e.y-path.y)*e.speed)*(-1)
+                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xffff)
+                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xffff)
                 end
   e.move = function()
-                if type == "shooter" then
+                if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    if flr(time()*50)%e.fire_rate == 0 then
+                    e.b_count = e.b_count + 1
+                    if e.b_count%e.fire_rate == 0 then
                       shoot(e.x, e.y, e.angle, 133, false, false)
                     end
                   end
-                elseif type == "exploder" then
+                elseif e.type == "exploder" then
                   if distance(e, player) >= e.explode_distance and not e.dont_move then
                     e.update_xy()
                   else
@@ -180,7 +191,7 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
                     e.exploding = true
                     e.explode_step = e.explode_step + 1
                   end
-                elseif type == "basic" then
+                elseif e.type == "basic" then
                   e.update_xy()
                 end
            end
@@ -192,20 +203,39 @@ end
 --[[
   bullet object
 ]]
-function bullet(startx, starty, angle, sprite, friendly)
+function bullet(startx, starty, angle, sprite, friendly, shotgun)
   local b = {}
   b.x = startx
   b.y = starty
   b.angle = angle
   b.sprite = sprite
   b.friendly = friendly
+  b.duration = 15
+  b.shotgun = (shotgun or false)
   b.speed = 2
+  b.acceleration = 0
   b.current_step = 0
   b.max_anim_steps = 5
+  b.rocket = false
+  b.size = 3
+
+  if b.sprite == 48 then
+    b.acceleration = 0.5
+    b.max_anim_steps = 15
+    b.rocket = true
+  end
+
   b.move = function()
-              b.x = b.x - b.speed * sin(b.angle / 360)
-              b.y = b.y - b.speed * cos(b.angle / 360)
-           end
+     if b.sprite == 48 then
+        b.acceleration += 0.5
+     end
+
+     if b.shotgun then
+       b.duration = b.duration - 1
+     end
+     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
+     b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
+   end
 
   return b
 end
@@ -213,83 +243,159 @@ end
 --[[
   boss object
 ]]
-function boss(startx, starty, sprite, level)
+function boss(startx, starty, sprite, lvl)
   local b = {}
   b.x = startx
   b.y = starty
   b.speed = .01
   b.angle = 0
-  b.level = (level or 1)
+  b.level = lvl or 1
   b.shot_last = nil
   b.shot_ang = 0
   b.sprite = sprite
+  b.size = 16
   b.bullet_speed = 2
   b.fire_rate = 7
   b.destroyed_step = 0
   b.destroy_sequence = {135, 136, 135}
   b.destroy_anim_length = 30
   b.health = 50
-  b.pattern = {90, 180, 270, 360}
+  b.circs = {}
   b.draw_healthbar = function()
-                       --health bar
-                       if b.sprite == 128 then
-                         xoffset = 1
-                         b.full_health = 50
-                       end
-                       rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
-                       rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
-                     end
+             --health bar
+             if b.sprite == 128 or 139 then
+               xoffset = 1
+               b.full_health = 50
+             end
+             rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
+             rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
+           end
   b.update = function()
-               if b.level == 1 then
-                 b.angle = (b.angle+1)%360
-                 for i=0,3 do
-                   if b.angle%b.fire_rate == 0 then
-                     shoot(b.x, b.y, (b.angle + (90*i)), 130, false, true)
-                   end
-
-                   --health bar
-                   if b.sprite == 128 then
-                     xoffset = 1
-                     b.full_health = 50
-                   end
-                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
-                   rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + (12 * (b.health / b.full_health)), b.y - 3, 8)
-                 end
-
-                 path = minimum_neighbor(b, player)
-                 b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
-                 b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
-
-                 b.draw_healthbar()
-               elseif b.level == 2 then
-                 if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
-                   local ang = angle_btwn(player.x, player.y, b.x, b.y)
-                   shoot(b.x, b.y, ang, 141, false, true)
-                 end
-                 b.draw_healthbar()
+           local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
+           if b.level == 1 then
+             b.angle = (b.angle+1)%360
+             for i=0,3 do
+               if b.angle%b.fire_rate == 0 then
+                 shoot(b.x, b.y, (b.angle + (90*i)), 130, false, true)
                end
              end
+
+             path = minimum_neighbor(b, player)
+             b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
+             b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
+
+           elseif b.level == 2 then
+             if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
+               shoot(b.x, b.y, p_ang, 141, false, true)
+               b.x = b.x - 5*sin(p_ang/360)
+               b.y = b.y - 5*cos(p_ang/360)
+             end
+             --b.draw_healthbar()
+           elseif b.level == 3 then
+              local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
+              b.x = 60 - 55*cos(ang)
+              b.y = 60 - 55*sin(ang)
+              line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
+              if distance(player, b) <= 30+8 then
+                shoot(b.x, b.y, p_ang, 141, false, true)
+              end
+           elseif b.level == 4 then
+             if abs(time())%3 == 0 then
+               b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
+             end
+             for c in all(b.circs) do
+               for i=12,c[3],-1 do
+                 circ(c[1], c[2], i, 8)
+               end
+               if abs(time()*100)%2 == 0 then
+                 c[3] -= 1
+                 if c[3] <= 0 then
+                   circfill(c[1], c[2], 12, 9)
+                   if distance(player, {["x"]=c[1],["y"]=c[2]}) <= 15 then
+                      player.health = player.health - 1
+                      sfx(2,2)
+                      timers["playerlasthit"] = player.immune_time
+                   end
+                   del(b.circs, c)
+                 end
+               end
+             end
+           elseif b.level == 6 then
+             -- b.x = b.x - 5*sin(abs(time())%10)
+             for i=-2,2 do
+               shoot(b.x, b.y, p_ang+i*4, 141, false, true)
+             end
+           end
+           b.draw_healthbar()
+          end
   return b
 end
 --------------------------------------------------------------------------------
 -------------------------------- helper functions ------------------------------
 --------------------------------------------------------------------------------
 function debug()
-  local debug_color = 7
+  local debug_color = 14
+
   print("px: " .. player.x, 0, 0, debug_color)
   print("sx: " .. level.sx, 45, 0, debug_color)
 
-  print("", 0, 6, debug_color)
-  print("mem: ".. stat(0), 45, 6, debug_color)
+  print("me: " .. round((stat(0)/1024)*100, 2) .. "%", 0, 6, debug_color)
+  local cpucolor = debug_color
+  if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
+  print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print(#enemy_bullets, 45, 12, debug_color)
-  -- stat(33) = y stat(32) = x
-  print(#level_sprites, 0, 12, debug_color)
+  if #player.inventory > 0 then print(player.inventory[1].ammo, 45, 12, debug_color) end
+  print(timers["playerlasthit"], 0, 12, debug_color)
+
+  print(timers["rightclick"], 0, 18, debug_color)
+  print("", 45, 18, debug_color)
+end
+
+function init_mem()
+  for i=0,53 do -- 53 - 63 = leaderboard data
+    dset(i, -1)
+  end
+end
+
+function save_leaderboard()
+  local idx = 53
+  while dget(idx) ~= 0 do
+    idx = idx + 1
+  end
+  dset(idx, player.killed)
+end
+
+function save_data()
+  local save = {player.x, player.y, level.sx, level.sy, level.lvl, player.tokens} -- missing: player.inventory, and current skill values/costs
+  for i=0,(#save-1) do
+    dset(i, save[i+1])
+  end
+  -- dset(#save, -5) -- save inventory items
+  -- for i=(#save+1),(#player.inventory) do
+  --   dset(i, player.inventory[i+1])
+  -- end
+end
+
+function load_data()
+  local idx = 0
+  _load = {}
+  while dget(idx) ~= -1 do
+    _load[#_load+1] = dget(idx)
+    idx = idx + 1
+  end
+end
+
+function show_leaderboard()
+  rectfill(0,0,128,128,0)
+  print("killed: "..player.killed,20,20,5)
+  for i=1,90 do
+    flip()
+  end
 end
 
 function bump(x, y)
-  local tx = flr((x - level.sx) / 8)
-  local ty = flr((y - level.sy) / 8)
+  local tx = flr((x - level.sx + (level.x*8)) / 8)
+  local ty = flr((y - level.sy + (level.y*8)) / 8)
   local map_id = mget(tx, ty)
 
   return fget(map_id, 0)
@@ -299,85 +405,34 @@ function bump_all(x, y)
   return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
 end
 
-function collision()
-  --local fwd_tempx = player.x - player.speed * sin(player.angle / 360)
-  --local fwd_tempy = player.y - player.speed * cos(player.angle / 360)
-  --local up_tempx = player.x + 5
-  --local up_tempy = player.y + 4
-
-  --local bck_tempx = player.x + player.speed * sin(player.angle / 360)
-  --local bck_tempy = player.y + player.speed * cos(player.angle / 360)
-
-  --[[pset(player.x + 3, player.y + 3, clr) --topleft
-  pset(player.x + 12, player.y + 3, clr) --topright
-  pset(player.x + 3, player.y + 12, clr) --bottomleft
-  pset(player.x + 12, player.y + 12, clr) --bottomright]]
-
-  --[[topleft, topright, bottomleft, bottomright = {}, {}, {}, {}
-  topleft.x, topleft.y = player.x + 3, player.y + 3
-  topright.x, topright.y = player.x + 12, player.y + 3
-  bottomleft.x, bottomleft.y = player.x + 3, player.y + 12
-  bottomright.x, bottomright.y = player.x + 12, player.y + 12
-
-  local test = bump_all(topleft.x + 1, topleft.y + 1)
-  wall_up, wall_lft, wall_rgt, wall_dwn = test, test, test, test]]
-
-  --[[wall_up =  bump(topleft.x, topleft.y) or bump(topright.x, topright.y)
-  wall_lft = bump(topleft.x, topleft.y) or bump(bottomleft.x, bottomleft.y)
-  wall_rgt = bump(topright.x, topright.y) or bump(bottomright.x, bottomright.y)
-  wall_dwn = bump(bottomleft.x, bottomleft.y) or bump(bottomright.x, bottomright.y)]]
-
-  wall_up = bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) --done
-  wall_lft = bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) --done
-  wall_rgt = bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)
-  wall_dwn = bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) --done
-end
-
-function enemy_collision(e, p)
-  local other = (p or player)
-  return (e.x > other.x+8 or e.x+8 < other.x or e.y > other.y+8 or e.y+8<other.y) == false
-end
-
-function bullet_collision(sp, b)
-  if sp == player then
-    return (b.x > sp.x+4+5 or b.x+4 < sp.x+5 or b.y > sp.y+4+5 or b.y+4<sp.y+5) == false
-  end
-  return (b.x > sp.x+4 or b.x+4 < sp.x or b.y > sp.y+4 or b.y+4<sp.y) == false
-end
-
-function boss_collision(sp, b)
-  if b == player then
-    return (b.x > sp.x+16 or b.x+8 < sp.x or b.y > sp.y+16 or b.y+8 < sp.y)==false
-  end
-  return (b.x > sp.x+16 or b.x+4 < sp.x or b.y > sp.y+16 or b.y+4 < sp.y)==false
+function ent_collide(firstent, secondent)
+  secondent = secondent or player
+  if firstent == player then offset = 4 else offset = 0 end
+  return (firstent.x + offset > secondent.x + level.sx + secondent.size or firstent.x + offset + player.size < secondent.x + level.sx
+    or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
 end
 
 function collide_all_enemies()
   local e = enemy_spawned[1]
   for o in all(enemy_spawned) do
-    if o~=e and enemy_collision(e, o) then
+    if o~=e and ent_collide(e, o) then
       fix_enemy(o, e)
     end
   end
 end
 
 function fix_enemy(o, e)
-  if (o.x - e.x) < 0 then
-    o.x = o.x - 8
-  elseif (o.x - e.x) > 0 then
-    o.x = o.x + 8
-  elseif (o.x == e.y) then
-    o.x = o.x + 8
+  local function fix_coord(o,e,c)
+    if (o[c] - e[c]) < 0 then
+      o[c] = o[c] - 8
+    elseif (o[c] - e[c]) > 0 then
+      o[c] = o[c] + 8
+    elseif (o[c] == e[c]) then
+      o[c] = o[c] + 8
+    end
   end
-
-  if (o.y - e.y) < 0 then
-    o.y = o.y - 8
-  elseif (o.y - e.y) > 0 then
-    o.y = o.y + 8
-  elseif (o.y == e.y) then
-    o.y = o.y + 8
-  end
-  --bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
+  fix_coord(o,e,'x')
+  fix_coord(o,e,'y')
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -385,13 +440,14 @@ function round(num, numdecimalplaces)
   local mult = 10^(numdecimalplaces or 0)
   return flr(num * mult + 0.5) / mult
 end
+function ceil(x) return -flr(-x) end
 
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
- sx=(s%8)*8 --
- sy=(s%8)*8 --
+ sx=(s%8)*8
+ sy=flr(s/8)*4
  x0=flr(0.5*sw)
  y0=flr(0.5*sh)
  a=a/360
@@ -418,10 +474,10 @@ function minimum_neighbor(start, goal)
   local map = {}
   map.x = 128
   map.y = 120
-  local minimum_dist = inf
+  local minimum_dist = 8000
   local min_node = start
-    for i=-1,1 do
-      for j=-1,1 do
+    for i=0xffff,1 do
+      for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
         if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
@@ -456,20 +512,23 @@ end
 --[[
   shoot: create bullet objects and add them to the 'bullets' table
 ]]
-function shoot(x, y, a, spr, friendly, boss)
+function shoot(x, y, a, spr, friendly, boss, shotgun)
   if friendly then
     local offx = player.x + 5
     local offy = player.y + 5
     local ang = angle_btwn((stat(32) - 3), (stat(33) - 3), offx, offy)
+    if a != player.angle then
+      ang += a
+    end
     offx = offx - 8*sin(ang / 360)
     offy = offy - 8*cos(ang / 360)
-    add(player_bullets, bullet(offx, offy, ang, spr, friendly))
+    add(player_bullets, bullet(offx, offy, ang, spr, friendly, shotgun))
   elseif boss then
     local offx = x + 5
     local offy = y + 5
     offx = offx - 16*sin(a / 360)
     offy = offy - 16*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
+    add(enemy_bullets, bullet(offx, offy, a, spr, friendly, shotgun))
   else
     local offx = x - 8*sin(a / 360)
     local offy = y - 8*cos(a / 360)
@@ -488,6 +547,14 @@ end
 
 function spawnenemies()
   for enemy in all(enemy_table) do
+    if enemy.x == nil then
+      -- if not within player.x 20?
+      -- if not bump
+      -- while loop?
+    end
+    if enemy.y == nil then
+
+    end
     if time() - wait.start_time >= enemy.time then
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -495,7 +562,7 @@ function spawnenemies()
   end
 
   if #enemy_table == 0 then
-    spawn_enmies = false
+    spawn_enemies = false
     if not wait.timer then detect_killed_enemies = true end
   end
 end
@@ -507,73 +574,90 @@ function detect_kill_enemies()
   end
 end
 
-function kill_all_enemies()
-  for e in all(enemy_table) do
-    del(enemy_table, e)
-  end
+function kill_all_enemies(no_drop_items)
+  enemy_table = {}
 
   for e in all(enemy_spawned) do
+    if no_drop_items then e.drop_prob = 0 end
     del(enemy_spawned, e)
     add(destroyed_enemies, e)
   end
 
   for b in all(boss_table) do
-    add(destroyed_bosses, b)
     del(boss_table, b)
+    add(destroyed_bosses, b)
+    coin.x = b.x - level.sx
+    coin.y = b.y - level.sy
     b = nil
   end
 end
 
-function screentransaction()
-  player.last_hit = time() - 0.5 --make player invulnerable so they dont get hit during transition
-  local map_right = level.border.right + level.sx - 120
-  local map_left = level.border.left + level.sx
+function levelchange()
+  local farx = 100
+  --local farleft
 
-  --when to transistion
-  --===========================================================
-  if level.sx < -78 and level.sy == 0 then move_map = true end
-  --===========================================================
-
-  if level.sx - (player.x - 50) < level.sx then
-    wait.controls = true
-    level.sx -= 1
-    player.x -= 1
-
-  --follow player if not all the way left, not all the way right, and player.x == 50
-  elseif map_right > 0 and (player.x > 50 or map_left < 0) and not move_map then
-    --level.sx = level.sx + player.current_speed * sin((player.angle - player.turn) / 360)
-    wait.controls = false
-    player.x = 50
-    if btn(c.left_arrow) and not wall_lft then level.sx += player.speed end
-    if btn(c.right_arrow) and not wall_rgt then level.sx -= player.speed end
+  level.i = 3*level.lvl+1
+  if level.transition[level.i] == level.lvl+1
+  and (level.transition[level.i+1] - 12) * 8 < abs(level.sx - ((level.lvl-1) * 128))
+  --[[and transition[level.i+2] == flr(level.sy)]] then
+    move_map = true
   end
 
-  --if hit transistion trigger from above, move the map to center on new level
-  if move_map then
-    if map_right > 0 then
-      level.sx = flr(level.sx) --reset so map lines up nicely
-      player.x -= 1 --move player sprite back along with
-      level.sx -= 1 --moving map
-      wait.controls = true --pause player controls
+  --todo add map centering on player in the beginning
+
+  if not move_map then
+    if btn(c.left_arrow) and abs(level.sx - ((level.lvl-1) * 128)) > level.x*8 and player.x < farx then
+      level.sx += player.speed
+      if player.x < farx then player.x = farx end
+    end
+    if btn(c.right_arrow) --[[and level.sx - ((level.lvl-1) * 128) <= (level.transition[level.i+1])*8]]  and player.x > farx then
+      level.sx -= player.speed
+      if player.x > farx then player.x = farx end
+    end
+  end
+
+  if move_map ~= nil and move_map then
+    wait.controls = true
+
+    if level.transition[level.i+1]*8 > abs(level.sx - ((level.lvl-1) * 128)) then
+      level.sx = flr(level.sx) - 1
+      player.x -= 1
+
+    --[[elseif check we go down then]]
+
     else
-      move_map = nil
-      wait.controls = false --resume player controls
-      screen_transaction = false --stop doing this functions checks
-      level.sx = 120 - level.border.right --make the new map bounds the new level
-      level.border.left += 128
+      dropped = {}
+      level_sprites = {}
+      open_door = false
+      level.sx = 0
+      level.sy = 0
+      level.x = level.transition[level.i+1]
+      level.y = level.transition[level.i+2]
+
+      wait.controls = false
+      move_map = false
+      level_change = false
+      level.lvl += 1
+      coin.dropped = false
       coresume(game)
     end
   end
 end
 
 function drawcountdown()
-  local countdown = flr((wait.start_time + wait.end_time) - time())
+  local x, y, clr = 57, 15, 12
+  --local countdown = flr((wait.start_time + wait.end_time) - time())
+  local countdown = timers["leveltimer"]
   local hours = flr(countdown/3600);
   local mins = flr(countdown/60 - (hours * 60));
-  local secs = flr(countdown - hours * 3600 - mins * 60);
+  local secs = ceil(countdown - hours * 3600 - mins * 60);
+  if secs == 60 then
+    mins += 1
+    secs = 0
+  end
   if secs < 10 then secs = "0" .. secs end
 
-  print(mins .. ":" .. secs, 50, 50, 12)
+  print(mins .. ":" .. secs, x, y, clr)
 
   if countdown == 0 then
     wait.timer = false
@@ -585,9 +669,10 @@ function opendoor()
   if doorh == nil then doorh = 1 end
   rectfill(126+level.sx, 63+level.sy, 127+level.sx, 63-doorh+level.sy, 13)
   rectfill(126+level.sx, 64+level.sy, 127+level.sx, 64+doorh+level.sy, 13)
-  if doorh < 21 then doorh += 0.5
-  else
+  if doorh < 20 then doorh += 0.5
+  elseif doorh == 20 then
      coresume(game)
+     doorh += 1
   end
 end
 
@@ -597,7 +682,7 @@ function draw_hud()
   local fnt_color = 6
   local topx = 1
   local topy = 112
-  local btmx = 126
+  local btmx = 70--126
   local btmy = 126
   local healthbar = {}
   healthbar.tx = topx + 15
@@ -614,8 +699,8 @@ function draw_hud()
   end
 
   local shield = {}
-  shield.tx = healthbar.tx+12
-  shield.ty = healthbar.ty+6
+  shield.tx = healthbar.tx
+  shield.ty = healthbar.ty
   shield.bx = shield.tx + (player.shield * 5)
   shield.by = shield.ty + 4
   shield.color = 12
@@ -640,71 +725,70 @@ function draw_hud()
     rectfill(healthbar.tx, healthbar.ty, healthbar.bx, healthbar.by, healthbar.color)
   end
 
-  print("inv",healthbar.tx+55, healthbar.ty+6, fnt_color)
-  local invx = healthbar.tx+67
+  print("inv",healthbar.tx-12--[[+55]], healthbar.ty+6, fnt_color)
+  local invx = healthbar.tx--+67
   local invy = healthbar.ty+5
   for sp in all(player.inventory) do
     spr(sp, invx, invy)
     invx = invx + 9
   end
-  print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
+  -- print("shield", healthbar.tx-12, healthbar.ty+6, fnt_color)
   if player.shield > 0 then rectfill(shield.tx, shield.ty, shield.bx, shield.by, shield.color) end
 end
 
 function draw_titlescreen()
   rectfill(0, 0, 127, 127, 0)
 
-  if title.title_step%title.width == 0 then
-    title.row = title.row+1
-  end
-  -- local nx = 0
-  -- local ny = 0
-  -- local nc = 0
-  -- for i=1,title.width do
-  --   nx = title.startx+(title.title_step%title.width)
-  --   ny = title.starty+title.row
-  --   nc = title.text[title.row][(title.title_step%title.width)+1]
-  --   title.drawn.x[#title.drawn.x+1] = nx
-  --   title.drawn.y[#title.drawn.y+1] = ny
-  --   title.drawn.colors[#title.drawn.colors+1] = nc
-  --   title.title_step = i
-  -- end
-  local nx = title.startx+(title.title_step%title.width)
-  local ny = title.starty+title.row
-  local nc = title.text[title.row][(title.title_step%title.width)+1]
-  title.drawn.x[#title.drawn.x+1] = nx
-  title.drawn.y[#title.drawn.y+1] = ny
-  title.drawn.colors[#title.drawn.colors+1] = nc
-  for i=1,#title.drawn.x do
-    pset(title.drawn.x[i], title.drawn.y[i], title.drawn.colors[i])
-  end
-  pset(nx, ny, nc)
+  if not title.drawn then
+    title.drawn = {}
+    for i=1, #title.text do
+      title.drawn[i] = {}
+    end
+    for i=1, #title.text do
+      while #title.text[i] > 0 do
+       local d = sub(title.text[i], 1, 1)
+       title.text[i] = sub(title.text[i], 2)
+       if d ~= "," and d ~= " " then
+         local b = sub(title.text[i], 1, 1)
+         title.text[i] = sub(title.text[i], 2)
+         if b ~= "," and b ~= " " then
+           add(title.drawn[i], (d..b)+0)
+         else
+           add(title.drawn[i], d+0)
+         end
+       end
 
-  title.title_step = title.title_step + 1
-  if title.title_step == title.height*title.width then
-    title.title_step = title.title_step - 1
+      end
+    end
   end
+
+  for i=1,#title.drawn do
+    for j=1,#title.drawn[i] do
+      if title.init > (flr(time()) - 1) then
+        if title.drawn[i][j] ~= 0 then
+          pset(j+title.startx, i+title.starty, (title.drawn[i][j]+(flr(time()*(i*5))%15)))
+        end
+      else
+        pset(j+title.startx, i+title.starty, (title.drawn[i][j]))
+      end
+    end
+  end
+
+  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
+
 end
 
 --[[
   print seraph dialog
 ]]
 function dialog_seraph(dialog)
+
   wait.dialog_finish = true
 
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
   local d = dialog.text
-
-  if not titlescreen then
-    draw_titlescreen()
-  else
-    title.drawn.x = {} -- free up this memory
-    title.drawn.y = {}
-    title.drawn.colors = {}
-    title.title_step = 1
-  end
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -742,6 +826,16 @@ function dialog_seraph(dialog)
 
   --print("z/x to continue", 69, 123, 7)
   wait.dialog_finish = false
+  timers["leftclick"] = 1
+end
+
+
+function fill_enemy_table(level, lvl_timer)
+  local types = {"shooter", "basic", "exploder"}
+  local baseline = 20
+  for i=1,(baseline*level) do
+    add(enemy_table, enemy(flr(rnd(128)), flr(rnd(128)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+  end
 end
 
 function gameflow()
@@ -786,24 +880,14 @@ function gameflow()
   wait.controls = false  -- resume player controls
   drawdialog = false -- stop showing seraph's dialog
 
-  -- add list of enemies to spawn_enmies
-  --(spawn x position, spawn y position, type, time (in seconds) when the enemy should show up)
-  add(enemy_table, enemy(100, 100, "exploder", 4))
-  add(enemy_table, enemy(50, 50, "basic", 4))
-
-  add(enemy_table, enemy(100, 100, "shooter", 5))
-  add(enemy_table, enemy(50, 50, "exploder", 5))
-
-  add(enemy_table, enemy(100, 100, "shooter", 6))
-  add(enemy_table, enemy(50, 50, "basic", 6))
-
+  fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
-  wait.end_time = 65 -- how long the timer should run for in seconds
+  timers["leveltimer"] = 65
   wait.timer = true -- tells the game we want to wait for the timer to finish
   yield()
 
-  kill_all_enemies()
+  kill_all_enemies(true)
   wait.timer = false
   spawn_enemies = false
 
@@ -813,56 +897,51 @@ function gameflow()
   wait.controls = true
   yield()
 
-  seraph = {}
-  seraph.text = "okay, that should do- wait    what's that?"
-  drawdialog = true
-  wait.controls = true
-  yield()
-
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(56, 56, 128, 2))
+  add(boss_table, boss(60, 60, 128, 3))
   yield()
 
   kill_all_enemies()
-  level.border.right = 248
-  open_door = true
+
   wait.controls = true
+  open_door = true
+  level_change = true
   yield()
 
+  --level.border.right = 248
   wait.controls = false
-  screen_transaction = true
+  yield()
+
+  fill_enemy_table(2, 60)
+  wait.start_time = time()
+  --wait.timer = true
+  spawn_enemies = true
+  add(boss_table, boss(56, 56, 139, 2))
+  yield()
+
+  kill_all_enemies(true)
+  --level.border.right = 432
+  level_change = true
+  yield()
+  level_change=true
 end
 
 --[[
     skill-tree menu (needs to be called continuously from draw to work)
 ]]
 function skilltree()
-  local token_sprites = {64, 66, 68, 70, 72}
-  for i=#token_sprites,0,-1 do -- reverse list and add it to token_sprites animation
-    add(token_sprites, token_sprites[i])
-  end
 
   rectfill(-50, -50, 200, 200, 0)
-  spr(token_sprites[flr(time()*8)%#token_sprites + 1], 20, 20, 2, 2)
+  spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], 20, 20, 2, 2)
   print(" - " .. player.tokens, 36, 26, 7)
 
-  print("upgrade health - ".. player.tokens .." tokens ", 20, 52, 7)
-  print("upgrade fire rate - ".. player.tokens .." tokens ", 20, 44, 7)
-  print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, 7)
-  print("quit", 20, 68, 7)
+  print("upgrade speed - ".. next_cost[1] .." tokens ", 10, 36, 7+((skills_selected[1] and 1 or 0)*3))
+  print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, 7+((skills_selected[2] and 1 or 0)*3))
+  print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, 7+((skills_selected[3] and 1 or 0)*3))
+  print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
 
-
-  if skills_selected[1] then
-    print("upgrade speed - ".. player.tokens .." tokens ", 20, 36, highlighted)
-  elseif skills_selected[2] then
-    print("upgrade fire rate - ".. player.tokens .." tokens ", 20, 44, highlighted)
-  elseif skills_selected[3] then
-    print("upgrade health - ".. player.tokens .." tokens ", 20, 52, highlighted)
-  elseif skills_selected[4] then
-    print("quit", 20, 68, highlighted)
-  end
 end
 
 --[[
@@ -871,13 +950,7 @@ end
 function step_destroy_animation(e)
 
   if e.destroyed_step <= e.destroy_anim_length then
-    if e.destroyed_step < 5 then
-      spr(e.destroy_sequence[1], e.x, e.y)
-    elseif e.destroyed_step <= 10 then
-      spr(e.destroy_sequence[2], e.x, e.y)
-    elseif e.destroyed_step <= 15 then
-      spr(e.destroy_sequence[3], e.x, e.y)
-    end
+    spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
   else
     drop_item(e)
     del(destroyed_enemies, e)
@@ -886,6 +959,17 @@ function step_destroy_animation(e)
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step = e.destroyed_step + 1
 
+  if e.type == "exploder" then
+    circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+    e.destroyed_step = e.destroyed_step + 1
+    if e.destroyed_step >= e.destroy_anim_length then
+      del(destroyed_enemies, e)
+      del(exploding_enemies, e)
+      del(enemy_spawned, e)
+      return true
+    end
+    return false
+  end
 end
 
 --[[
@@ -895,7 +979,19 @@ function boss_hit_animation(bul)
   local colors = {8, 9}
 
   if bul.current_step <= bul.max_anim_steps then
-    circ(bul.x, bul.y, flr(time()*100)%4, colors[flr(time()*100)%#colors + 1])
+    local c = colors[flr(time()*100)%(#colors) + 1]
+    local s = flr(time()*100)%4
+    local r = 1
+    if rnd(1) > .5 then r = 0xffff end
+    if not bul.rocket then
+      circ(bul.x, bul.y, s, c)
+    else
+      for i=1,3 do
+        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, (r*rnd(bul.max_anim_steps/2))+bul.y, rnd(4), c)
+        circfill((r*rnd(bul.max_anim_steps))+bul.x, (r*rnd(bul.max_anim_steps))+bul.y, .1, c)
+      end
+      circ(bul.x, bul.y, bul.current_step, c)
+    end
   else
     del(boss_hit_anims, bul)
   end
@@ -908,19 +1004,11 @@ end
 ]]
 function step_boss_destroyed_animation(b)
   local s = 1 s1 = 1
-  if flr(rnd(10))%2 == 0 then s = -1 end
-  if flr(rnd(10))%2 == 0 then s1 = -1 end
+  if flr(rnd(10))%2 == 0 then s = 0xffff end
+  if flr(rnd(10))%2 == 0 then s1 = 0xffff end
   if b.destroyed_step <= b.destroy_anim_length then
-    if b.destroyed_step < flr(b.destroy_anim_length/3) then
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    elseif b.destroyed_step <= flr(b.destroy_anim_length/3)*2 then
-      spr(b.destroy_sequence[2], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    elseif b.destroyed_step <= b.destroy_anim_length then
-      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-      spr(b.destroy_sequence[3], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    end
+    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
   else
     del(destroyed_bosses, b)
     coin.dropped = true
@@ -929,28 +1017,6 @@ function step_boss_destroyed_animation(b)
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
   b.destroyed_step = b.destroyed_step + 1
 
-end
-
-function step_explode_enemy(e)
-  if e.destroyed_step <= e.destroy_anim_length then
-    if e.destroyed_step < 5 then
-      spr(e.destroy_sequence[1], e.x, e.y)
-    elseif e.destroyed_step <= 10 then
-      spr(e.destroy_sequence[2], e.x, e.y)
-    elseif e.destroyed_step <= 15 then
-      spr(e.destroy_sequence[3], e.x, e.y)
-    end
-  else
-    drop_item(e)
-    del(destroyed_enemies, e)
-  end
-
-  circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
-  e.destroyed_step = e.destroyed_step + 1
-  if e.destroyed_step == e.destroy_anim_length then
-    return true
-  end
-  return false
 end
 
 function drop_item(e)
@@ -970,13 +1036,78 @@ function loop_func(table, func)
   end
 end
 
+function time_diff(time_var, thresh)
+  return ((time() - (time_var or (time()-2))) > thresh)
+end
+
+function inc(var)
+  return var + 1
+end
+
+function move_anim(l)
+  for i=1,5 do
+    pset(rnd(5)+(l[1]+8) +6*sin(player.angle / 360), rnd(5)+(l[2]+8) +6*cos(player.angle / 360), 9)
+  end
+end
+
+function rocket_kill(rocket)
+  for enemy in all(enemy_spawned) do
+    if distance(enemy, rocket) <= rocket.max_anim_steps then
+      player.killed = inc(player.killed)
+      del(enemy_spawned, enemy)
+      sfx(5,1)
+      add(destroyed_enemies, enemy)
+      del(player_bullets, rocket)
+      add(boss_hit_anims, rocket)
+    end
+  end
+end
+
+function draw_playerhp()
+  local hpcolor = 11
+  local hpratio = player.health/player.max_health
+  if invtx == nil then invtx = 4 end
+  if invtx > 4 then invtx -= 1 end
+
+  if hpratio >= .5 then
+    hpcolor = 11
+  elseif hpratio >= .3 then
+    hpcolor = 9
+  elseif player.health == 1 and flr(time()*10000)%2==0 then
+    hpcolor = 6
+  else
+    hpcolor = 8
+  end
+
+  rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
+  rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
+  if player.shield > 0 then rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player.shield / 4.8)), player.y + 1, 12)--[[shield]] end
+
+  --if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
+  if timers["showinv"] > 0 then
+    if #player.inventory > 0 then
+      spr(player.inventory[1].sprite, player.x + invtx, player.y + 14)
+    end
+    if #player.inventory > 1 then
+      spr(player.inventory[2].sprite, player.x + invtx + 9, player.y + 14)
+    end
+    if #player.inventory > 2 then
+      spr(player.inventory[#player.inventory].sprite, player.x + invtx - 9, player.y + 14)
+    end
+    spr(112, player.x + 4, player.y + 14)
+  end
+end
+
+
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+  init_mem()
   poke(0x5f2d, 1)
 
-  player.last_hit = time() - player.immune_time
+  --player.last_hit = time() - player.immune_time
+  title.init = time()
 
   game = cocreate(gameflow)
   coresume(game)
@@ -987,15 +1118,42 @@ end --end _init()
 ---------------------------------- update --------------------------------------
 --------------------------------------------------------------------------------
 function _update()
-
-  collision()
+  --player.last_hit = abs(time() - 0.5) --uncomment for god mode
+  --collision()
   collide_all_enemies()
+
+  local previousx = player.x
+  local previousy = player.y
+
+  for k,t in pairs(timers) do
+    timers[k] = max(0, timers[k] - (1/30))
+  end
+
+  if not titlescreen then
+    if btnp(c.x_button) or btnp(c.z_button) then
+      titlescreen = true
+    end
+    return
+  end
 
   if in_skilltree then
     skills_selected[currently_selected] = false
     local diff = 0
+    local function update_selec()
+            if selection_set[currently_selected] == "health" then
+              player.max_health = inc(player.max_health)
+              player.health += 1
+            elseif selection_set[currently_selected] == "fire rate" then
+
+            elseif selection_set[currently_selected] == "speed" then
+              player.speed += .2
+            end
+            next_cost[currently_selected] = next_cost[currently_selected] + 1
+            player.tokens = player.tokens - 1
+            sfx(2, 1, 0)
+          end
     if btnp((c.up_arrow)) then
-      diff = -1
+      diff = 0xffff
       sfx(4, 1, 0)
     elseif btnp(c.down_arrow) then
       diff = 1
@@ -1005,22 +1163,14 @@ function _update()
         in_skilltree = false
         sfx(2, 1, 0)
       elseif selection_set[currently_selected] == "health" and player.tokens >= next_cost[currently_selected] then
-        player.max_health = player.max_health + 1
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       elseif selection_set[currently_selected] == "fire rate" and player.tokens >= next_cost[currently_selected] then
-        player.fire_rate = player.fire_rate - 1
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       elseif selection_set[currently_selected] == "speed" and player.tokens >= next_cost[currently_selected] then
-        player.speed = player.speed + .5
-        next_cost[currently_selected] = next_cost[currently_selected] + 1
-        player.tokens = player.tokens - 1
-        sfx(2, 1, 0)
+        update_selec()
       else
-        invalid = time()
+        --invalid = time()
+        timers["invalid"] = 0.5
         sfx(3, 1, 0)
       end
     end
@@ -1041,10 +1191,10 @@ function _update()
       up arrow
     ]]
     if (btn(c.up_arrow)) then
-      if not wall_up then
-        --dash_detect(c.up_arrow)
-        --player.current_speed = player.speed
-        player.y -= player.speed
+      player.y -= player.speed
+      add(moves, {player.x, player.y})
+      if bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3) then
+        player.y = previousy
       end
     end --end up button
 
@@ -1052,10 +1202,10 @@ function _update()
       down arrow
     ]]
     if (btn(c.down_arrow)) then
-      if not wall_dwn then
-        --dash_detect(c.down_arrow)
-        --player.current_speed = -player.speed
-        player.y += player.speed
+      player.y += player.speed
+      add(moves, {player.x, player.y})
+      if bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12) then
+        player.y = previousy
       end
     end --end down button
 
@@ -1063,12 +1213,10 @@ function _update()
       left arrow
     ]]
     if (btn(c.left_arrow)) then
-      if not wall_lft then
-        --dash_detect(c.left_arrow)
-        --player.angle -= player.turnspeed
-        --player.turn = 85
-        --player.current_speed = player.speed
-        player.x -= player.speed
+      player.x -= player.speed
+      add(moves, {player.x, player.y})
+      if bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11) then
+        player.x = previousx
       end
     end --end left button
 
@@ -1076,67 +1224,169 @@ function _update()
       right arrow
     ]]
     if (btn(c.right_arrow)) then
-      if not wall_rgt then
-        --dash_detect(c.right_arrow)
-        --player.angle += player.turnspeed
-        --player.turn = -85
-        --player.current_speed = player.speed
-        player.x += player.speed
+      player.x += player.speed
+      add(moves, {player.x, player.y})
+      if bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11) then
+        player.x = previousx
       end
     end --end right button
 
+    -- middle mouse button
+    if (stat(34) == 4) then -- cycle inventory
+      local temp = 0
+      --if #player.inventory > 1 and time_diff(player.last_middle_click, .15) then
+      if timers["middleclick"] == 0 then
+        if #player.inventory > 1 then
+          for i=1,#player.inventory do
+            if i == 1 then
+              temp = player.inventory[i]
+            elseif i == #player.inventory then
+              player.inventory[i] = temp
+              break
+            end
+            player.inventory[i] = player.inventory[i+1]
+          end
+        end
+
+        timers["middleclick"] = .25
+        timers["showinv"] = .5
+        if #player.inventory == 2 then invtx = 7
+        elseif #player.inventory > 2 then invtx = 13 --[[inventory animation]] end
+      end
+      --player.last_middle_click = time()
+    end
+
+    --right mouse button
+    if (stat(34) == 2) and #player.inventory > 0 and timers["rightclick"] == 0 then
+      timers["rightclick"] = player.power_fire_rate
+
+      if player.inventory[1].type == "shotgun" then
+        shoot(player.x, player.y, player.angle, 34, true, false, true)
+        shoot(player.x, player.y, 30, 34, true, false, true)
+        shoot(player.x, player.y, -30, 34, true, false, true)
+        --timers["rightclick"] = .1 --allows for custom firespeed
+        --sfx(1,1)
+
+      elseif player.inventory[1].type == "rockets" then
+        shoot(player.x, player.y, 0, 48, true, false)
+        --sfx(10,1)
+      end
+
+      if player.inventory[1].ammo == 1 then
+        del(player.inventory, player.inventory[1])
+        timers["showinv"] = .5
+        timers["rightclick"] = 1
+      else player.inventory[1].ammo -= 1 end
+    end
+
     player.angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
+  else
+    -- player.last_hit = time() - player.immune_time --make player invulnerable so they dont get hit when they can't move
+    timers["playerlasthit"] = 0x.0001 --make player invulnerable so they dont get hit when they can't move
   end -- end wait.controls
 
   --[[
     z button
     -- shoot for now, this can be changed later
   ]]
-  --if (btn(c.z_button)) then
+  -- if (btn(c.z_button)) then
   --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
+  -- if (stat(34) == 1) then
+  --   --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
+  --   if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
+  --     --player.last_click = time()
+  --     timers["leftclick"] = 1
+  --     coresume(game)
+  --
+  --   elseif not drawdialog and not wait.controls then
+  --     player.b_count = inc(player.b_count)
+  --     --if time_diff(player.last_click, .25) or player.b_count%player.fire_rate == 0 then
+  --     if timers["leftclick"] == 0 or player.b_count%player.fire_rate == 0 then
+  --       --player.last_click = time()
+  --       timers["leftclick"] = .25
+  --       shoot(player.x, player.y, player.angle, 34, true, false)
+  --       sfx(1,1)
+  --     end
+  --   end
+  -- end --end z button
   if (stat(34) == 1) then
-    if drawdialog and not wait.dialog_finish and time() - (lastclick or time() - 2) > 1 then
+    if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
       coresume(game)
-      lastclick = time()
-    elseif not drawdialog and not wait.controls then
-      player.b_count = player.b_count + 1
-      if player.b_count%player.fire_rate == 0 then
-        shoot(player.x, player.y, player.angle, 2, true, false)
-        sfx(1,1)
-      end
-    end
-  end --end z button
+      timers["leftclick"] = 1
 
-  -- middle button
-  if (stat(34) == 4) and time() - (lastclick or time() - 2) > 0.5 then
-    coresume(game)
-    lastclick = time()
+    elseif not wait.controls and timers["firerate"] == 0 then
+      shoot(player.x, player.y, player.angle, 34, true, false)
+      --sfx(1,1)
+      timers["firerate"] = player.fire_rate
+    end
   end
+
+  -- right mouse button
+  -- if (stat(34) == 2) and #player.inventory > 0 then
+  --   save_data()
+  --   load_data()
+  --   --if player.inventory[1] == 48 and time_diff(player.last_right, .25) then
+  --   if player.inventory[1].sprite == 48 and timers["rightclick"] == 0 then
+  --     shoot(player.x,player.y, 0, 48, true, false)
+  --     sfx(10,1)
+  --     if player.inventory[1].ammo == 1 then
+  --       del(player.inventory, player.inventory[1])
+  --     else
+  --       player.inventory[1].ammo -= 1
+  --     end
+  --     --player.last_right = time()
+  --     --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
+  --     timers["rightclick"] = .25
+  --     timers["middleclick"] = .25
+  --   end
+  --   --if player.inventory[1] == 33 or time_diff(player.last_right, .25) then
+  --   if player.inventory[1].sprite == 33 and timers["rightclick"] == 0 then
+  --     player.b_count = inc(player.b_count)
+  --     --if player.b_count%player.fire_rate == 0 and time_diff(player.last_click, .25) then
+  --     if --[[player.b_count%player.fire_rate == 0 and]] timers["leftclick"] == 0 then
+  --       shoot(player.x, player.y, player.angle, 34, true, false, true)
+  --       shoot(player.x, player.y, 30, 34, true, false, true)
+  --       shoot(player.x, player.y, -30, 34, true, false, true)
+  --       sfx(1,1)
+  --     end
+  --
+  --     if player.inventory[1].ammo == 1 then
+  --       del(player.inventory, player.inventory[1])
+  --     else
+  --       player.inventory[1].ammo -= 1
+  --     end
+  --     --player.last_right = time()
+  --     timers["rightclick"] = 1
+  --   end
+  -- end
 
   --[[
     x button
   ]]
-  if (btnp(c.x_button)) then
+  if (btnp(c.x_button)) and not level_change then
     coresume(game)
   end --end x button
 
   --player.x = player.x - player.current_speed * sin((player.angle - player.turn) / 360)
   --player.y = player.y - player.current_speed * cos((player.angle - player.turn) / 360)
 
-  if screen_transaction then screentransaction() end
+  if level_change then levelchange() end
 
-  player.current_speed = 0
-  player.turn = 0
-  if player.x < -4 then player.x = -4 end
-  if player.y < -4 then player.y = -4 end
-  if player.x > 116 then player.x = 116 end
-  if player.y > 116 then player.y = 116 end
+  --player.current_speed = 0
+  --player.turn = 0
+  if player.x < 0 then player.x = 0 end
+  if player.y < 0 then player.y = 0 end
+  if player.x > 112 then player.x = 112 end
+  if player.y > 112 then player.y = 112 end
 
   if player.shield > 0 and not wait.controls then
     player.shield = player.shield - .01
   elseif player.shield < 0 then
     player.shield = 0
   end
+
+  if btn(c.left_arrow, 1) then level.sx += 1 end
+  if btn(c.right_arrow, 1) then level.sx -= 1 end
 end --end _update()
 
 --------------------------------------------------------------------------------
@@ -1144,24 +1394,31 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
-  map(0, 0, level.sx, level.sy, 128, 128)
+  map(level.x, level.y, level.sx, level.sy, 128, 128)
+
+  if not titlescreen then
+    draw_titlescreen()
+    return
+  end
+
 
   if level_sprites ~= nil then
     palt(5, true)
     for i = 1, #level_sprites, 3 do
+      local x = level_sprites[i+1] + level.sx
+      local y = level_sprites[i+2] + level.sy
       --spr_r(level_sprites[i], level_sprites[i+1] + level.sx, level_sprites[i+2] + level.sy, level_sprites[i+3], 1, 1)
-      spr(level_sprites[i], level_sprites[i+1] + level.sx, level_sprites[i+2] + level.sy)
+      spr(level_sprites[i], x, y)
+      --if x < 128 then del(level_sprites, ) end todo make this delete offscreen sprites
     end
   end
   palt()
 
   if open_door then opendoor() end
 
---[[    spr_r(255, 0 + level.sx, 0 + level.sy, 180, 1, 1)
-    spr_r(255, 0 + level.sx, 0 + level.sy, 270, 1, 1)
-    spr_r(255, 0 + level.sx, 8 + level.sy, 180, 1, 1)]]
-
   spr_r(player.sprite, player.x, player.y, player.angle, 2, 2)
+  loop_func(moves, move_anim)
+  moves = {}
 
   if player.shield > 0 then -- draw shield.
     circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
@@ -1173,11 +1430,16 @@ function _draw()
 
     -- check if this sprite has been shot
     for b in all(player_bullets) do
-      if bullet_collision(e, b) then
+      if ent_collide(e, b) then
+        player.killed = inc(player.killed)
         del(enemy_spawned, e)
         sfx(5,1)
         add(destroyed_enemies, e)
         del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if b.rocket then
+          rocket_kill(b)
+        end
         b = nil
         e = nil
         break
@@ -1186,18 +1448,36 @@ function _draw()
 
 
     if e ~= nil then
-      if ((time() - player.last_hit) > player.immune_time) and enemy_collision(e) and player.shield == 0 then
-        player.health = player.health - 1
-        sfx(2,2)
-        player.last_hit = time()
+      -- if time_diff(player.last_hit, player.immune_time) and ent_collide(e) then
+      if timers["playerlasthit"] == 0 and ent_collide(e) then
+        if player.shield <= 0 then
+          player.health = player.health - 1
+          sfx(2,2)
+          --player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
+        else
+          player.shield = player.shield - .15
+        end
       end
 
       if e.exploding and flr(time()*500)%2==0 then
         pal()
         pal(2,8,0)
       end
+
+      if e.type == "shooter" then
+        pal(2,9,0)
+        pal(5,10,0)
+      elseif e.type == "exploder" then
+        pal(8,10,0)
+        pal(2,8,0)
+        pal(5,9,0)
+      else
+        pal()
+      end
       spr(e.sprite, e.x, e.y)
       pal()
+
       if e.explode_step == e.explode_wait then
         add(exploding_enemies, e)
       end
@@ -1206,27 +1486,28 @@ function _draw()
   end
 
   for e in all(exploding_enemies) do
-    if step_explode_enemy(e) then
-      if distance(e, player) <= 15 and ((time() - player.last_hit) > player.immune_time) and player.shield == 0 then
-        player.health = player.health - 1
+    if step_destroy_animation(e) then
+      -- if distance(e, player) <= 15 and time_diff(player.last_hit, player.immune_time) then
+      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
+        if player.shield <= 0 then
+          player.health = player.health - 1
           sfx(2,2)
-        player.last_hit = time()
+          -- player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
+        else
+          player.shield = player.shield - .15
+        end
       end
-      del(enemy_spawned, e)
-      del(exploding_enemies, e)
     end
   end
 
-  -- for d in all(destroyed_enemies) do
-  --   step_destroy_animation(d)
-  -- end
   loop_func(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
 
-    if enemy_collision(d) then
+    if ent_collide(d) then
       if d.type == "heart" and player.health < player.max_health then
-        player.health = player.health+1
+        player.health = min(player.max_health, player.health+3)
         sfx(7,1)
         del(dropped, d)
       elseif d.type == "shield" then
@@ -1234,7 +1515,7 @@ function _draw()
         sfx(7,1)
         del(dropped, d)
       elseif d.type ~= "heart" and #player.inventory < player.inv_max then
-        add(player.inventory, d.sprite)
+        add(player.inventory, d)
         sfx(7,1)
         del(dropped, d)
       end
@@ -1258,29 +1539,45 @@ function _draw()
 
     if bump(b.x, b.y) then
       del(player_bullets, b)
+      add(boss_hit_anims, b)
+      if b.rocket then
+        rocket_kill(b)
+      end
       b = nil
     end
 
     if b ~= nil then
       spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
       b.move()
+      if b.duration <= 0 then
+        del(player_bullets, b)
+        b = nil
+      end
     end
 
     if b~=nil then
       for bos in all(boss_table) do
-        if boss_collision(bos, b) then
+        if ent_collide(bos, b) then
           sfx(6,1)
-          bos.health -= 1
+          if b.sprite == 48 then
+            bos.health -= 3
+          else
+            bos.health -= 1
+          end
           bos.shot_last = time()
           bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
           del(player_bullets, b)
           add(boss_hit_anims, b)
+          if b.rocket then
+            rocket_kill(b)
+          end
           if (bos.health <= 0) then
             sfx(5,1)
             add(destroyed_bosses, bos)
+            player.killed = player.killed+1
             del(boss_table, bos)
-            coin.x = bos.x
-            coin.y = bos.y
+            coin.x = bos.x - level.sx
+            coin.y = bos.y - level.sy
             bos = nil
             coresume(game)
           end
@@ -1294,26 +1591,30 @@ function _draw()
     -- first delete offscreen bullets:
     delete_offscreen(enemy_bullets, b)
 
-    if ((time() - player.last_hit) > player.immune_time) and bullet_collision(player, b) then
-      if player.shield == 0 then
-        player.health = player.health - 1
-        sfx(2,2)
-        player.last_hit = time()
-      else
-        add(shield_anims, {b.x, b.y, 10})
+    -- if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
+    if ent_collide(player, b) then
+      if timers["playerlasthit"] == 0 then
+        if player.shield <= 0 then
+          player.health = player.health - 1
+          sfx(2,2)
+          -- player.last_hit = time()
+          timers["playerlasthit"] = player.immune_time
+        else
+          add(shield_anims, {b.x, b.y, 10})
+          player.shield = player.shield - .15
+        end
       end
       del(enemy_bullets, b)
       b = nil
     end
 
-    if b~=nil and bump(b.x, b.y) then
-      del(enemy_bullets, b)
-      b = nil
-    end
-
-    if b ~= nil then
+    if b~=nil then
       spr(b.sprite, b.x, b.y)
       b.move()
+      if bump(b.x, b.y) then
+        del(enemy_bullets, b)
+        b = nil
+      end
     end
   end
 
@@ -1327,6 +1628,12 @@ function _draw()
   end
 
   for b in all(boss_table) do
+    -- if time_diff(player.last_hit, player.immune_time) and ent_collide(player, b) then
+    if timers["playerlasthit"] == 0 and ent_collide(player, b) then
+      player.health = player.health - 2
+      --player.last_hit = time()
+      timers["playerlasthit"] = player.immune_time
+    end
     spr(b.sprite, b.x, b.y, 2, 2)
     b.update()
   end
@@ -1336,39 +1643,44 @@ function _draw()
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
   if player.health <= 0 then
-    print("game over", 48, 60, 8)
-    sfx(9,1)--this doesn't fire because stop() activates immediately.
-    stop()
+    sfx(9,1)
+    show_leaderboard()
+    run()
   end
 
-  spr(96, stat(32) - 3, stat(33) - 3)
+  draw_playerhp()
 
-  draw_hud()
+  if pget(stat(32), stat(33)) == 8 or pget(stat(32), stat(33)) == 2 then pal(8, 6) end
+  spr(96, stat(32) - 3, stat(33) - 3)
+  pal()
+
+  --draw_hud()
   if spawn_enemies then spawnenemies() end
   if detect_killed_enemies then detect_kill_enemies() end
   if wait.timer then drawcountdown() end
   if coin.dropped then
-     spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x, coin.y, 2, 2)
-     if boss_collision(coin, player) then
+     spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x+level.sx, coin.y+level.sy, 2, 2)
+     if ent_collide(player, coin) then
        player.tokens = player.tokens + 1
        coin.dropped = false
+       direction = nil
        in_skilltree = true
      end
   end
 
   if drawdialog then dialog_seraph(seraph) end
 
-  if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
+  -- if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
+  if (timers["playerlasthit"] > player.immune_time - 0.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
   end
 
-  if in_skilltree then
-    skilltree()
-  end
+  if in_skilltree then skilltree() end
+  if in_leaderboard then draw_leaderboard() end
 
-  --debug() -- always on bottom
+  debug() -- always on bottom
 end --end _draw()
 
 
@@ -1397,14 +1709,14 @@ e888888e0440044000000000530bb03500899800b333333b25555552000000000000000000000000
 0e8888e00000004400000000530bb03503088030b733333b25555552000000000000000000000000555555555555555500000000000000000000000000000000
 00e88e0000000000000000005330033500000000bb3333bb2225555200000000000000000000000055b3555bb35b355500000000000000000000000000000000
 000ee000000000000000000055533555000000005bbbbbb55522222200000000000000000000000055bbb3533553335500000000000000000000000000000000
-00088000999009990000000055555555000000000000000000000000a55a55550000000000000000555555555555555550000005000000000000000000000000
-00066000967766690000000055533555000000000000000000000000aa5aa55a000000000000000055353bbbb555b35500777600000000000000000000000000
-000660009766666900000000533003350000000000000000000000005a55a5aa0000000000000000553353333553335507766660000000000000000000000000
-000660009666665900000000530bb0350000000000000000000000005aa5aaa50000000000000000555555555555555507666660000000000000000000000000
-000660000966669000000000530bb03500000000000000000000000055aa55550000000000000000555555bbb335555507666660000000000000000000000000
-00866800096665900000000053b00b3500000000000000000000000055a5a5550000000000000000555555333355555507666660000000000000000000000000
-08866880009559000000000053b00b350000000000000000000000005aa5aaaa0000000000000000555555555555555500666600000000000000000000000000
-00000000000990000000000053b00b35000000000000000000000000aa55555a0000000000000000555555555555555550000005000000000000000000000000
+00088000990000990000000055555555771111770000000000000000a55a55550000000000000000555555555555555550000005000000000000000000000000
+00066000967766690003000055533555711111170000000000000000aa5aa55a000000000000000055353bbbb555b35500777600000000000000000000000000
+0006600097666669003b3000533003351111111100000000000000005a55a5aa0000000000000000553353333553335507766660000000000000000000000000
+000660009666665903b30000530bb0351111111100000000000000005aa5aaa50000000000000000555555555555555507666660000000000000000000000000
+000660000966669003b30000530bb03511111111000000000000000055aa55550000000000000000555555bbb335555507666660000000000000000000000000
+0086680009666590003b300053b00b3571111117000000000000000055a5a5550000000000000000555555333355555507666660000000000000000000000000
+08866880009559000003000053b00b357711117700000000000000005aa5aaaa0000000000000000555555555555555500666600000000000000000000000000
+00000000000990000000000053b00b35aaaaaaaa0000000000000000aa55555a0000000000000000555555555555555550000005000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1429,14 +1741,14 @@ e888888e0440044000000000530bb03500899800b333333b25555552000000000000000000000000
 00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00080000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0300000000000300000a000000000000200000200000000099090990000000009090090988080880000000000c0000111000000c000700000000000000000000
 00300000000030000009000000000000020202000000000009090900000990000909909008080800000000000110011111000011007670000000000000000000
 0003000000030000000a00000000000002222200008880000999990000999900009aa90008888800000000000011011111000110076167000000000000000000
@@ -1469,61 +1781,61 @@ e888888e0440044000000000530bb03500899800b333333b25555552000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000008855555555555555355355350455540006ddd600555555550000000052aaa25553bbb35533333300333333009ddddddd5555555995555555
-0000000000000000285555553553553535555535045f540006ddd600555555550000000052a9a25553b3b3553b00b3003b55b3009ddddddd5555559dd9555555
-000000000000000028555555553335555353535500454000006d60005555555500000000552a2555553b35553b00b3003b55b3009ddddddd555559dddd955555
-0000000000000000885555553b3b3b35553b3555004f4000006d6000555555550000000055292555553b35553b00b3003b55b3009ddddddd55559dddddd95555
-00000000000000008855555533bbb33533bbb335004f4000006d6000555555550000000055292555553b35553b00b3003b55b3009ddddddd5559dddddddd9555
-0000000000000000285555553bbbbb353bbbbb35004f400000656000555555550000000055292555553b35553b00b300000000009ddddddd559dddddddddd955
-000000000000000028555555533b3355533b335504fff400065d560055555555000000005299925553bbb3553b00b300000000009ddddddd59dddddddddddd95
-00000000000000008855555555535555555355554fffff406d555d605555555500000000299999253bbbbb3500000000000000009ddddddd9dddddddddddddd9
-03333330000000000000000055555555955955958888888255555552255555555555558882288228000000003b00b30000000000dddddddd9dddddddddddddd9
-03b55b30000000000000000095595595955555958888888255555528825555555555558288888888000000003b00b30000000000dddddddd59dddddddddddd95
-03b55b30000000000000000055999555595959558888888255555288882555555555558255555555000000003b00b3003b55b300dddddddd559dddddddddd955
-03b55b3000000000000000009a9a9a95559a95558888888255552888888255555555558855555555000000003b00b3003b55b300dddddddd5559dddddddd9555
-03b55b30000000000000000099aaa99599aaa9958888888255528888888825555555558855555555000000003b00b3003b55b300dddddddd55559dddddd95555
-03b55b3000000000000000009aaaaa959aaaaa958888888255288888888882555555558255555555000000003b00b3003b55b300dddddddd555559dddd955555
-b3b55b3b0000000000000000599a9955599a99558888888252888888888888255555558255555555000000003b00b3003b55b300dddddddd5555559dd9555555
-0bbbbbb0000000000000000055595555555955558888888228888888888888825555558855555555000000003333330033333300dddddddd5555555995555555
-b3b55b3b00000000000000000000000000000000222222222888888888888882555555550000000000000000555555bb55555555dddddddd555555556bb66bb6
-03b55b3000000000000000000000000000000000888888885288888888888825555555550000000000000000555555b655555555dddddddd5555555566666666
-03b55b3000000000000000000000000000000000888888885528888888888255555555550000000000000000555555b655555555dddddddd5555555555555555
-03b55b3000000000000000000000000000000000888888885552888888882555555555550000000000000000555555bb55555555dddddddd5555555555555555
-03b55b3000000000000000000000000000000000888888885555288888825555555555550000000000000000555555bb55555555dddddddd5555555555555555
-03b55b3000000000000000000000000000000000888888885555528888255555555555550000000000000000555555b655555555dddddddd5555555555555555
-03b55b3000000000000000000000000000000000888888885555552882555555888888880000000000000000555555b6bbbbbbbbdddddddd6666666655555555
-0333333000000000000000000000000000000000888888885555555225555555822882280000000000000000555555bbb66bb66b999999996bb66bb655555555
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000ddddddddddddddd9999999996655555555555566
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d4444444ddddddd9ddddddddb65555555555556b
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d44fff44ddddddd9ddddddddb65555555555556b
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d4f4f4f4ddddddd9dddddddd6655555555555566
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d4ff4ff4ddddddd9dddddddd6655555555555566
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d4f4f4f4ddddddd9ddddddddb65555555555556b
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d44fff44ddddddd9ddddddddb65555555555556b
-0000000000000000000000000000000000000000888888822888888800000000000000000000000000000000d4444444ddddddd9dddddddd6655555555555566
+66655566000000008800000055555555355355350455540006ddd600555555555555555552aaa25553bbb35555676665000000009ddddddd5555555995555555
+6775557700000000280000003553553535555535045f540006ddd600555555555555555552a9a25553b3b35555567765000000009ddddddd5555559dd9555555
+675555550000000028000000553335555353535500454000006d60005555555553333355552a2555553b355556766755000000009ddddddd555559dddd955555
+6755555500000000880000003b3b3b35553b3555004f4000006d60005555555553bbb35555292555553b355557655556000000009ddddddd55559dddddd95555
+55555555000000008800000033bbb33533bbb335004f4000006d6000555555555333335555292555553b355556556676000000009ddddddd5559dddddddd9555
+6755557600000000280000003bbbbb353bbbbb35004f400000656000555555555535555555292555553b355555566676000000009ddddddd559dddddddddd955
+555557760000000028000000533b3355533b335504fff400065d56005555555555b555555299925553bbb35566666677000000009ddddddd59dddddddddddd95
+55555666000000008800000055535555555355554fffff406d555d605555555555555555299999253bbbbb3577777777000000009ddddddd9dddddddddddddd9
+033333309999999999999a9955555555955955958888888255555552255555555555558882288228555555353b00b30000000000dddddddd9dddddddddddddd9
+03b55b30999999999999a9a995595595955555958888888255555528825555555555558288888888555555b53b00b30000000000dddddddd59dddddddddddd95
+03b55b3099999999999a999a5599955559595955888888825555528888255555555555820000000055bbbbb53b00b3003b55b300dddddddd559dddddddddd955
+03b55b30999a999999a999a99a9a9a95559a9555888888825555288888825555555555880000000055b333b53b00b3003b55b300dddddddd5559dddddddd9555
+03b55b30aaa9a9aaaa99999a99aaa99599aaa995888888825552888888882555555555880000000055bbbbb53b00b3003b55b300dddddddd55559dddddd95555
+03b55b3099999a99999999999aaaaa959aaaaa958888888255288888888882555555558200000000555555553b00b3003b55b300dddddddd555559dddd955555
+b3b55b3b9999999999999999599a9955599a99558888888252888888888888255555558200000000555555553b00b3003b55b300dddddddd5555559dd9555555
+0bbbbbb0999999999999999955595555555955558888888228888888888888825555558800000000555555553333330033333300dddddddd5555555995555555
+b3b55b3b000000009999999933355533555555532222222228888888888888820000000055b5555582288228555555bb55555555dddddddd555555556bb66bb6
+03b55b3000000000999999993bb555bb53b5555b888888885288888888888825000000005535555588888888555555b655555555dddddddd5555555566666666
+03b55b3000000000999999993b5555553b555555888888885528888888888255000000005333335588000000555555b655555555dddddddd5555555555555555
+03b55b3000000000999999993b5555553b55b3558888888855528888888825550000000053bbb35528000000555555bb55555555dddddddd5555555555555555
+03b55b3000000000aa99999a5555555555553b55888888885555288888825555000000005333335528000000555555bb55555555dddddddd5555555555555555
+03b55b300000000099a999a93b5555b353355555888888885555528888255555000000005555555588000000555555b655555555dddddddd5555555555555555
+03b55b3000000000999a9a9955555bb35b3b5555888888885555552882555555888888885555555588000000555555b6bbbbbbbbdddddddd6666666655555555
+03333330000000009999a9995555533353355555888888885555555225555555822882285555555528000000555555bbb66bb66b999999996bb66bb655555555
+0000000000000000000000005555555656555555888888822888888888888888888888885655555500000000ddddddddddddddd9999999996655555555555566
+0000000000000000000000005675555756555555888888822888888888888888888888885666665500000000d4444444ddddddd9ddddddddb65555555555556b
+0000000000000000000000006755555556666666888888822888888888888888888888885677765500000000d44fff44ddddddd9ddddddddb65555555555556b
+0000000000000000000000006755765556777776888888822888888888888888888888885666665500000000d4f4f4f4ddddddd9dddddddd6655555555555566
+0000000000000000000000005555675556666666888888822888888888888888888888885555555500000000d4ff4ff4ddddddd9dddddddd6655555555555566
+0000000000000000000000005665555555555556888888822888888888888888888888885555555500000000d4f4f4f4ddddddd9ddddddddb65555555555556b
+0000000000000000000000005767555555555556888888822888888888888888888888885555555500000000d44fff44ddddddd9ddddddddb65555555555556b
+0000000000000000000000005665555555555556888888822888888822222222888888885555555500000000d4444444ddddddd9dddddddd6655555555555566
 
 __gff__
 0001000000000101000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000202000000000000000000000000000000020000000000000000000000000000000000000000000000000100000000
 __map__
-feefefefefefefefefefefefefefefff3c060606060606060606063c3c3c3c250000000000e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303ff3c0303030303030303030304050303250000000000d5c7c7e6d7d6d7d6f5c7d6d7d5c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303ff3c3703370303c70313030314150303250500000000d5c7c7c7e6e7e6e7c7c7e6d5f5c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe030303cefdfdcf03030303030303ff3c0316c7c73cc713031303030303d3061500000000d5c7c7c7c7c7c7c7c7c7c7f6f5c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fec70303cdfbfbfc03030303030303ff25c716c73c3c3cc7130303030303c93c0500000000d5c7c7c7c7c7c7c7c7c7c7e6e7c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe030303deddfbfc03030303030303cedd16c716c73cc7c703040503030303071500000000d5c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe03030303cdfbfc03030303030303cddd130313c7c7c7c7031415030303030705e8e8e8e8e6d7c7c7c7c7c7c7c7d6d7c7c7c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe03030303deeddf03030303030303cdddc703c70303c703030303030303030803c7c7c7c7c7e6d7c7c7c7c7c7c7f6d5c7c7c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303cddd03c303032a2b03030313030303031803c7c7c7c7c7c7d5c7c7c7c7c7c7f6d5c7c7c7c7c7c7d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303cddd03ca03033a3b0303c703130303030703c7c7c7c7c7c7c7c7c7c7c7c7c7e6e7c7c7e8e8e8e8d800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303deddc7030303030303c30316030303d30703c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c7c2c7c7c7d900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303030303ff3c03030303030303ca0303030303c93c03d9d9d9d9c2c7c7c7c7c7d6d7c7c7c7c7d6c20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303cefdfdfd3c03030303030405030303030303033c0300000000c2c7c7c7c7c7f6d5c7c7c7c7e6c20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303cdfbfbdd3c03030303031415030304050303033c0000000000c2c7c7c7c7c7e6e7c7c7c7c7c7c20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-fe0303030303030303030303deededed060303030303030303031415030303250000000000c2c7c7c7c7c7e8e8e8e8e8e8e8c20000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-feeecefdfdcfeeeeeeeeeeeeeeeeeeff062525250303030303030303030303060000000000c2c7c7c7c7c7c2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000253c3c3c0625250606252525000000000000e8e8e8e8e8e8c2000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+feefefefefefefefefefefefefefefff3c060606060606060606063c3c3c3c250000000000e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8d2d2d2d2d2d2c7c7c7c7e4c7d2d2d2d20000000000000000000000c7c7f4f3f4f3f9f9c7c7f4c7c7c7c7f4000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303ff3c0303030303030303030304050303250000000000d5c7c7f7f8f8f8f8f7c7f6f8d5c7c7c7c7d8d2d2d2c7c7c7c7e3c7dac8c7c7c8d2d20000000000000000000000c7f9c0c0f3f4c7c0f9f3f3f3c7c7c7f3000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303ff3c3703370303c70313030314150303250500000000d5c7c7c7f7f7f7f7c7c7f6f6f5c7c7c7c7d8d2d2d2e9e3c7c8c7c8c7c7e9e4c7d2d2d200000000000000000000c0c7c7c7c7f3c7c7c7c7c7c7c7f3c7c0000000000000000000000000000000000000000000000000000000000000
+fe030303cefdfdcf03030303030303ff3c0316c7c73cc713031303030303d3061500000000d5c7c7c7c7c7c7c7c7c7c7f6f5c7c7c7c7d8c7e9c7c7c8c7e9e3e3e3e3c7e3c7c8c7d200000000000000000000c7c7c7c7c7f9c7c7c7cbf3c7c7f9f3f4000000000000000000000000000000000000000000000000000000000000
+fec70303cdfbfbfc03030303030303ff25c716c73c3c3cc7130303030303c93c0500000000d5c7c7c7c7c7c7c7c7c7c7f6f5c7c7c7c7d6c7c7c7c8dac7d2d2d2d2d2d2e9c7c7e4e3c7c7c7c7c7c7c7f4f3f9c7c7c7c7c7c7c7c7c7f3f4c7c7c7c7c7000000000000000000000000000000000000000000000000000000000000
+fe030303deddfbfc03030303030303ce0316c716c73cc7c703040503030303071500000000d5e5e5c7c7c7c7c7c7c7c7c7c7c7c7c7c7f6e3e4c7e4c7e3d2d2d2d2d2d2e3e3e3e9e4c7c7c7c7c7c7c7c7c7c7c7c7f4c7c7c7c7f3c7c7c7c7c7c7c7c7000000000000000000000000000000000000000000000000000000000000
+fe03030303cdfbfc03030303030303cd03130313c7c7c7c7031415030303030705e8e8e8e8f6f8d5c7c7c7c7c7c7c7c7c7c7c7c7c7c7f6e9e3c8c7e3e3d2d2d2d2d2d2d2d2d2e3e3c7c7c7c7c7c7c7f4f3f9f3c7f3c7c7c7c7f4c7c7c7c7c7c0c7c7000000000000000000000000000000000000000000000000000000000000
+fe03030303deeddf03030303030303cd03c703c70303c703030303030303030803c7c7c7c7c7c7c7c7c7c7c7c7c7f6d5c7c7c7c7c7c7f6c7c7dac8c7d2e3e9d2d2d2d2d2d2d2e4e3c7c7c7c7c7c7c7000000c7f3c0c7c7c0c7f3c7f3f4c7c7c7c7c0000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303cd0303c303032a2b03030313030303031803c7c7c7c7c7c7c7c7c7c7c7c7c7f6d5c7c7c7c7c7c7f6c7c7c7e9c7d2e3c7d2d2d2d2d2d2d2c8c7c100005b5b0000000000c7c0c7c7c7c7c7c7c7c7c7c7c7c7c7c7000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303cd0303ca03033a3b0303c703130303030703c7c7c7c7ead9d9d9d9d9d9d9d9d9d9d9d9d9d9d9d9e6e4e4e3c8c7c8c7c7c7c8e3c7e4e3e3c7e30000005b5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303de03c7030303030303c30316030303d30703c7c7c7c7c2c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c00000c0c0c0c0c0c0c0c0c0c0c0c0c0c0c00000005b5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303030303ff3c03030303030303ca0303030303c93c03d9d9d9d9c0c0c0c0c0c0c0c0c0c0c0c0c0c0c000000000000000c0c0c0c0c0c0c0c0c0c1c1c0c0c100005b5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303cefdfdfd3c03030303030405030303030303033c0300000000c0c0c0c0c0c0c0c0c0c0c0c0c0c0c00000000000000000c0c0c0c0c0c0c0c0c1c1c1c1c100005b5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303cdfbfbdd3c03030303031415030304050303033c0000000000c0c0c0c0c0c0c0c0c0c0c0c0c0c00000000000000000005c5c5cc1c1c1c1c1c1c1c1c10000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+fe0303030303030303030303deededed060303030303030303031415030303250000000000c0c0c0c0c0c0c0c0c0c0c0c0c0c00000000000000000005c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+feeecefdfdcfeeeeeeeeeeeeeeeeeeff062525250303030303030303030303060000000000c0c0c0c0c0c0c0c0c0000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000253c3c3c0625250606252525000000000000c0c0c0c0c0c0c0c0c0000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1544,12 +1856,12 @@ __sfx__
 0010000024050180001d0001c0001c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001c0500f0501a0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00100000140501c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-011000000260005600086400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000000260005600096400f60009600096000960009600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001853000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000001c0501b350253500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000001e0501d05022350350002b000300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001335013350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000d0500d0500d0500d0500d0500d0500c0500c0500c0500c0500c0500c0500c05007050070500705007050070500705006050000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000000d0500d0500d0500d0500d0500d0500c0500c0500c0500c0500c0500c0500c05007050070500705007050070500704007040070300702007010070100701007010010000400003000030000300003000
+000a000013040140501805014000190001e0002400020500016000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001704002550070401304003530000000c010105200753001550105400d7400255010030130200f5500c7500475002750055500b5500a7500e7501452006550150200e040145300a530000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1668,3 +1980,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
