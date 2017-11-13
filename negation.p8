@@ -292,7 +292,7 @@ function boss(startx, starty, sprite, lvl)
              --b.draw_healthbar()
            elseif b.level == 3 then
               -- local ang = (angle_btwn(60,60,b.x,b.y)+.1)%360
-              local ang = (360/(time()/6))*(10%(time()/6))
+              local ang = (360/(time()))*(10%(time()))
               b.x = 60 - 55*cos(ang)--ang/360)
               b.y = 60 - 55*sin(ang)--ang/360)
               local p_ang = (angle_btwn(player.x,player.y,b.x,b.y))
