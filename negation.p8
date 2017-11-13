@@ -168,8 +168,8 @@ function enemy(spawn_x, spawn_y, type, time_spwn)
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
-                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xFFFF)
-                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xFFFF)
+                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xffff)
+                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xffff)
                 end
   e.move = function()
                 if e.type == "shooter" then
@@ -299,14 +299,14 @@ function boss(startx, starty, sprite, lvl)
                 shoot(b.x, b.y, p_ang, 141, false, true)
               end
            elseif b.level == 4 then
-             if abs(time())%3 == 0 then
+             if abs(time()*10)%2 == 0 then
                b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
              end
              for c in all(b.circs) do
                for i=12,c[3],-1 do
                  circ(c[1], c[2], i, 8)
                end
-               if abs(time()*100)%2 == 0 then
+               if abs(time()*1000000)%2 == 0 then
                  c[3] -= 1
                  if c[3] <= 0 then
                    circfill(c[1], c[2], 12, 9)
@@ -386,7 +386,7 @@ end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
-  print("Killed: "..player.killed,20,20,5)
+  print("killed: "..player.killed,20,20,5)
   for i=1,90 do
     flip()
   end
@@ -475,8 +475,8 @@ function minimum_neighbor(start, goal)
   map.y = 120
   local minimum_dist = 8000
   local min_node = start
-    for i=0xFFFF,1 do
-      for j=0xFFFF,1 do
+    for i=0xffff,1 do
+      for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
         if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
@@ -602,7 +602,7 @@ function levelchange()
     move_map = true
   end
 
-  --TODO add map centering on player in the beginning
+  --todo add map centering on player in the beginning
 
   if not move_map then
     if btn(c.left_arrow) and abs(level.sx - ((level.lvl-1) * 128)) > level.x*8 and player.x < farx then
@@ -842,7 +842,7 @@ function gameflow()
   seraph = {}
 
   seraph.brd_color = 12
-  seraph.text = "READY TO GET TO WORK?"
+  seraph.text = "ready to get to work?"
   music(11,1)
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
@@ -871,7 +871,7 @@ function gameflow()
   titlescreen = true -- stop showing titlescreen
 
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT."
+  seraph.text = "alright, i see a door. give mea minute and i'll try and openit."
   drawdialog = true -- show seraph's dialog
   wait.controls = true -- stop player controls
   yield()
@@ -891,7 +891,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO-"
+  seraph.text = "okay, that should do-"
   drawdialog = true
   wait.controls = true
   yield()
@@ -899,7 +899,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(60, 60, 128, 3))
+  add(boss_table, boss(60, 60, 128, 4))
   yield()
 
   kill_all_enemies()
@@ -979,7 +979,7 @@ function boss_hit_animation(bul)
     local c = colors[flr(time()*100)%(#colors) + 1]
     local s = flr(time()*100)%4
     local r = 1
-    if rnd(1) > .5 then r = 0xFFFF end
+    if rnd(1) > .5 then r = 0xffff end
     if not bul.rocket then
       circ(bul.x, bul.y, s, c)
     else
@@ -1001,8 +1001,8 @@ end
 ]]
 function step_boss_destroyed_animation(b)
   local s = 1 s1 = 1
-  if flr(rnd(10))%2 == 0 then s = 0xFFFF end
-  if flr(rnd(10))%2 == 0 then s1 = 0xFFFF end
+  if flr(rnd(10))%2 == 0 then s = 0xffff end
+  if flr(rnd(10))%2 == 0 then s1 = 0xffff end
   if b.destroyed_step <= b.destroy_anim_length then
     spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
     spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
@@ -1042,8 +1042,9 @@ function inc(var)
 end
 
 function move_anim(l)
+  local col = {8,9,10}
   for i=1,5 do
-    pset(rnd(5)+(l[1]+8) +6*sin(player.angle / 360), rnd(5)+(l[2]+8) +6*cos(player.angle / 360), 9)
+    pset(rnd(5)+(l[1]+8)+6*sin(player.angle / 360), rnd(5)+(l[2]+8)+6*cos(player.angle / 360), col[i%#col + 1])
   end
 end
 
@@ -1150,7 +1151,7 @@ function _update()
             sfx(2, 1, 0)
           end
     if btnp((c.up_arrow)) then
-      diff = 0xFFFF
+      diff = 0xffff
       sfx(4, 1, 0)
     elseif btnp(c.down_arrow) then
       diff = 1
@@ -1406,7 +1407,7 @@ function _draw()
       local y = level_sprites[i+2] + level.sy
       --spr_r(level_sprites[i], level_sprites[i+1] + level.sx, level_sprites[i+2] + level.sy, level_sprites[i+3], 1, 1)
       spr(level_sprites[i], x, y)
-      --if x < 128 then del(level_sprites, ) end TODO make this delete offscreen sprites
+      --if x < 128 then del(level_sprites, ) end todo make this delete offscreen sprites
     end
   end
   palt()
@@ -1702,7 +1703,7 @@ __gfx__
 0ee00ee0000000000000000053b00b3507000070bb7773bb25555552000000000000000000000000555555555555555500000000000000000000000000000000
 e88ee88e000000000000000053b00b3507700770b773333b25555552000000000000000000000000555555555555555500000000000000000000000000000000
 e888888e666666600a0000a053b00b3578899887b733333b2555555200000000000000000000000055bbb35bbb35555500000000000000000000000000000000
-e888888e0440044000000000530bb03500899800b333333b255555520000000000000000000000005533355b3333555500000000000000000000000000000000
+e888888e044004400a0000a0530bb03500899800b333333b255555520000000000000000000000005533355b3333555500000000000000000000000000000000
 0e8888e00000004400000000530bb03503088030b733333b25555552000000000000000000000000555555555555555500000000000000000000000000000000
 00e88e0000000000000000005330033500000000bb3333bb2225555200000000000000000000000055b3555bb35b355500000000000000000000000000000000
 000ee000000000000000000055533555000000005bbbbbb55522222200000000000000000000000055bbb3533553335500000000000000000000000000000000
@@ -1977,3 +1978,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
