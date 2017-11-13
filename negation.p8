@@ -291,9 +291,15 @@ function boss(startx, starty, sprite, lvl)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
-              local ang = (angle_btwn(60,60,b.x,b.y)+.1)%360
-              b.x = b.x - 60*sin(ang/360)
-              b.y = b.y - 60*cos(ang/360)
+              -- local ang = (angle_btwn(60,60,b.x,b.y)+.1)%360
+              local ang = (360/(time()/6))*(10%(time()/6))
+              b.x = 60 - 55*cos(ang)--ang/360)
+              b.y = 60 - 55*sin(ang)--ang/360)
+              local p_ang = (angle_btwn(player.x,player.y,b.x,b.y))
+              line((b.x+8),(b.y+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
+              if distance(player, b) <= 30+8 then
+                shoot(b.x, b.y, p_ang, 141, false, true)
+              end
            end
            b.draw_healthbar()
           end
@@ -869,7 +875,7 @@ function gameflow()
   wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(56, 56, 128, 3))
+  add(boss_table, boss(60, 60, 128, 3))
   yield()
 
   kill_all_enemies()
