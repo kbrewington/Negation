@@ -7,8 +7,8 @@ __lua__
 
 player = {}
 player_sprite = 0
-player.x = 80
-player.y = 8
+player.x = 60
+player.y = 60
 player_speed = 1
 player_angle = 0
 player_turn = 0
@@ -106,6 +106,7 @@ boss_table = {}
 dropped = {}
 shield_anims = {}
 moves = {}
+tele_animation = {}
 
 currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
@@ -408,7 +409,7 @@ end
 function ent_collide(firstent, secondent)
   secondent = secondent or player
   offset = (firstent == player) and 4 or 0
-  return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + player.size < secondent.x + level_sx
+  return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
 end
 
@@ -716,13 +717,13 @@ end
   print seraph dialog
 ]]
 function dialog_seraph(dialog)
-
-  wait.dialog_finish = true
-
   local bck_color = dialog.bck_color or 5
   local brd_color = dialog.brd_color or 0
   local fnt_color = dialog.fnt_color or 7
   local d = dialog.text
+
+  if (dialog.step == nil) dialog.step = 0
+  if (dialog.step < #d) wait.dialog_finish = true
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -754,12 +755,12 @@ function dialog_seraph(dialog)
   pset(3, 125, brd_color) -- bottom left
 
   print("seraph", 4, 100, fnt_color)
-  print(sub(d, 0, 30), 5, 107, fnt_color) --30 character limit
-  print(sub(d, 31, 60), 5, 113, fnt_color)
-  print(sub(d, 61, 90), 5, 119, fnt_color)
 
-  --print("z/x to continue", 69, 123, 7)
-  wait.dialog_finish = false
+  print(sub(d, 0, min(dialog.step, 30)), 5, 107, fnt_color)
+  if (dialog.step > 30) print(sub(d, 31, min(dialog.step, 60)), 5, 113, fnt_color)
+  if (dialog.step > 60) print(sub(d, 61, min(dialog.step, 90)), 5, 119, fnt_color)
+  dialog.step = min(dialog.step+1, #d+30)
+  if (dialog.step == #d+30) wait.dialog_finish = false
 end
 
 
@@ -773,13 +774,10 @@ end
 
 function gameflow()
   -- start game
-  -- music(11,1)
-  seraph = {}
-  seraph.brd_color = 12
-  seraph.text = "READY TO GET TO WORK?"
-  drawdialog = true -- show seraph's dialog
-  --wait.controls = true -- stop player controls
+  music(11,1)
 
+  --wait.controls = true -- stop player controls
+  init_tele_anim(player)
   level_sprites = { 239, 0, 0,
                     239, 15*8, 0,
                     238, 0*8, 15*8,
@@ -799,7 +797,12 @@ function gameflow()
                     --251, 50, 26
 
                   }
-  timers["leftclick"] = 1
+  --timers["leftclick"] = 1
+  yield()
+
+  seraph = {}
+  seraph.text = "READY TO GET TO WORK?"
+  drawdialog = true -- show seraph's dialog
   yield()
 
   titlescreen = true -- stop showing titlescreen
@@ -816,7 +819,7 @@ function gameflow()
   fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
   wait.start_time = time() -- used for timer and spawn time to compare when to spawn
-  timers["leveltimer"] = 65
+  timers["leveltimer"] = 60
   wait.timer = true -- tells the game we want to wait for the timer to finish
   yield()
 
@@ -825,7 +828,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "okay, that should do-"
+  seraph.text = "OKAY, THAT SHOULD DO-"
   drawdialog = true
   --wait.controls = true
   yield()
@@ -833,7 +836,8 @@ function gameflow()
   --wait.controls = false
   drawdialog = false
 
-  add(boss_table, boss(60, 60, 128, 1))
+  --add(boss_table, boss(60, 60, 128, 1))
+  init_tele_anim(boss(60, 60, 128, 1))
   yield()
 
   kill_all_enemies()
@@ -948,6 +952,39 @@ function step_boss_destroyed_animation(b)
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
   b.destroyed_step += 1
 
+end
+
+function init_tele_anim(e)
+  --  loop_func(destroyed_enemies, step_destroy_animation)
+  e.anim_length = 90
+  e.anim_step = 0
+  add(tele_animation, e)
+end
+
+function step_teleport_animation(e)
+  local offset = -1
+  if (e == player) offset = 4
+  if e.anim_step <= e.anim_length then
+    if (e == player) wait.controls = true
+
+    if e.anim_step >= e.anim_length - 15 then
+      circfill(e.x +offset + (e.size/2), e.y + offset + (e.size/2), e.anim_step%18, 12)
+      circ(e.x+offset + (e.size/2), e.y+offset + (e.size/2), e.anim_step%18*2, 12)
+      timers["invalid"] = 0.1
+      showplayer=true
+    end
+
+    if rnd(30) < e.anim_step-15 then
+      circ(e.x - 5 + rnd(10 + e.size), e.y - 5 + rnd(10 + e.size), rnd(3), 12)
+    end
+
+    e.anim_step += 1
+
+  else
+    del(tele_animation, e)
+    if (e == player) showplayer, wait.controls = true, false; coresume(game)
+    if (e ~= player) add(boss_table, e)
+  end
 end
 
 function drop_item(e)
@@ -1102,7 +1139,7 @@ function _update()
     return
   end
 
-  if not wait.controls then
+  if not wait.controls and not drawdialog then
     --[[
       up arrow
     ]]
@@ -1223,7 +1260,7 @@ function _update()
       coresume(game)
       timers["leftclick"] = 1
 
-    elseif not wait.controls and timers["firerate"] == 0 then
+    elseif not wait.controls and not drawdialog and timers["firerate"] == 0 then
       shoot(player.x, player.y, player_angle, 34, true, false)
       --sfx(1,1)
       timers["firerate"] = player_fire_rate
@@ -1272,7 +1309,7 @@ function _update()
   --[[
     x button
   ]]
-  if (btnp(c.x_button)) and not level_change then
+  if (btnp(c.x_button)) and not level_change and #tele_animation == 0 then
     coresume(game)
   end --end x button
 
@@ -1325,7 +1362,7 @@ function _draw()
 
   if (open_door) opendoor()
 
-  spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
+  if (showplayer ~= nil) spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
   loop_func(moves, move_anim)
   moves = {}
 
@@ -1419,6 +1456,7 @@ function _draw()
         del(dropped, d)
       elseif d.type ~= "heart" and #player_inventory < player_inv_max then
         add(player_inventory, d)
+        if (#player_inventory < 4) timers["showinv"] = .5
         sfx(6,1)
         del(dropped, d)
       end
@@ -1525,13 +1563,15 @@ function _draw()
 
   loop_func(destroyed_bosses, step_boss_destroyed_animation)
 
+  loop_func(tele_animation, step_teleport_animation)
+
   if player_health <= 0 then
     sfx(9,1)
     show_leaderboard()
     run()
   end
 
-  draw_playerhp()
+  if (showplayer ~= nil) draw_playerhp()
 
   if (pget(stat(32), stat(33)) == 8 or pget(stat(32), stat(33)) == 2)  pal(8, 6)
   spr(96, stat(32) - 3, stat(33) - 3)
