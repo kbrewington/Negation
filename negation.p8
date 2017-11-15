@@ -764,7 +764,7 @@ end
 
 function gameflow()
   -- start game
-  music(11,1)
+  -- music(11,1)
 
   --wait.controls = true -- stop player controls
   init_tele_anim(player)
