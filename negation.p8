@@ -714,6 +714,18 @@ function draw_titlescreen()
 
 end
 
+function draw_controls()
+  rectfill(10, 20, 117, 101, 9)
+  rectfill(11, 21, 116, 100, 6)
+
+  print("use the mouse to aim!", 21, 30, 9)
+  print("USE: left click TO SHOOT", 18, 55, 5)
+  print("middle click TO", 38, 65, 5)
+  print("SWITCH POWER UPS", 38, 71, 5)
+  print("right click TO", 38, 81, 5)
+  print("SHOOT POWER UPS", 38, 87, 5)
+end
+
 --[[
   print seraph dialog
 ]]
@@ -775,10 +787,7 @@ end
 
 function gameflow()
   -- start game
-  music(11,1)
-
-  --wait.controls = true -- stop player controls
-  init_tele_anim(player)
+  drawcontrols = true
   level_sprites = { 239, 0, 0,
                     239, 15*8, 0,
                     238, 0*8, 15*8,
@@ -798,6 +807,13 @@ function gameflow()
                     --251, 50, 26
 
                   }
+  yield()
+
+  drawcontrols = false
+  music(11,1)
+
+  --wait.controls = true -- stop player controls
+  init_tele_anim(player)
   --timers["leftclick"] = 1
   yield()
 
@@ -1353,7 +1369,6 @@ function _draw()
     return
   end
 
-
   if level_sprites ~= nil then
     palt(5, true)
     for i = 1, #level_sprites, 3 do
@@ -1365,6 +1380,8 @@ function _draw()
     end
   end
   palt()
+
+  if (drawcontrols) draw_controls(); return
 
   if (open_door) opendoor()
 
