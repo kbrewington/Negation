@@ -14,7 +14,7 @@ player_angle = 0
 player_turn = 0
 player_fire_rate = .75
 player_power_fire_rate = 1
-player_health = 10
+player_health = 1
 player_max_health = 10
 player.size = 8
 player_immune_time = 2
@@ -352,46 +352,36 @@ function debug()
   print("", 45, 18, debug_color)
 end
 
-function init_mem()
-  for i=0,53 do -- 53 - 63 = leaderboard data
-    dset(i, -1)
-  end
-end
-
-function save_leaderboard()
-  local idx = 53
-  while dget(idx) ~= 0 do
-    idx += 1
-  end
-  dset(idx, player_killed)
-end
-
 function save_data()
   local save = {player.x, player.y, level_sx, level_sy, level_lvl, player_tokens} -- missing: player_inventory, and current skill values/costs
   for i=0,(#save-1) do
     dset(i, save[i+1])
   end
-  -- dset(#save, -5) -- save inventory items
-  -- for i=(#save+1),(#player_inventory) do
-  --   dset(i, player_inventory[i+1])
-  -- end
 end
 
 function load_data()
-  local idx = 0
   _load = {}
-  while dget(idx) ~= -1 do
-    _load[#_load+1] = dget(idx)
-    idx += 1
+  for i=0,53 do
+    _load[#_load+1] = dget(i)
   end
 end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
-  print("killed: "..player_killed,20,20,5)
-  for i=1,90 do
-    flip()
+  dset(63, player_killed)
+  for i=53,63 do
+    if dget(i) < dget(i+1) then
+      tmp = dget(i)
+      dset(i, dget(i+1))
+      dset(i+1, tmp)
+    end
   end
+  for i=53,62 do
+    co = (player_killed == dget(i)) and 10 or 7
+    print(i-52 .. " :  "..dget(i), 25, 20+(i%53*8), co)
+  end
+  in_leaderboard = true
+  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
 end
 
 function bump(x, y)
@@ -955,7 +945,7 @@ function step_boss_destroyed_animation(b)
 end
 
 function init_tele_anim(e)
-  --  loop_func(destroyed_enemies, step_destroy_animation)
+  --  foreach(destroyed_enemies, step_destroy_animation)
   e.anim_length = 90
   e.anim_step = 0
   add(tele_animation, e)
@@ -993,12 +983,6 @@ end
 
 function distance(n, d)
   return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
-end
-
-function loop_func(table, func)
-  for e in all(table) do
-    func(e)
-  end
 end
 
 function time_diff(time_var, thresh)
@@ -1059,7 +1043,6 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-  init_mem()
   poke(0x5f2d, 1)
 
   title.init = time()
@@ -1088,6 +1071,7 @@ function _update()
     if (btnp(c.x_button) or btnp(c.z_button)) titlescreen = true; --music(0)
     return
   end
+  if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; run()
 
   if in_skilltree then
     skills_selected[currently_selected] = false
@@ -1340,6 +1324,7 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
+  if (in_leaderboard) show_leaderboard(); return
   map(level_x, level_y, level_sx, level_sy, 128, 128)
 
   if not titlescreen then
@@ -1363,7 +1348,7 @@ function _draw()
   if (open_door) opendoor()
 
   if (showplayer ~= nil) spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
-  loop_func(moves, move_anim)
+  foreach(moves, move_anim)
   moves = {}
 
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
@@ -1442,7 +1427,7 @@ function _draw()
     end
   end
 
-  loop_func(destroyed_enemies, step_destroy_animation)
+  foreach(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
     if ent_collide(d) then
@@ -1559,16 +1544,16 @@ function _draw()
     b.update()
   end
 
-  loop_func(boss_hit_anims, boss_hit_animation)
+  foreach(boss_hit_anims, boss_hit_animation)
 
-  loop_func(destroyed_bosses, step_boss_destroyed_animation)
+  foreach(destroyed_bosses, step_boss_destroyed_animation)
 
-  loop_func(tele_animation, step_teleport_animation)
+  foreach(tele_animation, step_teleport_animation)
 
   if player_health <= 0 then
     sfx(9,1)
-    show_leaderboard()
-    run()
+    in_leaderboard = true
+    -- run()
   end
 
   if (showplayer ~= nil) draw_playerhp()
@@ -1601,7 +1586,6 @@ function _draw()
   end
 
   if (in_skilltree) skilltree()
-  if (in_leaderboard) draw_leaderboard()
 
   debug() -- always on bottom
 end --end _draw()
