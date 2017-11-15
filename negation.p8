@@ -27,7 +27,7 @@ player_shield_dur = 5
 --player.last_right = nil
 --player.last_click = nil
 --player.last_middle_click = nil
-player_killed = 0
+player_killed = 20
 player_shield = 0
 
 level = {}
@@ -58,7 +58,8 @@ timers = {leveltimer = 0,
           rightclick = 0,
           firerate = 0,
           invalid = 0,
-          bossstart = 0}
+          bossstart = 0,
+          countup = 0}
 
 -- controls
 c = {}
@@ -371,17 +372,17 @@ end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
-  dset(63, player_killed)
-  for i=53,63 do
-    if dget(i) < dget(i+1) then
-      tmp = dget(i)
-      dset(i, dget(i+1))
-      dset(i+1, tmp)
+  print("you died",20, 20, 8)
+  if sort then
+    if (timers["countup"] == 0) then
+       timers["countup"] = .1
+       if(k<player_killed) k+=1
+       if(k==player_killed) sort=false; timers["countup"] = .5
     end
-  end
-  for i=53,62 do
-    co = (player_killed == dget(i)) and 10 or 7
-    print(i-52 .. " :  "..dget(i), 25, 20+(i%53*8), co)
+    print("KILLED: "..k, 30, 50, 8)
+  else
+    print("KILLED: "..player_killed, 30, 50, 8)
+    if (timers["countup"] ~= 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
   end
   in_leaderboard = true
   print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
@@ -1048,6 +1049,10 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
+  -- for i=53,63 do
+  --   dset(i, 0)
+  -- end
+  k=0
   poke(0x5f2d, 1)
 
   title.init = time()
@@ -1076,7 +1081,7 @@ function _update()
     if (btnp(c.x_button) or btnp(c.z_button)) titlescreen = true; --music(0)
     return
   end
-  if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; run()
+  if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; sort = true; run()
 
   if in_skilltree then
     skills_selected[currently_selected] = false
@@ -1559,6 +1564,7 @@ function _draw()
   if player_health <= 0 then
     sfx(9,1)
     in_leaderboard = true
+    sort = true
     -- run()
   end
 
