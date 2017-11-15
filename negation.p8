@@ -18,6 +18,9 @@ player_health = 10
 player_max_health = 10
 player.size = 8
 player_immune_time = 2
+player.destroyed_step = 0
+player.destroy_anim_length = 30
+player.destroy_sequence = {135, 136, 135}
 --player.last_hit = 0
 player_b_count = 0
 player_tokens = 0
@@ -58,7 +61,8 @@ timers = {leveltimer = 0,
           rightclick = 0,
           firerate = 0,
           invalid = 0,
-          bossstart = 0}
+          bossstart = 0,
+          countup = 0}
 
 -- controls
 c = {}
@@ -125,10 +129,6 @@ titlescreen = nil
 function drop_obj(sx, sy, sprite)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 8, 5
-  -- d.y = sy
-  -- d.sprite = sprite
-  -- d.size = 8
-  -- d.drop_duration = 5
   d.init_time = time()
   d.types = {[32] = "heart",
              [33] = "shotgun",
@@ -148,28 +148,11 @@ end
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
-  --e.speed, e.time, e.b_count = .35, time_spwn, 0
-  -- e.y = spawn_y
-  -- e.speed = .35
-  -- e.time = time_spwn
-  -- e.b_count = 0
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
-  -- e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  -- e.drop_prob = 100--%
-  -- e.shoot_distance = 50
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 10
-  -- e.explode_wait = 15
-  -- e.explode_step = 0
-  -- e.fire_rate = 10
   e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
-  -- e.dont_move = false
-  -- e.size = 8
-  -- e.sprite = 132
-  -- e.angle = 360
-  -- e.speed = .35
-  -- e.type = type
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -209,18 +192,7 @@ end
 function bullet(startx, starty, angle, sprite, friendly, shotgun)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
-  -- b.y = starty
-  -- b.angle = angle
-  -- b.sprite = sprite
-  -- b.friendly = friendly
-  -- b.duration = 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
-  -- b.speed = 2
-  -- b.acceleration = 0
-  -- b.current_step = 0
-  -- b.max_anim_steps = 5
-  -- b.rocket = false
-  -- b.size = 3
 
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket = 0.5, 15, true
 
@@ -240,20 +212,8 @@ end
 function boss(startx, starty, sprite, lvl)
   local b = {}
   b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, (lvl or 1), nil, 0, sprite
-  -- b.y = starty
-  -- b.speed = .01
-  -- b.angle = 0
-  -- b.level = lvl or 1
-  -- b.shot_last = nil
-  -- b.shot_ang = 0
-  -- b.sprite = sprite
   b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health = 16, 2, 7, 0, 30, 50
-  -- b.bullet_speed = 2
-  -- b.fire_rate = 7
-  -- b.destroyed_step = 0
   b.destroy_sequence = {135, 136, 135}
-  -- b.destroy_anim_length = 30
-  -- b.health = 50
   b.circs = {}
   timers["bossstart"] = 12
   b.draw_healthbar = function()
@@ -277,8 +237,8 @@ function boss(startx, starty, sprite, lvl)
            elseif b.level == 2 then
              if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
                shoot(b.x, b.y, p_ang, 141, false, true)
-               b.x = b.x - 5*sin(p_ang/360)
-               b.y = b.y - 5*cos(p_ang/360)
+               b.x = b.x - 2*sin(p_ang/360)
+               b.y = b.y - 2*cos(p_ang/360)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
@@ -355,46 +315,36 @@ function debug()
   print(level_change, 45, 18, debug_color)
 end
 
-function init_mem()
-  for i=0,53 do -- 53 - 63 = leaderboard data
-    dset(i, -1)
-  end
-end
-
-function save_leaderboard()
-  local idx = 53
-  while dget(idx) ~= 0 do
-    idx += 1
-  end
-  dset(idx, player_killed)
-end
-
 function save_data()
   local save = {player.x, player.y, level_sx, level_sy, level_lvl, player_tokens} -- missing: player_inventory, and current skill values/costs
   for i=0,(#save-1) do
     dset(i, save[i+1])
   end
-  -- dset(#save, -5) -- save inventory items
-  -- for i=(#save+1),(#player_inventory) do
-  --   dset(i, player_inventory[i+1])
-  -- end
 end
 
 function load_data()
-  local idx = 0
   _load = {}
-  while dget(idx) ~= -1 do
-    _load[#_load+1] = dget(idx)
-    idx += 1
+  for i=0,53 do
+    _load[#_load+1] = dget(i)
   end
 end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
-  print("killed: "..player_killed,20,20,5)
-  for i=1,90 do
-    flip()
+  print("you died",20, 20, 8)
+  if sort then
+    if (timers["countup"] == 0) then
+       timers["countup"] = .1
+       if(k<player_killed) k+=1
+       if(k==player_killed) sort=false; timers["countup"] = .5
+    end
+    print("KILLED: "..k, 30, 50, 8)
+  else
+    print("KILLED: "..player_killed, 30, 50, 8)
+    if (timers["countup"] ~= 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
   end
+  in_leaderboard = true
+  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
 end
 
 function bump(x, y, flag)
@@ -966,7 +916,7 @@ function step_boss_destroyed_animation(b)
     spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
     spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
   else
-    del(destroyed_bosses, b)
+    if (b~= player) del(destroyed_bosses, b)
     coin.dropped = true
   end
 
@@ -976,7 +926,7 @@ function step_boss_destroyed_animation(b)
 end
 
 function init_tele_anim(e)
-  --  loop_func(destroyed_enemies, step_destroy_animation)
+  --  foreach(destroyed_enemies, step_destroy_animation)
   e.anim_length = 90
   e.anim_step = 0
   add(tele_animation, e)
@@ -1014,12 +964,6 @@ end
 
 function distance(n, d)
   return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
-end
-
-function loop_func(table, func)
-  for e in all(table) do
-    func(e)
-  end
 end
 
 function time_diff(time_var, thresh)
@@ -1080,7 +1024,10 @@ end
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
 function _init()
-  init_mem()
+  -- for i=53,63 do
+  --   dset(i, 0)
+  -- end
+  k=0
   poke(0x5f2d, 1)
 
   title.init = time()
@@ -1109,6 +1056,7 @@ function _update()
     if (btnp(c.x_button) or btnp(c.z_button)) titlescreen = true; --music(0)
     return
   end
+  if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; sort = true; run()
 
   if in_skilltree then
     skills_selected[currently_selected] = false
@@ -1362,11 +1310,20 @@ end --end _update()
 --------------------------------------------------------------------------------
 function _draw()
   cls()
+  if (in_leaderboard) show_leaderboard(); return
   map(level_x, level_y, level_sx, level_sy, 128, 128)
 
   if not titlescreen then
     draw_titlescreen()
     return
+  end
+
+  if player_health <= 0 then
+    if (player.destroyed_step < player.destroy_anim_length) step_boss_destroyed_animation(player); return
+    sfx(9,1)
+    in_leaderboard = true
+    sort = true
+    -- run()
   end
 
   if level_sprites ~= nil then
@@ -1386,7 +1343,7 @@ function _draw()
   if (open_door) opendoor()
 
   if (showplayer ~= nil) spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
-  loop_func(moves, move_anim)
+  foreach(moves, move_anim)
   moves = {}
 
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
@@ -1465,7 +1422,7 @@ function _draw()
     end
   end
 
-  loop_func(destroyed_enemies, step_destroy_animation)
+  foreach(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
     if ent_collide(d) then
@@ -1582,17 +1539,11 @@ function _draw()
     b.update()
   end
 
-  loop_func(boss_hit_anims, boss_hit_animation)
+  foreach(boss_hit_anims, boss_hit_animation)
 
-  loop_func(destroyed_bosses, step_boss_destroyed_animation)
+  foreach(destroyed_bosses, step_boss_destroyed_animation)
 
-  loop_func(tele_animation, step_teleport_animation)
-
-  if player_health <= 0 then
-    sfx(9,1)
-    show_leaderboard()
-    run()
-  end
+  foreach(tele_animation, step_teleport_animation)
 
   if (showplayer ~= nil) draw_playerhp()
 
@@ -1624,7 +1575,6 @@ function _draw()
   end
 
   if (in_skilltree) skilltree()
-  if (in_leaderboard) draw_leaderboard()
 
   debug() -- always on bottom
 end --end _draw()
