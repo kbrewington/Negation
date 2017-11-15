@@ -145,9 +145,9 @@ end
   enemy object
 ]]
 --function enemy(spawn_x, spawn_y, type, time_spwn)
-function enemy(type, time_spwn)
+function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.speed, e.time, e.b_count = nil, nil, .35, time_spwn, 0
+  e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
   --e.speed, e.time, e.b_count = .35, time_spwn, 0
   -- e.y = spawn_y
   -- e.speed = .35
@@ -552,8 +552,8 @@ function spawnenemies()
       -- repeat
       --   enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
       -- until distance(player, enemy) > 20
-      enemy.x = 50
-      enemy.y = 20
+      --enemy.x = 50
+      --enemy.y = 20
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
     end
@@ -769,7 +769,7 @@ function fill_enemy_table(level, lvl_timer)
   local types = {"shooter", "basic", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
   end
 end
 
