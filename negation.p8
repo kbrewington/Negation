@@ -151,7 +151,7 @@ function enemy(x, y, type, time_spwn)
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 10
+  e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
 
   e.update_xy = function()
@@ -192,7 +192,7 @@ end
 function bullet(startx, starty, angle, sprite, friendly, shotgun)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
-  b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
+  b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 8
 
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket = 0.5, 15, true
 
@@ -361,7 +361,7 @@ function bump_all(x, y)
 end
 
 function ent_collide(firstent, secondent)
-  secondent = secondent or player
+  --secondent = secondent or player
   offset = (firstent == player) and 4 or 0
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
@@ -737,7 +737,7 @@ end
 
 function gameflow()
   -- start game
-  drawcontrols = true
+  drawcontrols, wait.controls = true, true
   level_sprites = { 239, 0, 0,
                     239, 15*8, 0,
                     238, 0*8, 15*8,
@@ -760,7 +760,7 @@ function gameflow()
   --timers["leftclick"] = 1
   yield()
 
-  drawcontrols = false
+  drawcontrols, wait.controls = false, false
   music(11,1)
 
   --wait.controls = true -- stop player controls
@@ -773,10 +773,10 @@ function gameflow()
   drawdialog = true -- show seraph's dialog
   yield()
 
-  titlescreen = true -- stop showing titlescreen
+  --titlescreen = true -- stop showing titlescreen
 
   seraph = {} -- reset seraph table to defaults
-  seraph.text = "ALRIGHT, I SEE A DOOR. GIVE MEA MINUTE AND I'LL TRY AND OPENIT."
+  seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL TRY AND OPEN IT."
   drawdialog = true -- show seraph's dialog
   --wait.controls = true -- stop player controls
   yield()
@@ -796,7 +796,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO-"
+  seraph.text = "OKAY, THAT SHOULD DO *static* INCOM-*static* BIG *static*..."
   drawdialog = true
   --wait.controls = true
   yield()
@@ -1280,8 +1280,15 @@ function _update()
   --[[
     x button
   ]]
-  if (btnp(c.x_button)) and not level_change and #tele_animation == 0 then
+  if (btnp(c.x_button)) and not level_change then
+    --   e.anim_length = 90
+    --   e.anim_step = 0
+    for t in all(tele_animation) do
+      t.anim_step = t.anim_length
+    end
     coresume(game)
+  elseif level_change then
+    kill_all_enemies()
   end --end x button
 
   --player.x = player.x - player.current_speed * sin((player_angle - player_turn) / 360)
@@ -1372,7 +1379,7 @@ function _draw()
 
     if e ~= nil then
       -- if time_diff(player.last_hit, player_immune_time) and ent_collide(e) then
-      if timers["playerlasthit"] == 0 and ent_collide(e) then
+      if timers["playerlasthit"] == 0 and ent_collide(player, e) then
         if player_shield <= 0 then
           player_health -= 1
           sfx(2,2)
@@ -1426,7 +1433,7 @@ function _draw()
   foreach(destroyed_enemies, step_destroy_animation)
 
   for d in all(dropped) do
-    if ent_collide(d) then
+    if ent_collide(player, d) then
       if d.type == "heart" and player_health < player_max_health then
         player_health = min(player_max_health, player_health+3)
         sfx(7,1)
@@ -1713,7 +1720,7 @@ e888888e044004400a0000a0530bb03500899800b333333b25555552000000000000000000000000
 
 __gff__
 0001000000000101000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000202000000000000000000000000000000020000000000000000000000000000000000000000000000000100000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000202000200000000000002000000000000020000000000000000000000000000000000000000000000000100000000
 __map__
 feefefefefefefefefefefefefefeffffefafa03ccc5dbdbdbd4dbdbdbd4dbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0e8e8e8e8e8e8e8d2d2d2d2d2d203030303e403d2d2d2d2d2000000000000000000000303f4f3f4f3f9f90303f403030303f400fc03d2d2d2030303e4ebd2d20303f30300000000000000000000000000
 fe0303030303030303030303030303fffefafa03ccc5dbd4dbdbd4dbd4dbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f8d503030303d8d2d2d203030303e303dac80303c8d2d2d20000000000000000000003f9c0c0f3f403c003030303030303f300d503030303030303e3e9d2d203cbf40300000000000000000000000000
