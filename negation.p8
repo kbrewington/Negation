@@ -499,11 +499,9 @@ end
 function spawnenemies()
   for enemy in all(enemy_table) do
     if time() - wait.start_time >= enemy.time then
-      -- repeat
-      --   enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
-      -- until distance(player, enemy) > 20
-      --enemy.x = 50
-      --enemy.y = 20
+      repeat
+        enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
+      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
     end
@@ -796,7 +794,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY, THAT SHOULD DO *static* INCOM-*static* BIG *static*..."
+  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* BIG *static*..."
   drawdialog = true
   --wait.controls = true
   yield()
