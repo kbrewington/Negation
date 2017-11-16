@@ -308,11 +308,11 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print("", 45, 12, debug_color)
+  print(level_lvl, 45, 12, debug_color)
   print("", 0, 12, debug_color)
 
   print("", 0, 18, debug_color)
-  print(level_change, 45, 18, debug_color)
+  print("", 45, 18, debug_color)
 end
 
 function save_data()
@@ -497,11 +497,24 @@ function delete_offscreen(list, obj)
 end
 
 function spawnenemies()
+
   for enemy in all(enemy_table) do
     if time() - wait.start_time >= enemy.time then
       repeat
         enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
       until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
+
+      if (level_lvl == 1) enemy.type = "basic"
+      if level_lvl == 2 then
+        enemy.type = "basic"
+        if (rnd(99) < 20) enemy.type = "shooter"
+      end
+      if level.lvl == 3 then
+        if enemy.type == "exploder" then
+          if (rnd(99) < 80) enemy.type = "shooter"
+        end
+      end
+
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
     end
@@ -794,7 +807,7 @@ function gameflow()
   spawn_enemies = false
 
   seraph = {}
-  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* BIG *static*..."
+  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
   drawdialog = true
   --wait.controls = true
   yield()
@@ -808,9 +821,15 @@ function gameflow()
 
   kill_all_enemies()
 
+  seraph = {}
+  seraph.text = "NICE WORK. THE DOOR SHOULD OPEN NOW."
+  drawdialog = true
+  yield()
+
   wait.controls = true
   open_door = true
   level_change = true
+  drawdialog = false
   yield()
 
   --level.border.right = 248
@@ -1057,6 +1076,7 @@ function _update()
   end
   if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; sort = true; run()
 
+
   if in_skilltree then
     skills_selected[currently_selected] = false
     local diff = 0
@@ -1107,7 +1127,7 @@ function _update()
     return
   end
 
-  if not wait.controls and not drawdialog then
+  if not wait.controls and #seraph.text == 0 then
     move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
     --[[
       up arrow
