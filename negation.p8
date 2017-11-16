@@ -112,6 +112,7 @@ dropped = {}
 shield_anims = {}
 moves = {}
 tele_animation = {}
+seraph = {}
 
 currently_selected = 1
 selection_set = {"speed", "health", "fire rate", "quit"}
@@ -395,6 +396,9 @@ function round(num, numdecimalplaces)
 end
 function ceil(x) return -flr(-x) end
 
+-- http://pico-8.wikia.com/wiki/Centering_Text
+function hcenter(s) return 64-flr((#s*4)/2) end
+
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
@@ -497,21 +501,21 @@ function delete_offscreen(list, obj)
 end
 
 function spawnenemies()
-
+  local types = {"basic", "shooter", "exploder"} --1, 2, 3
   for enemy in all(enemy_table) do
     if time() - wait.start_time >= enemy.time then
       repeat
         enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
       until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
 
-      if (level_lvl == 1) enemy.type = "basic"
+      if (level_lvl == 1) enemy.type = types[1]
       if level_lvl == 2 then
         enemy.type = "basic"
         if (rnd(99) < 20) enemy.type = "shooter"
       end
       if level.lvl == 3 then
         if enemy.type == "exploder" then
-          if (rnd(99) < 80) enemy.type = "shooter"
+          if (rnd(99) < 80) enemy.type = types[1+rnd(1)]
         end
       end
 
@@ -553,15 +557,11 @@ end
 
 function levelchange()
   local farx = 100
-  --local farleft
 
   level.i = 3*level_lvl+1
   if (level_transition[level.i] == level_lvl+1 and (level_transition[level.i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
-  -- [[and transition[level.i+2] == flr(level_sy)]] then
-    -- move_map = true
-  -- end
 
-  --todo add map centering on player in the beginning
+  --TODO add map centering on player in the beginning
 
   if not move_map then
     if btn(c.left_arrow) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
@@ -588,15 +588,8 @@ function levelchange()
       level_sprites = {}
       open_door = false
       level_sx, level_sy, level_x, level_y = 0, 0, level_transition[level.i+1], level_transition[level.i+2]
-      -- level_sy = 0
-      -- level_x = level_transition[level.i+1]
-      -- level_y = level_transition[level.i+2]
-
       wait.controls, move_map, level_change, coin.dropped = false, false, false, false
-      -- move_map = false
-      -- level_change = false
       level_lvl += 1
-      -- coin.dropped = false
       coresume(game)
     end
   end
@@ -604,23 +597,16 @@ end
 
 function drawcountdown()
   local x, y, clr = 57, 15, 12
-  --local countdown = flr((wait.start_time + wait.end_time) - time())
   local countdown = timers["leveltimer"]
   local hours = flr(countdown/3600);
   local mins = flr(countdown/60 - (hours * 60));
   local secs = ceil(countdown - hours * 3600 - mins * 60);
-  if secs == 60 then
-    mins += 1
-    secs = 0
-  end
+  if (secs == 60) mins += 1; secs = 0
   if (secs < 10) secs = "0" .. secs
 
   print(mins .. ":" .. secs, x, y, clr)
 
-  if countdown == 0 then
-    wait.timer = false
-    coresume(game)
-  end
+  if (countdown == 0) wait.timer = false; coresume(game)
 end
 
 function opendoor()
@@ -671,8 +657,9 @@ function draw_titlescreen()
     end
   end
 
-  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
-
+  local t = "PRESS left click TO START"
+  --print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
+  print(t, hcenter(t), 100, flr(time())%15+1)
 end
 
 function draw_controls()
@@ -690,14 +677,14 @@ end
 --[[
   print seraph dialog
 ]]
-function dialog_seraph(dialog)
-  local bck_color = dialog.bck_color or 5
-  local brd_color = dialog.brd_color or 0
-  local fnt_color = dialog.fnt_color or 7
-  local d = dialog.text
+function draw_dialog()
+  local bck_color = seraph.bck_color or 5
+  local brd_color = seraph.brd_color or 0
+  local fnt_color = seraph.fnt_color or 7
+  local d = seraph.text
 
-  if (dialog.step == nil) dialog.step = 0
-  if (dialog.step < #d) wait.dialog_finish = true
+  if (seraph.step == nil) seraph.step = 0
+  if (seraph.step < #d) wait.dialog_finish = true
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -730,11 +717,11 @@ function dialog_seraph(dialog)
 
   print("seraph", 4, 100, fnt_color)
 
-  print(sub(d, 0, min(dialog.step, 30)), 5, 107, fnt_color)
-  if (dialog.step > 30) print(sub(d, 31, min(dialog.step, 60)), 5, 113, fnt_color)
-  if (dialog.step > 60) print(sub(d, 61, min(dialog.step, 90)), 5, 119, fnt_color)
-  dialog.step = min(dialog.step+1, #d+30)
-  if (dialog.step == #d+30) wait.dialog_finish = false
+  print(sub(d, 0, min(seraph.step, 30)), 5, 107, fnt_color)
+  if (seraph.step > 30) print(sub(d, 31, min(seraph.step, 60)), 5, 113, fnt_color)
+  if (seraph.step > 60) print(sub(d, 61, min(seraph.step, 90)), 5, 119, fnt_color)
+  seraph.step = min(seraph.step+1, #d+30)
+  if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
 
@@ -763,37 +750,18 @@ function gameflow()
 
                     255, 15*8, 12*8,
                     255, 15*8, 13*8,
-                    255, 15*8, 14*8
-
-                    --251, 50, 26
-
-                  }
-  --timers["leftclick"] = 1
+                    255, 15*8, 14*8}
   yield()
 
   drawcontrols, wait.controls = false, false
-  music(11,1)
-
-  --wait.controls = true -- stop player controls
   init_tele_anim(player)
-  --timers["leftclick"] = 1
   yield()
 
-  seraph = {}
   seraph.text = "READY TO GET TO WORK?"
-  drawdialog = true -- show seraph's dialog
   yield()
 
-  --titlescreen = true -- stop showing titlescreen
-
-  seraph = {} -- reset seraph table to defaults
   seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL TRY AND OPEN IT."
-  drawdialog = true -- show seraph's dialog
-  --wait.controls = true -- stop player controls
   yield()
-
-  --wait.controls = false  -- resume player controls
-  drawdialog = false -- stop showing seraph's dialog
 
   fill_enemy_table(1, 65)
   spawn_enemies = true -- tell the game we want to spawn enemies
@@ -806,39 +774,27 @@ function gameflow()
   wait.timer = false
   spawn_enemies = false
 
-  seraph = {}
   seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
-  drawdialog = true
-  --wait.controls = true
   yield()
 
-  --wait.controls = false
-  drawdialog = false
-
-  --add(boss_table, boss(60, 60, 128, 1))
   init_tele_anim(boss(60, 60, 128, 1))
   yield()
 
   kill_all_enemies()
 
-  seraph = {}
   seraph.text = "NICE WORK. THE DOOR SHOULD OPEN NOW."
-  drawdialog = true
   yield()
 
   wait.controls = true
   open_door = true
   level_change = true
-  drawdialog = false
   yield()
 
-  --level.border.right = 248
   wait.controls = false
   yield()
 
   fill_enemy_table(2, 60)
   wait.start_time = time()
-  --wait.timer = true
   spawn_enemies = true
   add(boss_table, boss(56, 56, 139, 2))
   yield()
@@ -1037,6 +993,11 @@ function draw_playerhp()
   end
 end
 
+function continuebuttons()
+  if ((btnp(c.x_button) or btnp(c.z_button) or stat(34) == 1) and timers["leftclick"] == 0) return true
+  return false
+end
+
 
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
@@ -1075,6 +1036,10 @@ function _update()
     return
   end
   if (in_leaderboard and (btnp(c.x_button) or btnp(c.z_button))) in_leaderboard = false; sort = true; run()
+
+  if seraph.text ~= nil and not wait.dialog_finish then
+    if (continuebuttons()) seraph = {}; coresume(game); return
+  end
 
 
   if in_skilltree then
@@ -1127,7 +1092,7 @@ function _update()
     return
   end
 
-  if not wait.controls and #seraph.text == 0 then
+  if not wait.controls and seraph.text == nil then
     move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
     --[[
       up arrow
@@ -1168,7 +1133,6 @@ function _update()
     -- middle mouse button
     if (stat(34) == 4) then -- cycle inventory
       local temp = 0
-      --if #player_inventory > 1 and time_diff(player.last_middle_click, .15) then
       if timers["middleclick"] == 0 then
         if #player_inventory > 1 then
           for i=1,#player_inventory do
@@ -1216,91 +1180,24 @@ function _update()
 
     player_angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
   else
-    -- player.last_hit = time() - player_immune_time --make player invulnerable so they dont get hit when they can't move
+
     timers["playerlasthit"] = 0x.0001 --make player invulnerable so they dont get hit when they can't move
   end -- end wait.controls
 
   --[[
-    z button
-    -- shoot for now, this can be changed later
+    left mouse button
   ]]
-  -- if (btn(c.z_button)) then
-  --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
-  -- if (stat(34) == 1) then
-  --   --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
-  --   if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
-  --     --player.last_click = time()
-  --     timers["leftclick"] = 1
-  --     coresume(game)
-  --
-  --   elseif not drawdialog and not wait.controls then
-  --     player_b_count = inc(player_b_count)
-  --     --if time_diff(player.last_click, .25) or player_b_count%player_fire_rate == 0 then
-  --     if timers["leftclick"] == 0 or player_b_count%player_fire_rate == 0 then
-  --       --player.last_click = time()
-  --       timers["leftclick"] = .25
-  --       shoot(player.x, player.y, player_angle, 34, true, false)
-  --       sfx(1,1)
-  --     end
-  --   end
-  -- end --end z button
-  if (stat(34) == 1) then
-    if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
-      coresume(game)
-      timers["leftclick"] = 1
-
-    elseif not wait.controls and not drawdialog and timers["firerate"] == 0 then
+  if stat(34) == 1 then
+    if not wait.controls and seraph.text == nil and timers["firerate"] == 0 then
       shoot(player.x, player.y, player_angle, 34, true, false)
       --sfx(1,1)
       timers["firerate"] = player_fire_rate
     end
   end
-
-  -- right mouse button
-  -- if (stat(34) == 2) and #player_inventory > 0 then
-  --   save_data()
-  --   load_data()
-  --   --if player_inventory[1] == 48 and time_diff(player.last_right, .25) then
-  --   if player_inventory[1].sprite == 48 and timers["rightclick"] == 0 then
-  --     shoot(player.x,player.y, 0, 48, true, false)
-  --     sfx(10,1)
-  --     if player_inventory[1].ammo == 1 then
-  --       del(player_inventory, player_inventory[1])
-  --     else
-  --       player_inventory[1].ammo -= 1
-  --     end
-  --     --player.last_right = time()
-  --     --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
-  --     timers["rightclick"] = .25
-  --     timers["middleclick"] = .25
-  --   end
-  --   --if player_inventory[1] == 33 or time_diff(player.last_right, .25) then
-  --   if player_inventory[1].sprite == 33 and timers["rightclick"] == 0 then
-  --     player_b_count = inc(player_b_count)
-  --     --if player_b_count%player_fire_rate == 0 and time_diff(player.last_click, .25) then
-  --     if --[[player_b_count%player_fire_rate == 0 and]] timers["leftclick"] == 0 then
-  --       shoot(player.x, player.y, player_angle, 34, true, false, true)
-  --       shoot(player.x, player.y, 30, 34, true, false, true)
-  --       shoot(player.x, player.y, -30, 34, true, false, true)
-  --       sfx(1,1)
-  --     end
-  --
-  --     if player_inventory[1].ammo == 1 then
-  --       del(player_inventory, player_inventory[1])
-  --     else
-  --       player_inventory[1].ammo -= 1
-  --     end
-  --     --player.last_right = time()
-  --     timers["rightclick"] = 1
-  --   end
-  -- end
-
   --[[
     x button
   ]]
   if (btnp(c.x_button)) and not level_change then
-    --   e.anim_length = 90
-    --   e.anim_step = 0
     for t in all(tele_animation) do
       t.anim_step = t.anim_length
     end
@@ -1309,26 +1206,21 @@ function _update()
     kill_all_enemies()
   end --end x button
 
-  --player.x = player.x - player.current_speed * sin((player_angle - player_turn) / 360)
-  --player.y = player.y - player.current_speed * cos((player_angle - player_turn) / 360)
-
   if (level_change)  levelchange()
 
-  --player.current_speed = 0
-  --player_turn = 0
   if (player.x < 0) player.x = 0
   if (player.y < 0) player.y = 0
   if (player.x > 112) player.x = 112
   if (player.y > 112) player.y = 112
 
-  if player_shield > 0 and not wait.controls then
+  if player_shield > 0 and (not wait.controls or seraph.text == nil) then
     player_shield = player_shield - .01
   elseif player_shield < 0 then
     player_shield = 0
   end
 
-  if (btn(c.left_arrow, 1)) level_sx += 1
-  if (btn(c.right_arrow, 1)) level_sx -= 1
+  --if (btn(c.left_arrow, 1)) level_sx += 1
+  --if (btn(c.right_arrow, 1)) level_sx -= 1
 end --end _update()
 
 --------------------------------------------------------------------------------
@@ -1591,7 +1483,7 @@ function _draw()
      end
   end
 
-  if (drawdialog) dialog_seraph(seraph)
+  if (seraph.text ~= nil) draw_dialog()
 
   -- if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
   if (timers["playerlasthit"] > player_immune_time - 0.5) or (timers["invalid"] > 0) then
