@@ -681,7 +681,7 @@ function enem_spawned()
       if timers["playerlasthit"] == 0 and ent_collide(player, e) then
         if player_shield <= 0 then
           player_health -= 1
-          sfx(2,2)
+          sfx(18)
           --player.last_hit = time()
           timers["playerlasthit"] = player_immune_time
         else
@@ -719,16 +719,16 @@ function item_drops()
     if ent_collide(player, d) then
       if d.type == "heart" and player_health < player_max_health then
         player_health = min(player_max_health, player_health+3)
-        sfx(7,1)
+        sfx(17)
         del(dropped, d)
       elseif d.type == "shield" then
         player_shield = player_shield_dur
-        sfx(4,1)
+        sfx(6)
         del(dropped, d)
       elseif d.type ~= "heart" and #player_inventory < player_inv_max then
         add(player_inventory, d)
         if (#player_inventory < 4) timers["showinv"] = .5
-        sfx(6,1)
+        sfx(19)
         del(dropped, d)
       end
     end
@@ -801,7 +801,8 @@ function bullets_enemies()
       if timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
           player_health -= 1
-          sfx(2,2)
+          add(boss_hit_anims, b)
+          sfx(18)
           -- player.last_hit = time()
           timers["playerlasthit"] = player_immune_time
         else
@@ -966,7 +967,9 @@ end
   shoot: create bullet objects and add them to the 'bullets' table
 ]]
 function shoot(x, y, a, spr, friendly, boss, shotgun)
-  if (spr~=48) then
+  if shotgun then
+    sfx(20)
+  elseif spr~=48 then
     sfx(2)
   else
     sfx(16)
@@ -974,10 +977,12 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
   if friendly then
     local offx, offy = (player.x + 5), (player.y + 5)
     local ang = angle_btwn((stat(32) - 3), (stat(33) - 3), offx, offy)
-    if (a != player_angle) ang += a
+    local range = shotgun and 1 or 0
+    local start = shotgun and 0xffff or 0
     offx, offy = (offx - 8*sin(ang / 360)), (offy - 8*cos(ang / 360))
-    -- offy = offy - 8*cos(ang / 360)
-    add(player_bullets, bullet(offx, offy, ang, spr, friendly, shotgun))
+    for i=start,range,1 do
+      add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
+    end
   elseif boss then
     local offx, offy = (x + 5), (y + 5)
     -- local offy = y + 5
@@ -999,24 +1004,24 @@ function skill_tree()
             player_max_health += 1
             player_health += 1
           elseif selection_set[currently_selected] == "fire rate" then
-
+            player_fire_rate += .15
           elseif selection_set[currently_selected] == "speed" then
             player_speed += .2
           end
           next_cost[currently_selected] = next_cost[currently_selected] + 1
           player_tokens -= 1
-          sfx(2, 1, 0)
+          -- sfx(1)
         end
   if btnp(2) then
     diff = 0xffff
-    sfx(4, 1, 0)
+    sfx(0)
   elseif btnp(3) then
     diff = 1
-    sfx(4, 1, 0)
+    sfx(0)
   elseif btnp(5) then
     if selection_set[currently_selected] == "quit" then
       in_skilltree = false
-      sfx(1, 1, 0)
+      sfx(0)
     elseif (selection_set[currently_selected] == "health" and player_tokens >= next_cost[currently_selected]) then
       update_selec()
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
@@ -1025,7 +1030,7 @@ function skill_tree()
       update_selec()
     else
       timers["invalid"] = 0.5
-      sfx(2, 1, 0)
+      sfx(3)
     end
   end
   currently_selected = ((currently_selected+diff)%#skills_selected)
@@ -1046,7 +1051,7 @@ function enem_exploder()
       if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
           player_health -= 1
-          sfx(2,2)
+          sfx(18)
           timers["playerlasthit"] = player_immune_time
         else
           player_shield = player_shield - .15
@@ -1160,6 +1165,7 @@ function levelchange()
 end
 
 function rocket_kill(rocket)
+  sfx(22)
   for enemy in all(enemy_spawned) do
     if distance(enemy, rocket) <= rocket.max_anim_steps then
       player_killed += 1
@@ -1293,15 +1299,9 @@ function _update()
       timers["rightclick"] = player_power_fire_rate
 
       if player_inventory[1].type == "shotgun" then
-        -- for i=-1,1 do
-          shoot(player.x, player.y, player_angle, 34, true, false, true)
-        -- end
-        --timers["rightclick"] = .1 --allows for custom firespeed
-        --sfx(1,1)
-
+        shoot(player.x, player.y, player_angle, 34, true, false, true)
       elseif player_inventory[1].type == "rockets" then
         shoot(player.x, player.y, player_angle, 48, true, false)
-        --sfx(10,1)
       end
 
       if player_inventory[1].ammo == 1 then
@@ -1661,7 +1661,7 @@ feeecefdfdcfeeeeeeeeeeeeeeeeeefffefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0
 __sfx__
 00040000160501620016100191001b100000000000006000190000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00100000070500a5500e0000e70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0002000030360194602b36011450223500b4501e35008450163500544011330024200b32000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0002000030340194402b34011430223300b4301e33008430163200541011310024100b31000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001c150151500f1000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000b0000080500d0500f0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00050000162300b43012220064200d210054100b6000b6001420000000000000000000000000000000000000000000000000000000000c2000220000000000000000000000000000000000000000000000000000
@@ -1679,9 +1679,9 @@ __sfx__
 000500001c05021050260502c0503105031000280002d000280002a0002c0002e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000200002d65026650206501c64017640116400b620356201a620156200d620136202b6002a600216001f6000c600096000860000000000000000000000000000000000000000000000000000000000000000000
 00040000062100a210132501a250052100b210162501c250000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0003000019650176400f6400c63009620000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003000019650176400f6400c63009620036100361003610036100361000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000900002f0502b150242501c1402f0202c110232101c1202f0302c130212501c1502f0502c150202301b1202e0202c110202201b1202f0502d00000000000002265022630216301f6201a610166101361010610
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000600000d65013650186501b6500231012650166501f650256502265030650033101b650166401463013630126300f6300d6200b6200a6100961008610076100661000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1788,3 +1788,4 @@ __music__
 00 41424344
 00 41424344
 00 41424344
+
