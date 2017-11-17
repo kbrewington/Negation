@@ -178,7 +178,7 @@ function gameflow()
   seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 1))
+  init_tele_anim(boss(60, 60, 128, 3))
   yield()
 
   kill_all_enemies()
@@ -377,7 +377,7 @@ function boss(startx, starty, sprite, lvl)
   b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health = 16, 2, 7, 0, 30, 50
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
-  timers["bossstart"] = 12
+  timers["bossstart"] = (lvl == 6) and 12 or 1000
   b.draw_healthbar = function()
              --health bar
              if (b.sprite == 128 or 139) xoffset = 1; b.full_health = 50
@@ -404,7 +404,8 @@ function boss(startx, starty, sprite, lvl)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
-              local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
+              local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
+              if (timers["bossstart"] == 0) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
@@ -906,9 +907,10 @@ function step_boss_destroyed_animation(b)
   local s = 1 s1 = 1
   if (flr(rnd(10))%2 == 0) s = 0xffff
   if (flr(rnd(10))%2 == 0) s1 = 0xffff
-  if b.destroyed_step <= b.destroy_anim_length then
-    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+  if (b.destroyed_step <= b.destroy_anim_length) then
+    for i=1,3 do
+      spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+    end
   else
     if (b~= player) del(destroyed_bosses, b)
     coin.dropped = true
