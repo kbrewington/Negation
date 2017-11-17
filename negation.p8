@@ -28,9 +28,6 @@ player_inv_max = 4
 player_killed = 0
 player_tokens = 0
 
-level = {
-  lvl = 1
-}
 level_lvl = 1
 level_sx = 0
 level_sy = 0
@@ -51,6 +48,7 @@ wait = {
 timers = {
   leveltimer = 0,
   showinv = 0,
+  showinv2 = 0,
   playerlasthit = 0,
   leftclick = 0,
   middleclick = 0,
@@ -177,7 +175,7 @@ function gameflow()
   seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 1))
+  init_tele_anim(boss(60, 60, 128, 1, 40))
   yield()
 
   kill_all_enemies()
@@ -196,7 +194,7 @@ function gameflow()
   fill_enemy_table(2, 60)
   wait.start_time = time()
   spawn_enemies = true
-  add(boss_table, boss(56, 56, 139, 2))
+  add(boss_table, boss(100, 56, 139, 2, 50))
   yield()
 
   kill_all_enemies(true)
@@ -204,7 +202,14 @@ function gameflow()
   level_change = true
   yield()
 
+  -- start level 3
+  fill_enemy_table(3, 90)
+  wait.start_time = time()
+  spawn_enemies = true
+  --detect_killed_enemies = true
+  init_tele_anim(boss(60, 60, 160, 3, 50))
   yield()
+
   level_change = true
 end
 
@@ -267,7 +272,7 @@ function delete_offscreen(list, obj)
 end
 
 function continuebuttons()
-  if (btnp(4) or btnp(5) or stat(34) == 1) return true
+  if ((btnp(4) or btnp(5) or stat(34) == 1) and timers["leftclick"] == 0) timers["leftclick"] = 1; return true
   return false
 end
 
@@ -370,16 +375,16 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   return b
 end
 
-function boss(startx, starty, sprite, lvl)
+function boss(startx, starty, sprite, lvl, hp)
   local b = {}
-  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, (lvl or 1), nil, 0, sprite
-  b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health = 16, 2, 7, 0, 30, 50
+  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, lvl, nil, 0, sprite
+  b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health, b.full_health = 16, 2, 7, 0, 30, (hp or 50), (hp or 50)
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
   timers["bossstart"] = 12
   b.draw_healthbar = function()
              --health bar
-             if (b.sprite == 128 or 139) xoffset = 1; b.full_health = 50
+             if (b.sprite == 128 or 139) xoffset = 1
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
            end
@@ -403,7 +408,8 @@ function boss(startx, starty, sprite, lvl)
              end
              --b.draw_healthbar()
            elseif b.level == 3 then
-              local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
+              --local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
+              local ang = (360/b.health)*(10%b.health)
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
@@ -652,6 +658,11 @@ function draw_playerhp()
     if (#player_inventory > 2) spr(player_inventory[#player_inventory].sprite, player.x + invtx - 9, player.y + 14)
     spr(112, player.x + 4, player.y + 14)
   end
+  if timers["showinv2"] > 0 and #player_inventory > 0 then
+    local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
+    rectfill(player.x + 4, player.y + (21 - flr(7  * ammoratio)) , player.x + 11, player.y + 21, 13)
+    spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
+  end
 end
 
 function enem_spawned()
@@ -695,8 +706,8 @@ function enem_spawned()
       end
 
       if e.type == "shooter" then
-        pal(2,9,0)
-        pal(5,10,0)
+        pal(2,1,0)
+        pal(5,13,0)
       elseif e.type == "exploder" then
         pal(8,10,0)
         pal(2,8,0)
@@ -733,16 +744,19 @@ function item_drops()
       end
     end
 
+    if (d.type == "shotgun" and pget(d.x+2, d.y+4) == 4) pal(4,15,0)
+
     if abs(time() - d.init_time) <= d.drop_duration then
       if abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
-        spr(d.sprite, d.x, d.y)
+        spr(d.sprite, d.x+level_sx, d.y+level_sy)
       elseif flr(time()*1000)%2==0 then
-        spr(d.sprite, d.x, d.y)
+        spr(d.sprite, d.x+level_sx, d.y+level_sy)
       end
     else
       del(dropped, d)
     end
   end
+  pal()
 end
 
 function bullets_player()
@@ -1008,8 +1022,8 @@ function skill_tree()
           elseif selection_set[currently_selected] == "speed" then
             player_speed += .2
           end
+          player_tokens -= next_cost[currently_selected]
           next_cost[currently_selected] = next_cost[currently_selected] + 1
-          player_tokens -= 1
           -- sfx(1)
         end
   if btnp(2) then
@@ -1082,7 +1096,7 @@ function spawnenemies()
         enemy.type = "basic"
         if (rnd(99) < 20) enemy.type = "shooter"
       end
-      if level.lvl == 3 then
+      if level_lvl == 3 then
         if enemy.type == "exploder" then
           if (rnd(99) < 80) enemy.type = types[1+rnd(1)]
         end
@@ -1127,8 +1141,8 @@ end
 function levelchange()
   local farx = 100
 
-  level.i = 3*level_lvl+1
-  if (level_transition[level.i] == level_lvl+1 and (level_transition[level.i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
+  level_i = 3*level_lvl+1
+  if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
 
   --todo add map centering on player in the beginning
 
@@ -1137,7 +1151,7 @@ function levelchange()
       level_sx += player_speed
       if player.x < farx then player.x = farx end
     end
-    if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level.i+1])*8]]  and player.x > farx then
+    if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
       level_sx -= player_speed
       if player.x > farx then player.x = farx end
     end
@@ -1146,7 +1160,7 @@ function levelchange()
   if move_map ~= nil and move_map then
     wait.controls = true
 
-    if level_transition[level.i+1]*8 > abs(level_sx - ((level_lvl-1) * 128)) then
+    if level_transition[level_i+1]*8 > abs(level_sx - ((level_lvl-1) * 128)) then
       level_sx = flr(level_sx) - 1
       player.x -= 1
 
@@ -1156,7 +1170,7 @@ function levelchange()
       dropped = {}
       level_sprites = {}
       open_door = false
-      level_sx, level_sy, level_x, level_y = 0, 0, level_transition[level.i+1], level_transition[level.i+2]
+      level_sx, level_sy, level_x, level_y = 0, 0, level_transition[level_i+1], level_transition[level_i+2]
       wait.controls, move_map, level_change, coin.dropped = false, false, false, false
       level_lvl += 1
       coresume(game)
@@ -1289,7 +1303,7 @@ function _update()
         if (#player_inventory == 2) invtx = 7
         if (#player_inventory > 2) invtx = 13
       end
-      timers["showinv"] = .5
+      timers["showinv"], timers["showinv2"] = .5, 0
     end
 
     --========================
@@ -1307,8 +1321,11 @@ function _update()
       if player_inventory[1].ammo == 1 then
         if (player_inventory[1].type ~= "rockets") sfx(3)
         del(player_inventory, player_inventory[1])
-        timers["rightclick"], timers["showinv"] = 1, .5
-      else player_inventory[1].ammo -= 1 end
+        timers["rightclick"], timers["showinv"], timers["showinv2"] = 1, .5, 0
+      else
+        player_inventory[1].ammo -= 1
+        timers["showinv2"] = player_power_fire_rate + 0.2
+      end
     end
 
     --========================
@@ -1421,13 +1438,26 @@ function _draw()
   end
   palt()
 
+  if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
+
   if (drawcontrols) draw_controls(); return
 
   if (open_door) opendoor()
 
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
 
-  if (showplayer ~= nil) spr_r(player_sprite, player.x, player.y, player_angle, 2, 2); draw_playerhp()
+  if (showplayer ~= nil) draw_playerhp()
+  if (showplayer ~= nil and timers["playerlasthit"] <= 0x.0001) then
+    spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
+  elseif showplayer ~= nil and timers["playerlasthit"] > 0x.0001 and flr(time()*1000%2) == 0 then
+    spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
+  end
+
+  -- if abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
+  --   spr(d.sprite, d.x+level_sx, d.y+level_sy)
+  -- elseif flr(time()*1000)%2==0 then
+  --   spr(d.sprite, d.x+level_sx, d.y+level_sy)
+  -- end
 
   if (wait.timer) drawcountdown()
 
@@ -1453,7 +1483,8 @@ function _draw()
   for b in all(boss_table) do
     -- if time_diff(player.last_hit, player_immune_time) and ent_collide(player, b) then
     if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_health -= 2; sfx(18); timers["playerlasthit"] = player_immune_time
-    spr(b.sprite, b.x, b.y, 2, 2)
+    if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
+    else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
   end
 
@@ -1574,11 +1605,11 @@ e888888e044004400a0000a0530bb03500899800b333333b25555552000000000000000000000000
 02000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000c000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00555500000000009000000900000000000000000000000000000000000000000000000000808000008080000000000000000000777777777777777700000000
-05999950000000009008800900000000000080000008000000000200002000000000000000505558555050000002220000000000777777777777777700000000
+05dddd50000000009008800900000000000080000008000000000200002000000000000000505558555050000002220000000000777777777777777700000000
 5885588500000000900880090000000000005000000500000002020000202000000000000055588588555000002ddd2000000000777777777777777700000000
-0595595000000000099889900000000000005500005500000002002002002000c0000000000005555500000002dd2dd200000000777707777770777700000000
+05d55d5000000000099889900000000000005500005500000002002002002000c0000000000005555500000002dd2dd200000000777707777770777700000000
 0055550000000000009889000000000000050500005050000000202002020000cccccccc2000558585500020002d2d2000000000777707777770777700000000
-00099000000000000098890000000000008005055050080000002022220200000000000c020800585008020002dd2dd2000000000777077dd770777000000000
+000dd000000000000098890000000000008005055050080000002022220200000000000c020800585008020002dd2dd2000000000777077dd770777000000000
 0005500000000000000990000000000000000555555000000000221111220000000000000020000500002000002ddd20000000000777072dd270777000000000
 000550000000000000099000000000000000054444500000002028822882020000000000020000555000020000022200000000000777072dd270770000000000
 0000000000000000000000000000000000555884488555500d020212212020d000000000200005555500002000000000000000000077002dd200770000000000
@@ -1788,4 +1819,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
