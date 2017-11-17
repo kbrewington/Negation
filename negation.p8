@@ -405,7 +405,7 @@ function boss(startx, starty, sprite, lvl)
              --b.draw_healthbar()
            elseif b.level == 3 then
               local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
-              if (timers["bossstart"] == 0) timers["bossstart"] = 1000
+              if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
