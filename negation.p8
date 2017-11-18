@@ -17,15 +17,15 @@ player = {
 --player_sprite = 0
 player_health = 10
 player_max_health = 10
-player_immune_time = 2
+-- player_immune_time = 2
 player_shield = 0
-player_shield_dur = 5
+-- player_shield_dur = 5
 player_speed = 1
 player_angle = 0
 player_fire_rate = .75
-player_power_fire_rate = 1
-player_inv_max = 4
-player_killed = 20
+-- player_power_fire_rate = 1
+-- player_inv_max = 4
+player_killed = 0
 player_tokens = 0
 
 level_lvl = 1
@@ -157,10 +157,10 @@ function gameflow()
   init_tele_anim(player)
   yield()
 
-  seraph.text = "READY TO GET TO WORK?"
+  seraph.text = "ready to get to work?"
   yield()
 
-  seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL GET IT OPEN."
+  seraph.text = "i see a door. give me a minuteand i'll get it open."
   yield()
 
   fill_enemy_table(1, 65)
@@ -169,14 +169,14 @@ function gameflow()
 
   kill_all_enemies(true)
   wait.timer = false
-  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
+  seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
   init_tele_anim(boss(60, 60, 128, 1, 40))
   yield()
 
   kill_all_enemies(true)
-  seraph.text = "NICE WORK. THE DOOR SHOULD    OPEN NOW."
+  seraph.text = "nice work. the door should    open now."
   yield()
 
   wait.controls,level_change,open_door = true,true,true
@@ -187,14 +187,14 @@ function gameflow()
 
   --start level 2
   wait.controls = true
-  seraph.text = "WELCOME TO THE PLANET HECLAO, SUPPOSE TO BE OUR HOME AWAY   FROM HOME."
+  seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
   yield()
 
-  seraph.text = "UNFORTUNATELY WE WEREN'T ALONE"
+  seraph.text = "unfortunately we weren't alone"
   yield()
 
-  seraph.text = "OH, WHO IS THIS LITTLE GUY?   SEEMS TO BE CHECKING YOU OUT."
+  seraph.text = "oh, who is this little guy?   seems to be checking you out."
   yield()
 
   wait.controls,spawn_time_start  = false,60
@@ -267,11 +267,8 @@ function distance(n, d)
 end
 
 function angle_btwn(tx, ty, fx, fy)
-  local diffx, diffy = (tx - fx), (ty - fy)
-  -- local diffy = ty - fy
-  local angle = ((atan2(diffy, diffx) * 360) + 180)%360
-  if (angle <= 0) angle = (angle + 360)%360
-  return angle
+  -- if (angle <= 0) angle = (angle + 360)%360
+  return ((atan2((ty - fy), (tx - fx)) * 360) + 180)%360
 end
 
 --[[
@@ -411,17 +408,13 @@ function boss(startx, starty, sprite, lvl, hp)
              b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
              b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
 
-           elseif b.level == 2 then
-             if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
-               shoot(b.x, b.y, p_ang, 141, false, true)
-               b.x = b.x - 2*sin(p_ang/360)
-               b.y = b.y - 2*cos(p_ang/360)
-             end
-           elseif b.level == 2.5 then
-             if flr(time()*50)%b.fire_rate == 0 then
-               shoot(b.x, b.y, p_ang, 141, false, true)
-               b.x = b.x - 2*sin(p_ang/360)
-               b.y = b.y - 2*cos(p_ang/360)
+           elseif b.level < 3 then
+             if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
+               if flr(time()*50)%b.fire_rate == 0 then
+                 shoot(b.x, b.y, p_ang, 141, false, true)
+                 b.x = b.x - 2*sin(p_ang/360)
+                 b.y = b.y - 2*cos(p_ang/360)
+               end
              end
            elseif b.level == 3 then
               local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
@@ -443,9 +436,10 @@ function boss(startx, starty, sprite, lvl, hp)
                  if c[3] <= 0 then
                    circfill(c[1], c[2], 12, 9)
                    if distance(player, {["x"]=c[1],["y"]=c[2]}) <= 15 then
-                      player_health -= 1
-                      sfx(18)
-                      timers["playerlasthit"] = player_immune_time
+                      player_hit(1)
+                      -- player_health -= 1
+                      -- sfx(18)
+                      -- timers["playerlasthit"] = 2 -- player_immune_time
                    end
                    del(b.circs, c)
                  end
@@ -548,7 +542,7 @@ function draw_titlescreen()
   end
 
   --print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
-  print("PRESS left click TO START", hcenter(25), 100, flr(time())%15+1)
+  print("press left click to start", hcenter(25), 100, flr(time())%15+1)
 end
 
 function draw_controls()
@@ -705,10 +699,11 @@ function enem_spawned()
     if e ~= nil then
       if timers["playerlasthit"] == 0 and ent_collide(player, e) then
         if player_shield <= 0 then
-          player_health -= 1
-          sfx(18)
-          --player.last_hit = time()
-          timers["playerlasthit"] = player_immune_time
+          player_hit(1)
+          -- player_health -= 1
+          -- sfx(18)
+          -- --player.last_hit = time()
+          -- timers["playerlasthit"] = 2 -- player_immune_time
         else
           player_shield -= .15
         end
@@ -745,10 +740,10 @@ function item_drops()
         sfx(17)
         del(dropped, d)
       elseif d.type == "shield" then
-        player_shield = player_shield_dur
+        player_shield = 5 --player_shield_dur
         sfx(6)
         del(dropped, d)
-      elseif d.type ~= "heart" and #player_inventory < player_inv_max then
+      elseif d.type ~= "heart" and #player_inventory < 4 --[[player_inv_max]] then
         add(player_inventory, d)
         if (#player_inventory < 4) timers["showinv"] = .5
         sfx(19)
@@ -781,37 +776,31 @@ function bullets_player()
       del(player_bullets, b)
       add(boss_hit_anims, b)
       if (b.rocket) rocket_kill(b)
-      b = nil
+      return
     end
 
-    if b ~= nil then
-      spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
-      b.move()
-      if (b.duration <= 0) del(player_bullets, b); b = nil
+    spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    b.move()
+    if (b.duration <= 0) del(player_bullets, b); return
 
-    end
-
-    if b~=nil then
-      for bos in all(boss_table) do
-        if ent_collide(bos, b) then
-          sfx(4,1)
-          bos.health -= ((b.sprite == 48) and 3 or 1)
-          bos.shot_last = time()
-          bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
-          del(player_bullets, b)
-          add(boss_hit_anims, b)
-          if (b.rocket) rocket_kill(b)
-          if bos.health <= 0 then
-            sfx(5,1)
-            add(destroyed_bosses, bos)
-            player_killed += 1
-            del(boss_table, bos)
-            coin.x,coin.y = bos.x,bos.y
-            --bos = nil
-            if (#boss_table == 0) coresume(game)
-          end
-          break
+    for bos in all(boss_table) do
+      if ent_collide(bos, b) then
+        sfx(23,1)
+        bos.health -= ((b.sprite == 48) and 3 or 1)
+        bos.shot_last = time()
+        bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
+        del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if (b.rocket) rocket_kill(b)
+        if bos.health <= 0 then
+          sfx(22,1)
+          add(destroyed_bosses, bos)
+          player_killed += 1
+          del(boss_table, bos)
+          coin.x,coin.y = bos.x,bos.y
+          if (#boss_table == 0) coresume(game)
         end
+        break
       end
     end
   end
@@ -825,54 +814,36 @@ function bullets_enemies()
     if ent_collide(player, b) then
       if timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
-          player_health -= 1
-          add(boss_hit_anims, b)
-          sfx(18)
+          player_hit(1)
+          -- player_health -= 1
+          -- add(boss_hit_anims, b)
+          -- sfx(18)
           -- player.last_hit = time()
-          timers["playerlasthit"] = player_immune_time
+          -- timers["playerlasthit"] = 2 -- player_immune_time
         else
           add(shield_anims, {b.x, b.y, 10})
           player_shield = player_shield - .15
         end
       end
       del(enemy_bullets, b)
-      b = nil
+      return
     end
 
-    if b~=nil then
-      spr(b.sprite, b.x, b.y)
-      b.move()
-      if (bump(b.x, b.y)) del(enemy_bullets, b); b = nil
-    end
+    spr(b.sprite, b.x, b.y)
+    b.move()
+    if (bump(b.x, b.y)) del(enemy_bullets, b); add(boss_hit_anims, b)
   end
 end
 
--- function show_leaderboard()
---   rectfill(0,0,128,128,0)
---   print("you died",20, 20, 8)
---   if sort then
---     if (timers["countup"] == 0) then
---        timers["countup"] = .1
---        if(k<player_killed) k+=1
---        if(k==player_killed) sort=false; timers["countup"] = .5
---     end
---     print("killed: "..k, 30, 50, 8)
---   else
---     print("killed: "..player_killed, 30, 50, 8)
---     if (timers["countup"] ~= 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
---   end
---   in_leaderboard = true
---   print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
--- end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
   print("you died",hcenter(8), 55, 8)
   --k = min(player_killed, k+0.5)
   if (k<player_killed-1) k += 0.5
-  local t = "KILLED: "..flr(k)
+  local t = "killed: "..flr(k)
   print(t, hcenter(#t), 63, 5)
-  print("PRESS \x8e/\x97 TO START OVER", 20, 100, flr(time()*5)%15+1)
+  print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
   if (flr(k)==player_killed-1) timers["invalid"] = 0.5; k+=1
   if (timers["invalid"] > 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
 end
@@ -916,15 +887,14 @@ function boss_hit_animation(bul)
 
   if bul.current_step <= bul.max_anim_steps then
     local c = colors[flr(time()*100)%(#colors) + 1]
-    local s = flr(time()*100)%4
-    local r = 1
-    if (rnd(1) > .5) r = 0xffff
+    local r = sgn(sin(rnd(10)))
+    -- if (rnd(1) > .5) r = 0xffff
     if (not bul.rocket) then
-      circ(bul.x, bul.y, s, c)
+      circ(bul.x, bul.y, flr(time()*100)%4, c)
     else
       for i=1,3 do
-        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, (r*rnd(bul.max_anim_steps/2))+bul.y, rnd(4), c)
-        circfill((r*rnd(bul.max_anim_steps))+bul.x, (r*rnd(bul.max_anim_steps))+bul.y, .1, c)
+        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, r*rnd(bul.max_anim_steps/2)+bul.y, rnd(4), c)
+        circfill((r*rnd(bul.max_anim_steps))+bul.x, r*rnd(bul.max_anim_steps)+bul.y, .1, c)
       end
       circ(bul.x, bul.y, bul.current_step, c)
     end
@@ -939,12 +909,9 @@ end
   draw boss destruction animation
 ]]
 function step_boss_destroyed_animation(b)
-  local s = 1 s1 = 1
-  if (flr(rnd(10))%2 == 0) s = 0xffff
-  if (flr(rnd(10))%2 == 0) s1 = 0xffff
   if (b.destroyed_step <= b.destroy_anim_length) then
     for i=1,3 do
-      spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+      spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+sgn(sin(rnd(10)))*flr(rnd(8)), b.y+sgn(sin(rnd(10)))*flr(rnd(8)))
     end
   else
     if (b~= player) del(destroyed_bosses, b)
@@ -998,7 +965,7 @@ end
 function water_anim()
   for i=0,16 do
     for j=0,16 do
-      if (fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and fget(mget(i-1+level_x-(level_sx/8), j-1+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
+      if (fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
     end
   end
 end
@@ -1015,41 +982,20 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
   if friendly then
     local offx, offy = (player.x + 5), (player.y + 5)
     local ang = angle_btwn((stat(32) - 3), (stat(33) - 3), offx, offy)
-    local range = shotgun and 1 or 0
-    local start = shotgun and 0xffff or 0
     offx, offy = (offx - 8*sin(ang / 360)), (offy - 8*cos(ang / 360))
-    for i=start,range,1 do
+    for i=(shotgun and 0xffff or 0),(shotgun and 1 or 0),1 do
       add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
     end
   elseif boss then
-    local offx, offy = (x + 5), (y + 5)
-    -- local offy = y + 5
-    offx, offy = (offx - 16*sin(a / 360)), (offy - 16*cos(a / 360))
-    -- offy = offy - 16*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly, shotgun))
+    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
   else
-    local offx, offy = (x - 8*sin(a / 360)), (y - 8*cos(a / 360))
-    -- local offy = y - 8*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
+    add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
   end
 end
 
 function skill_tree()
   skills_selected[currently_selected] = false
   local diff = 0
-  local function update_selec()
-          if selection_set[currently_selected] == "health" then
-            player_max_health += 1
-            player_health += 1
-          elseif selection_set[currently_selected] == "fire rate" then
-            player_fire_rate = max(.1, player_fire_rate-.15)
-          elseif selection_set[currently_selected] == "speed" then
-            player_speed += .2
-          end
-          player_tokens -= next_cost[currently_selected]
-          next_cost[currently_selected] += 1
-          -- sfx(1)
-        end
   if btnp(2) then
     diff = 0xffff
     sfx(0)
@@ -1061,11 +1007,18 @@ function skill_tree()
       in_skilltree = false
       sfx(0)
     elseif (selection_set[currently_selected] == "health" and player_tokens >= next_cost[currently_selected]) then
-      update_selec()
+        player_max_health += 1
+        player_health += 1
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
-      update_selec()
+        player_fire_rate = max(.1, player_fire_rate-.15)
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
     elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
-      update_selec()
+        player_speed += .2
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
     else
       timers["invalid"] = 0.5
       sfx(3)
@@ -1088,9 +1041,7 @@ function enem_exploder()
     if step_destroy_animation(e) then
       if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
-          player_health -= 1
-          sfx(18)
-          timers["playerlasthit"] = player_immune_time
+          player_hit(1)
         else
           player_shield -= .15
         end
@@ -1257,7 +1208,11 @@ function load_data()
   end
 end
 
-
+function player_hit(d)
+  player_health -= d
+  sfx(18)
+  timers["playerlasthit"] = 2
+end
 --------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
 --------------------------------------------------------------------------------
@@ -1338,7 +1293,7 @@ function _update()
     --========================
     if (stat(34) == 2) and #player_inventory > 0 and timers["rightclick"] == 0 then
       local invt = player_inventory[1]
-      timers["rightclick"] = player_power_fire_rate
+      timers["rightclick"] = 1 -- player_power_fire_rate
 
       if invt.type == "shotgun" then
         shoot(player.x, player.y, player_angle, 34, true, false, true)
@@ -1354,7 +1309,7 @@ function _update()
         timers["rightclick"], timers["showinv"], timers["showinv2"] = 1, .5, 0
       else
         invt.ammo -= 1
-        timers["showinv2"] = player_power_fire_rate + 0.2
+        timers["showinv2"] = 1.2 --player_power_fire_rate + 0.2
       end
     end
 
@@ -1511,7 +1466,7 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_health -= 2; sfx(18); timers["playerlasthit"] = player_immune_time
+    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
     if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
@@ -1541,7 +1496,7 @@ function _draw()
 
   if (seraph.text ~= nil) draw_dialog()
 
-  if (timers["playerlasthit"] > player_immune_time - 0.5) or (timers["invalid"] > 0) then
+  if (timers["playerlasthit"] > 2 --[[player_immune_time]] - 0.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
@@ -1742,7 +1697,7 @@ __sfx__
 0003000019650176400f6400c63009620036100361003610036100361000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 000900002f0502b150242501c1402f0202c110232101c1202f0302c130212501c1502f0502c150202301b1202e0202c110202201b1202f0502d00000000000002265022630216301f6201a610166101361010610
 000600000d65013650186501b6500231012650166501f650256502265030650033101b650166401463013630126300f6300d6200b6200a6100961008610076100661000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003000028250202301a230102200c220082100720005200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1848,4 +1803,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
