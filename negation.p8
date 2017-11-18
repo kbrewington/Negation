@@ -14,17 +14,12 @@ player = {
   destroy_anim_length = 30,
   destroy_sequence = {135, 136, 135},
 }
---player_sprite = 0
 player_health = 10
 player_max_health = 10
--- player_immune_time = 2
 player_shield = 0
--- player_shield_dur = 5
 player_speed = 1
 player_angle = 0
 player_fire_rate = .75
--- player_power_fire_rate = 1
--- player_inv_max = 4
 player_killed = 0
 player_tokens = 0
 
@@ -99,7 +94,7 @@ skills_selected = {true, false, false, false}
 title = {
   startx = 23,
   starty = 50,
-  text = {   "12,12,12,12, 0, 0, 0,12,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0, 0,12,12,12,12,12, 0, 0,12,12,12,12,12,12,12, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12,12, 0, 0, 0,12,12,12",
+  text = {         "12,12,12,12, 0, 0, 0,12,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0, 0,12,12,12,12,12, 0, 0,12,12,12,12,12,12,12, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12,12, 0, 0, 0,12,12,12",
                    "12, 1, 1, 1,12, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0,12, 1,12",
                    "12, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0,12,12,12, 1,12,12,12, 0,12,12,12, 1,12,12, 0, 0,12, 1,12,12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12",
                    "12, 1,12,12, 1, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0, 0, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12,12, 1, 1,12,12, 1,12",
@@ -112,9 +107,7 @@ title = {
                    "12,12,12, 0, 0, 0, 0, 0,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0,12,12,12, 0,12,12,12, 0, 0, 0,12,12,12, 0, 0, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12, 0, 0, 0, 0, 0,12,12"}
 }
 
---============================================================================--
 --============================= helper functions =============================--
---============================================================================--
 function debug()
   -- local debug_color = 14
   -- local cpucolor = debug_color
@@ -136,24 +129,10 @@ end
 function gameflow()
   -- start game
   drawcontrols, wait.controls = true, true
-  -- level_sprites = { 239, 0, 0,
-  --                   239, 15*8, 0,
-  --                   238, 0*8, 15*8,
-  --                   238, 15*8, 15*8,
-  --
-  --                   235, 15*8, 5*8,
-  --                   235, 15*8, 6*8,
-  --                   235, 15*8, 7*8,
-  --                   235, 15*8, 8*8,
-  --                   235, 15*8, 9*8,
-  --                   235, 15*8, 10*8,
-  --
-  --                   255, 15*8, 12*8,
-  --                   255, 15*8, 13*8,
-  --                   255, 15*8, 14*8}
   yield()
 
   drawcontrols, wait.controls = false, false
+
   init_tele_anim(player)
   yield()
 
@@ -227,15 +206,6 @@ function gameflow()
   level_change = true
 end
 
--- http://lua-users.org/wiki/simpleround
--- function round(num, numdecimalplaces)
---   local mult = 10^(numdecimalplaces or 0)
---   return flr(num * mult + 0.5) / mult
--- end
-
---https://gist.github.com/josefnpat/bfe4aaa5bbb44f572cd0
--- function ceil(x) return -flr(-x) end
-
 -- http://pico-8.wikia.com/wiki/centering_text
 function hcenter(s) return 64-flr((s*4)/2) end
 
@@ -287,12 +257,6 @@ end
   collision
 ]]
 function bump(x, y, flag)
-  -- local tx = flr((x - level_sx + (level_x*8)) / 8)
-  -- local ty = flr((y - level_sy + (level_y*8)) / 8)
-  -- local flag = (flag or 0)
-  -- local map_id = mget(tx, ty)
-
-  --return fget(map_id, flag)
   return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
 end
 
@@ -308,9 +272,7 @@ function ent_collide(firstent, secondent)
 end
 
 
---============================================================================--
 --====================== object-like structures ==============================--
---============================================================================--
 function drop_obj(sx, sy, sprite)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 8, 5
@@ -437,9 +399,6 @@ function boss(startx, starty, sprite, lvl, hp)
                    circfill(c[1], c[2], 12, 9)
                    if distance(player, {["x"]=c[1],["y"]=c[2]}) <= 15 then
                       player_hit(1)
-                      -- player_health -= 1
-                      -- sfx(18)
-                      -- timers["playerlasthit"] = 2 -- player_immune_time
                    end
                    del(b.circs, c)
                  end
@@ -473,9 +432,7 @@ function boss(startx, starty, sprite, lvl, hp)
 end
 
 
---============================================================================--
 --========================== draw functions ==================================--
---============================================================================--
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
@@ -700,10 +657,6 @@ function enem_spawned()
       if timers["playerlasthit"] == 0 and ent_collide(player, e) then
         if player_shield <= 0 then
           player_hit(1)
-          -- player_health -= 1
-          -- sfx(18)
-          -- --player.last_hit = time()
-          -- timers["playerlasthit"] = 2 -- player_immune_time
         else
           player_shield -= .15
         end
@@ -815,11 +768,6 @@ function bullets_enemies()
       if timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
           player_hit(1)
-          -- player_health -= 1
-          -- add(boss_hit_anims, b)
-          -- sfx(18)
-          -- player.last_hit = time()
-          -- timers["playerlasthit"] = 2 -- player_immune_time
         else
           add(shield_anims, {b.x, b.y, 10})
           player_shield = player_shield - .15
@@ -848,9 +796,7 @@ function show_leaderboard()
   if (timers["invalid"] > 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
 end
 
---============================================================================--
 --======================= animation functions ================================--
---============================================================================--
 --[[
     draw enemy destruction animation to screen
   ]]
@@ -879,9 +825,6 @@ function step_destroy_animation(e)
   end
 end
 
---[[
-    draw boss hit animation
-]]
 function boss_hit_animation(bul)
   local colors = {8, 9}
 
@@ -905,9 +848,6 @@ function boss_hit_animation(bul)
   bul.current_step += 1
 end
 
---[[
-  draw boss destruction animation
-]]
 function step_boss_destroyed_animation(b)
   if (b.destroyed_step <= b.destroy_anim_length) then
     for i=1,3 do
@@ -971,12 +911,7 @@ function water_anim()
 end
 
 
---============================================================================--
 --================================ functions =================================--
---============================================================================--
---[[
-  shoot: create bullet objects and add them to the 'bullets' table
-]]
 function shoot(x, y, a, spr, friendly, boss, shotgun)
   if (boss) sfx(2)
   if friendly then
@@ -1083,11 +1018,6 @@ function spawnenemies()
       del(enemy_table, enemy)
     end
   end
-
-  -- if #enemy_table == 0 then
-  --   spawn_enemies = false
-  --   --if (not wait.timer) detect_killed_enemies = true
-  -- end
 end
 
 function detect_kill_enemies()
@@ -1213,13 +1143,8 @@ function player_hit(d)
   sfx(18)
   timers["playerlasthit"] = 2
 end
---------------------------------------------------------------------------------
 ---------------------------------- constructor ---------------------------------
---------------------------------------------------------------------------------
 function _init()
-  -- for i=53,63 do
-  --   dset(i, 0)
-  -- end
   k=0
   poke(0x5f2d, 1)
 
@@ -1230,9 +1155,7 @@ function _init()
 end --end _init()
 
 
---============================================================================--
 --================================ update ====================================--
---============================================================================--
 function _update()
   --timers["playerlasthit"] = 1 --uncomment for god mode
   collide_all_enemies()
