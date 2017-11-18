@@ -249,13 +249,9 @@ function distance(n, d)
 end
 
 function angle_btwn(tx, ty, fx, fy)
-  -- if (angle <= 0) angle = (angle + 360)%360
   return ((atan2((ty - fy), (tx - fx)) * 360) + 180)%360
 end
 
---[[
-  delete offscreen objects
-]]
 function delete_offscreen(list, obj)
   if (obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128) del(list, obj)
 end
@@ -265,9 +261,6 @@ function continuebuttons()
   return false
 end
 
---[[
-  collision
-]]
 function bump(x, y, flag)
   return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
 end
@@ -277,7 +270,6 @@ function bump_all(x, y)
 end
 
 function ent_collide(firstent, secondent)
-  --secondent = secondent or player
   offset = (firstent == player) and 4 or 0
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
@@ -322,7 +314,6 @@ function enemy(x, y, type, time_spwn)
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                     e.b_count += 1
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
-
                   end
                 elseif e.type == "exploder" then
                   if distance(e, player) >= e.explode_distance and not e.dont_move then
@@ -336,7 +327,6 @@ function enemy(x, y, type, time_spwn)
                   e.update_xy()
                 end
            end
-
   return e
 end
 
@@ -1135,20 +1125,6 @@ function fix_enemy(o, e)
   fix_coord(o,e,'y')
 end
 
-function save_data()
-  local save = {player.x, player.y, level_sx, level_sy, level_lvl, player_tokens} -- missing: player_inventory, and current skill values/costs
-  for i=0,(#save-1) do
-    dset(i, save[i+1])
-  end
-end
-
-function load_data()
-  _load = {}
-  for i=0,53 do
-    _load[#_load+1] = dget(i)
-  end
-end
-
 function player_hit(d)
   player_health -= d
   sfx(18)
@@ -1176,19 +1152,12 @@ function _update()
 
   -- count down timers
   for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
-
   if (level_change)  levelchange()
-
   if (titlescreen == nil and continuebuttons()) titlescreen = true; return
-
   if (drawcontrols and continuebuttons()) showcontrols = false coresume(game); return
-
   if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
-
   if (in_skilltree) skill_tree(); return;
-
   if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
-
   if not wait.controls and seraph.text == nil then
     --========================
     --left mouse button-------
@@ -1293,9 +1262,6 @@ function _update()
 
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
 
-    --if (btn(c.left_arrow, 1)) level_sx += 1
-    --if (btn(c.right_arrow, 1)) level_sx -= 1
-
     enem_exploder()
     spawnenemies()
     if (detect_killed_enemies) detect_kill_enemies()
@@ -1346,19 +1312,12 @@ function _draw()
     if (player.destroyed_step < player.destroy_anim_length) step_boss_destroyed_animation(player); return
     sfx(9,1)
     in_leaderboard = true
-    --sort = true
-    -- run()
   end
 
   if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
-  --if (level_lvl == 2 and #boss_table == 0) spr(139, 100, 56, 2, 2)
-
   if (drawcontrols) draw_controls(); return
-
   if (open_door) opendoor()
-
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
-
   if (showplayer ~= nil) draw_playerhp()
   if (showplayer ~= nil and timers["playerlasthit"] <= 0x.0001) then
     spr_r(0, player.x, player.y, player_angle, 2, 2)
@@ -1411,8 +1370,6 @@ function _draw()
        sfx(17,1)
        player_tokens += 1
        coin.dropped,direction,in_skilltree = false, nil, true
-       -- direction = nil
-       -- in_skilltree = true
      end
   end
 
