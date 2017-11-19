@@ -1,101 +1,33 @@
 pico-8 cartridge // http://www.pico-8.com
-version 9
+version 8
 __lua__
---------------------------------------------------------------------------------
---------------------------------- global variables  ----------------------------
---------------------------------------------------------------------------------
+--============================================================================--
+--=============================== global variables  ==========================--
+--============================================================================--
+player = {
+  x = 60,
+  y = 60,
 
-player = {}
-player_sprite = 0
-player.x = 60
-player.y = 60
-player_speed = 1
-player_angle = 0
-player_turn = 0
-player_fire_rate = .75
-player_power_fire_rate = 1
+  size = 8,
+
+  destroyed_step = 0,
+  destroy_anim_length = 30,
+  destroy_sequence = {135, 136, 135},
+}
 player_health = 10
 player_max_health = 10
-player.size = 8
-player_immune_time = 2
---player.last_hit = 0
-player_b_count = 0
-player_tokens = 0
-player_inventory = {}
-player_inv_max = 4
-player_shield_dur = 5
---player.last_right = nil
---player.last_click = nil
---player.last_middle_click = nil
-player_killed = 0
 player_shield = 0
+player_speed = 1
+player_angle = 0
+player_fire_rate = .75
+player_killed = 0
+player_tokens = 0
 
-level = {}
--- level.border = {}
--- level.border.left = 0
--- level.border.up = 0
--- level.border.right = 120
--- level.border.down = 120
 level_lvl = 1
 level_sx = 0
 level_sy = 0
 level_x = 0
 level_y = 0
-<<<<<<< HEAD
-level_transition = {1, 0, 0,
-                    2, 16, 0,
-                    3, 32, 0,
-                    4, 48, 0}
-
-wait = {}
-wait.controls = false
-wait.dialog_finish = false
-
-timers = {leveltimer = 0,
-          showinv = 0,
-          playerlasthit = 0,
-          leftclick = 0,
-          middleclick = 0,
-          rightclick = 0,
-          firerate = 0,
-          invalid = 0,
-          bossstart = 0}
-
--- controls
-c = {}
-c.left_arrow = 0
-c.right_arrow = 1
-c.up_arrow = 2
-c.down_arrow = 3
-c.z_button = 4
-c.x_button = 5
-
-title = {}
-title.drawn = nil
-title.init = nil
-title.startx = 23
-title.starty = 50
-title.text = {   "12,12,12,12, 0, 0, 0,12,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0, 0,12,12,12,12,12, 0, 0,12,12,12,12,12,12,12, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12,12, 0, 0, 0,12,12,12",
-                 "12, 1, 1, 1,12, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0,12, 1,12",
-                 "12, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0,12,12,12, 1,12,12,12, 0,12,12,12, 1,12,12, 0, 0,12, 1,12,12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12",
-                 "12, 1,12,12, 1, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0, 0, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12,12, 1, 1,12,12, 1,12",
-                 "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
-                 "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0, 0, 12, 1,12, 0,12, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
-                 "12, 1,12, 0, 0,12, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0,12, 1, 1, 1,12",
-                 "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
-                 "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12,12,12, 1,12,12,12, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
-                 "12, 1,12, 0, 0, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0,12, 1,12",
-                 "12,12,12, 0, 0, 0, 0, 0,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0,12,12,12, 0,12,12,12, 0, 0, 0,12,12,12, 0, 0, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12, 0, 0, 0, 0, 0,12,12"}
-
-_load = {}
-
-coin = {}
-coin.dropped = false
-coin.size = 16
-coin.x = nil
-coin.y = nil
-coin.sprites = {64, 66, 68, 70, 72, 70, 68, 66}
-=======
 level_transition = {
   1, 0, 0,
   2, 16, 0,
@@ -134,42 +66,222 @@ coin = {
 -- bullets
 player_bullets = {}
 enemy_bullets = {}
->>>>>>> master
 
+-- enemies
+boss_table = {}
 enemy_table  = {}
 enemy_spawned = {}
-player_bullets = {}
-enemy_bullets = {}
+
+-- animations
+seraph = {}
+moves = {}
+shield_anims = {}
+tele_animation = {}
+boss_hit_anims = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
-boss_hit_anims = {}
 exploding_enemies = {}
-boss_table = {}
-dropped = {}
-shield_anims = {}
-moves = {}
-tele_animation = {}
+water_anim_list = {}
 
+-- inventory
+dropped = {}
+player_inventory = {}
+
+-- skilltree
 currently_selected = 1
-selection_set = {"speed", "health", "fire rate", "quit"}
+selection_set = {"speed", "fire rate", "health", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
---invalid = 0
-titlescreen = nil
 
---------------------------------------------------------------------------------
------------------------- object-like structures --------------------------------
---------------------------------------------------------------------------------
---[[
-  drop objects
-]]
+title = {
+  startx = 23,
+  starty = 50,
+  text = {         "12,12,12,12, 0, 0, 0,12,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0, 0,12,12,12,12,12, 0, 0,12,12,12,12,12,12,12, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12,12, 0, 0, 0,12,12,12",
+                   "12, 1, 1, 1,12, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0,12, 1,12",
+                   "12, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0,12,12,12, 1,12,12,12, 0,12,12,12, 1,12,12, 0, 0,12, 1,12,12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12",
+                   "12, 1,12,12, 1, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0, 0, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12,12, 1, 1,12,12, 1,12",
+                   "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
+                   "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0, 0, 12, 1,12, 0,12, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
+                   "12, 1,12, 0, 0,12, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0,12, 1, 1, 1,12",
+                   "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
+                   "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12,12,12, 1,12,12,12, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
+                   "12, 1,12, 0, 0, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0,12, 1,12",
+                   "12,12,12, 0, 0, 0, 0, 0,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0,12,12,12, 0,12,12,12, 0, 0, 0,12,12,12, 0, 0, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12, 0, 0, 0, 0, 0,12,12"}
+}
+
+--============================= helper functions =============================--
+function debug()
+  local debug_color = 14
+  local cpucolor = debug_color
+
+  print("px: " .. player.x, 0, 0, debug_color)
+  print("py: " .. player.y, 45, 0, debug_color)
+
+  print("me: " .. round((stat(0)/1024)*100, 2) .. "%", 0, 6, debug_color)
+  if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
+  print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
+
+  print("m "..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
+  print("", 0, 12, debug_color)
+
+  print(124+level_sx-((level_lvl-1)*127), 0, 18, debug_color)
+  print("", 45, 18, debug_color)
+end
+
+function gameflow()
+  -- start game
+  drawcontrols, wait.controls = true, true
+  yield()
+
+  drawcontrols, wait.controls = false, false
+
+  init_tele_anim(player)
+  yield()
+
+  seraph.text = "ready to get to work?"
+  yield()
+
+  seraph.text = "i see a door. give me a minuteand i'll get it open."
+  yield()
+
+  fill_enemy_table(1, 65)
+  spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
+  yield()
+
+  kill_all_enemies(true)
+  wait.timer = false
+  seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
+  yield()
+
+  init_tele_anim(boss(60, 60, 128, 1, 40))
+  yield()
+
+  kill_all_enemies(true)
+  seraph.text = "nice work. the door should    open now."
+  yield()
+
+  wait.controls,level_change,open_door = true,true,true
+  yield()
+
+  wait.controls = false
+  yield()
+
+  --start level 2
+  wait.controls = true
+  seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
+  add(boss_table, boss(100, 56, 139, 2, 35))
+  yield()
+
+  seraph.text = "unfortunately we weren't alone"
+  yield()
+
+  seraph.text = "oh, who is this little guy?   seems to be checking you out."
+  yield()
+
+  wait.controls,spawn_time_start  = false,60
+  fill_enemy_table(2, 60)
+  yield()
+
+  kill_all_enemies(true)
+  level_change = true
+  yield()
+
+  -- start level 3
+  open_door = false
+  seraph.text = "so the main source of the     infestation is up here past   the desert."
+  yield()
+
+  fill_enemy_table(3, 90)
+  spawn_time_start = 90
+  init_tele_anim(boss(100, 60, 160, 3, 40))
+  yield()
+
+  level_change = true
+  yield()
+
+  -- start level 4
+  fill_enemy_table(4, 90)
+  spawn_time_start,detect_killed_enemies = 90, true
+  yield()
+
+  init_tele_anim(boss(60, 60, 128, 1, 40))
+  init_tele_anim(boss(60, 20, 139, 2.5, 40))
+
+  yield()
+  level_change = true
+
+  -- start level 5 (aoe boss)
+  yield()
+
+end
+
+-- http://lua-users.org/wiki/simpleround
+function round(num, numdecimalplaces)
+  local mult = 10^(numdecimalplaces or 0)
+  return flr(num * mult + 0.5) / mult
+end
+-- http://pico-8.wikia.com/wiki/centering_text
+function hcenter(s) return 64-flr((s*4)/2) end
+
+function minimum_neighbor(start, goal)
+  local map = {}
+  map.x, map.y = 128, 120
+  -- map.y = 120
+  local minimum_dist, min_node = 8000, start
+  -- local min_node = start
+    for i=0xffff,1 do
+      for j=0xffff,1 do
+        local nx = start.x+(i*enemy().speed)
+        local ny = start.y+(j*enemy().speed)
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+          local current = enemy(nx, ny)
+          local cur_distance = distance(current, goal)
+          if cur_distance < minimum_dist then
+            minimum_dist = cur_distance
+            min_node = current
+          end
+        end
+      end -- end j for
+    end --end i for
+    return min_node
+end
+
+function distance(n, d)
+  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
+end
+
+function angle_btwn(tx, ty, fx, fy)
+  return ((atan2((ty - fy), (tx - fx)) * 360) + 180)%360
+end
+
+function delete_offscreen(list, obj)
+  if (obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128) del(list, obj)
+end
+
+function continuebuttons()
+  if ((btnp(4) or btnp(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = 1; return true
+  return false
+end
+
+function bump(x, y, flag)
+  return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
+end
+
+function bump_all(x, y)
+  return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
+end
+
+function ent_collide(firstent, secondent)
+  offset = (firstent == player) and 4 or 0
+  return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
+    or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
+end
+
+
+--====================== object-like structures ==============================--
 function drop_obj(sx, sy, sprite)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 8, 5
-  -- d.y = sy
-  -- d.sprite = sprite
-  -- d.size = 8
-  -- d.drop_duration = 5
   d.init_time = time()
   d.types = {[32] = "heart",
              [33] = "shotgun",
@@ -182,35 +294,14 @@ function drop_obj(sx, sy, sprite)
   return d
 end
 
---[[
-  enemy object
-]]
---function enemy(spawn_x, spawn_y, type, time_spwn)
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
-  --e.speed, e.time, e.b_count = .35, time_spwn, 0
-  -- e.y = spawn_y
-  -- e.speed = .35
-  -- e.time = time_spwn
-  -- e.b_count = 0
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
-  -- e.destroyed_step = 0
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
-  -- e.drop_prob = 100--%
-  -- e.shoot_distance = 50
-  e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 10
-  -- e.explode_wait = 15
-  -- e.explode_step = 0
-  -- e.fire_rate = 10
+  e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
-  -- e.dont_move = false
-  -- e.size = 8
-  -- e.sprite = 132
-  -- e.angle = 360
-  -- e.speed = .35
-  -- e.type = type
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -225,7 +316,6 @@ function enemy(x, y, type, time_spwn)
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                     e.b_count += 1
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
-
                   end
                 elseif e.type == "exploder" then
                   if distance(e, player) >= e.explode_distance and not e.dont_move then
@@ -239,29 +329,13 @@ function enemy(x, y, type, time_spwn)
                   e.update_xy()
                 end
            end
-
   return e
 end
 
-
---[[
-  bullet object
-]]
 function bullet(startx, starty, angle, sprite, friendly, shotgun)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
-  -- b.y = starty
-  -- b.angle = angle
-  -- b.sprite = sprite
-  -- b.friendly = friendly
-  -- b.duration = 15
-  b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
-  -- b.speed = 2
-  -- b.acceleration = 0
-  -- b.current_step = 0
-  -- b.max_anim_steps = 5
-  -- b.rocket = false
-  -- b.size = 3
+  b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 8
 
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket = 0.5, 15, true
 
@@ -275,31 +349,16 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   return b
 end
 
---[[
-  boss object
-]]
-function boss(startx, starty, sprite, lvl)
+function boss(startx, starty, sprite, lvl, hp)
   local b = {}
-  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, (lvl or 1), nil, 0, sprite
-  -- b.y = starty
-  -- b.speed = .01
-  -- b.angle = 0
-  -- b.level = lvl or 1
-  -- b.shot_last = nil
-  -- b.shot_ang = 0
-  -- b.sprite = sprite
-  b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health = 16, 2, 7, 0, 30, 50
-  -- b.bullet_speed = 2
-  -- b.fire_rate = 7
-  -- b.destroyed_step = 0
+  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, lvl, nil, 0, sprite
+  b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health, b.full_health = 16, 2, 7, 0, 30, (hp or 50), (hp or 50)
   b.destroy_sequence = {135, 136, 135}
-  -- b.destroy_anim_length = 30
-  -- b.health = 50
   b.circs = {}
-  timers["bossstart"] = 12
+  timers["bossstart"] = (lvl == 6) and 12 or 1000
   b.draw_healthbar = function()
              --health bar
-             if (b.sprite == 128 or 139) xoffset = 1; b.full_health = 50
+             if (b.sprite == 128 or 139) xoffset = 1
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + 12, b.y - 3, 14)
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
            end
@@ -315,15 +374,17 @@ function boss(startx, starty, sprite, lvl)
              b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
              b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
 
-           elseif b.level == 2 then
-             if b.shot_last ~= nil and ((time() - b.shot_last) < 2) and flr(time()*50)%b.fire_rate == 0 then
-               shoot(b.x, b.y, p_ang, 141, false, true)
-               b.x = b.x - 5*sin(p_ang/360)
-               b.y = b.y - 5*cos(p_ang/360)
+           elseif b.level < 3 then
+             if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
+               if flr(time()*50)%b.fire_rate == 0 then
+                 shoot(b.x, b.y, p_ang, 141, false, true)
+                 b.x = b.x - 2*sin(p_ang/360)
+                 b.y = b.y - 2*cos(p_ang/360)
+               end
              end
-             --b.draw_healthbar()
            elseif b.level == 3 then
-              local ang = (360/(abs(time())/2))*(10%(abs(time())/2))
+              local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
+              if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
@@ -341,9 +402,7 @@ function boss(startx, starty, sprite, lvl)
                  if c[3] <= 0 then
                    circfill(c[1], c[2], 12, 9)
                    if distance(player, {["x"]=c[1],["y"]=c[2]}) <= 15 then
-                      player_health -= 1
-                      sfx(2,2)
-                      timers["playerlasthit"] = player_immune_time
+                      player_hit(1)
                    end
                    del(b.circs, c)
                  end
@@ -375,117 +434,9 @@ function boss(startx, starty, sprite, lvl)
           end
   return b
 end
---------------------------------------------------------------------------------
--------------------------------- helper functions ------------------------------
---------------------------------------------------------------------------------
-function debug()
-  local debug_color = 14
 
-  print("px: " .. player.x, 0, 0, debug_color)
-  print("sx: " .. level_sx, 45, 0, debug_color)
 
-  print("me: " .. round((stat(0)/1024)*100, 2) .. "%", 0, 6, debug_color)
-  local cpucolor = debug_color
-  if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
-  print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
-
-  print("", 45, 12, debug_color)
-  print("", 0, 12, debug_color)
-
-  print("", 0, 18, debug_color)
-  print(level_change, 45, 18, debug_color)
-end
-
-function init_mem()
-  for i=0,53 do -- 53 - 63 = leaderboard data
-    dset(i, -1)
-  end
-end
-
-function save_leaderboard()
-  local idx = 53
-  while dget(idx) ~= 0 do
-    idx += 1
-  end
-  dset(idx, player_killed)
-end
-
-function save_data()
-  local save = {player.x, player.y, level_sx, level_sy, level_lvl, player_tokens} -- missing: player_inventory, and current skill values/costs
-  for i=0,(#save-1) do
-    dset(i, save[i+1])
-  end
-  -- dset(#save, -5) -- save inventory items
-  -- for i=(#save+1),(#player_inventory) do
-  --   dset(i, player_inventory[i+1])
-  -- end
-end
-
-function load_data()
-  local idx = 0
-  _load = {}
-  while dget(idx) ~= -1 do
-    _load[#_load+1] = dget(idx)
-    idx += 1
-  end
-end
-
-function show_leaderboard()
-  rectfill(0,0,128,128,0)
-  print("killed: "..player_killed,20,20,5)
-  for i=1,90 do
-    flip()
-  end
-end
-
-function bump(x, y, flag)
-  local tx = flr((x - level_sx + (level_x*8)) / 8)
-  local ty = flr((y - level_sy + (level_y*8)) / 8)
-  local flag = (flag or 0)
-  local map_id = mget(tx, ty)
-
-  return fget(map_id, flag)
-end
-
-function bump_all(x, y)
-  return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
-end
-
-function ent_collide(firstent, secondent)
-  secondent = secondent or player
-  offset = (firstent == player) and 4 or 0
-  return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
-    or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
-end
-
-function collide_all_enemies()
-  local e = enemy_spawned[1]
-  for o in all(enemy_spawned) do
-    if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
-  end
-end
-
-function fix_enemy(o, e)
-  local function fix_coord(o,e,c)
-    if (o[c] - e[c]) < 0 then
-      o[c] = o[c] - 8
-    elseif (o[c] - e[c]) > 0 then
-      o[c] = o[c] + 8
-    elseif (o[c] == e[c]) then
-      o[c] = o[c] + 8
-    end
-  end
-  fix_coord(o,e,'x')
-  fix_coord(o,e,'y')
-end
-
--- http://lua-users.org/wiki/simpleround
-function round(num, numdecimalplaces)
-  local mult = 10^(numdecimalplaces or 0)
-  return flr(num * mult + 0.5) / mult
-end
-function ceil(x) return -flr(-x) end
-
+--========================== draw functions ==================================--
 -- https://www.lexaloffle.com/bbs/?pid=22757
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
@@ -514,211 +465,11 @@ function spr_r(s,x,y,a,w,h)
  end
 end
 
-function minimum_neighbor(start, goal)
-  local map = {}
-  map.x, map.y = 128, 120
-  -- map.y = 120
-  local minimum_dist, min_node = 8000, start
-  -- local min_node = start
-    for i=0xffff,1 do
-      for j=0xffff,1 do
-        local nx = start.x+(i*enemy().speed)
-        local ny = start.y+(j*enemy().speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
-          local current = enemy(nx, ny)
-          local cur_distance = distance(current, goal)
-          if cur_distance < minimum_dist then
-            minimum_dist = cur_distance
-            min_node = current
-          end
-        end
-      end -- end j for
-    end --end i for
-    return min_node
-end
-
---[[
-  get angle between two objects
-  args:
-    coordinates to object: tx, ty
-    coordinates from object: fx, fy
-]]
-function angle_btwn(tx, ty, fx, fy)
-  local diffx, diffy = (tx - fx), (ty - fy)
-  -- local diffy = ty - fy
-  local angle = ((atan2(diffy, diffx) * 360) + 180)%360
-  if (angle <= 0) angle = (angle + 360)%360
-  return angle
-end
-
---[[
-  shoot: create bullet objects and add them to the 'bullets' table
-]]
-function shoot(x, y, a, spr, friendly, boss, shotgun)
-  if (spr~=48) then
-    sfx(2)
-  else
-    sfx(16)
-  end
-  if friendly then
-    local offx, offy = (player.x + 5), (player.y + 5)
-    local ang = angle_btwn((stat(32) - 3), (stat(33) - 3), offx, offy)
-    if (a != player_angle) ang += a
-    offx, offy = (offx - 8*sin(ang / 360)), (offy - 8*cos(ang / 360))
-    -- offy = offy - 8*cos(ang / 360)
-    add(player_bullets, bullet(offx, offy, ang, spr, friendly, shotgun))
-  elseif boss then
-    local offx, offy = (x + 5), (y + 5)
-    -- local offy = y + 5
-    offx, offy = (offx - 16*sin(a / 360)), (offy - 16*cos(a / 360))
-    -- offy = offy - 16*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly, shotgun))
-  else
-    local offx, offy = (x - 8*sin(a / 360)), (y - 8*cos(a / 360))
-    -- local offy = y - 8*cos(a / 360)
-    add(enemy_bullets, bullet(offx, offy, a, spr, friendly))
-  end
-end
-
---[[
-  delete offscreen objects
-]]
-function delete_offscreen(list, obj)
-  if (obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128) del(list, obj)
-end
-
-function spawnenemies()
-  for enemy in all(enemy_table) do
-    if time() - wait.start_time >= enemy.time then
-      -- repeat
-      --   enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
-      -- until distance(player, enemy) > 20
-      --enemy.x = 50
-      --enemy.y = 20
-      add(enemy_spawned, enemy)
-      del(enemy_table, enemy)
-    end
-  end
-
-  if #enemy_table == 0 then
-    spawn_enemies = false
-    --if (not wait.timer) detect_killed_enemies = true
-  end
-end
-
-function detect_kill_enemies()
-  if #enemy_spawned == 0 then
-    detect_killed_enemies = false
-    coresume(game)
-  end
-end
-
-function kill_all_enemies(no_drop_items)
-  enemy_table = {}
-
-  for e in all(enemy_spawned) do
-    if (no_drop_items) e.drop_prob = 0
-    del(enemy_spawned, e)
-    add(destroyed_enemies, e)
-  end
-
-  for b in all(boss_table) do
-    del(boss_table, b)
-    add(destroyed_bosses, b)
-    coin.x = b.x - level_sx
-    coin.y = b.y - level_sy
-    b = nil
-  end
-end
-
-function levelchange()
-  local farx = 100
-  --local farleft
-
-  level.i = 3*level_lvl+1
-  if (level_transition[level.i] == level_lvl+1 and (level_transition[level.i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
-  -- [[and transition[level.i+2] == flr(level_sy)]] then
-    -- move_map = true
-  -- end
-
-  --todo add map centering on player in the beginning
-
-  if not move_map then
-    if btn(c.left_arrow) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
-      level_sx += player_speed
-      if player.x < farx then player.x = farx end
-    end
-    if btn(c.right_arrow) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level.i+1])*8]]  and player.x > farx then
-      level_sx -= player_speed
-      if player.x > farx then player.x = farx end
-    end
-  end
-
-  if move_map ~= nil and move_map then
-    wait.controls = true
-
-    if level_transition[level.i+1]*8 > abs(level_sx - ((level_lvl-1) * 128)) then
-      level_sx = flr(level_sx) - 1
-      player.x -= 1
-
-    --[[elseif check we go down then]]
-
-    else
-      dropped = {}
-      level_sprites = {}
-      open_door = false
-      level_sx, level_sy, level_x, level_y = 0, 0, level_transition[level.i+1], level_transition[level.i+2]
-      -- level_sy = 0
-      -- level_x = level_transition[level.i+1]
-      -- level_y = level_transition[level.i+2]
-
-      wait.controls, move_map, level_change, coin.dropped = false, false, false, false
-      -- move_map = false
-      -- level_change = false
-      level_lvl += 1
-      -- coin.dropped = false
-      coresume(game)
-    end
-  end
-end
-
-function drawcountdown()
-  local x, y, clr = 57, 15, 12
-  --local countdown = flr((wait.start_time + wait.end_time) - time())
-  local countdown = timers["leveltimer"]
-  local hours = flr(countdown/3600);
-  local mins = flr(countdown/60 - (hours * 60));
-  local secs = ceil(countdown - hours * 3600 - mins * 60);
-  if secs == 60 then
-    mins += 1
-    secs = 0
-  end
-  if (secs < 10) secs = "0" .. secs
-
-  print(mins .. ":" .. secs, x, y, clr)
-
-  if countdown == 0 then
-    wait.timer = false
-    coresume(game)
-  end
-end
-
-function opendoor()
-  if (doorh == nil) doorh = 1
-  rectfill(126+level_sx, 63+level_sy, 127+level_sx, 63-doorh+level_sy, 13)
-  rectfill(126+level_sx, 64+level_sy, 127+level_sx, 64+doorh+level_sy, 13)
-  if (doorh < 20) then
-    doorh += 0.5
-  elseif doorh == 20 then
-     coresume(game)
-     doorh += 1
-  end
-end
-
 function draw_titlescreen()
   rectfill(0, 0, 127, 127, 0)
 
   if not title.drawn then
+    sfx(7)
     title.drawn = {}
     for i=1, #title.text do
       title.drawn[i] = {}
@@ -751,21 +502,30 @@ function draw_titlescreen()
     end
   end
 
-  print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
-
+  --print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
+  print("press left click to start", hcenter(25), 100, flr(time())%15+1)
 end
 
---[[
-  print seraph dialog
-]]
-function dialog_seraph(dialog)
-  local bck_color = dialog.bck_color or 5
-  local brd_color = dialog.brd_color or 0
-  local fnt_color = dialog.fnt_color or 7
-  local d = dialog.text
+function draw_controls()
+  rectfill(10, 20, 117, 101, 8)
+  rectfill(11, 21, 116, 100, 6)
 
-  if (dialog.step == nil) dialog.step = 0
-  if (dialog.step < #d) wait.dialog_finish = true
+  print("use the mouse to aim!", 21, 30, 8)
+  print("use: left click to shoot", 18, 55, 5)
+  print("middle click to", 38, 65, 5)
+  print("switch power ups", 38, 71, 5)
+  print("right click to", 38, 81, 5)
+  print("shoot power ups", 38, 87, 5)
+end
+
+function draw_dialog()
+  local bck_color = seraph.bck_color or 5
+  local brd_color = seraph.brd_color or 0
+  local fnt_color = seraph.fnt_color or 7
+  local d = seraph.text
+
+  if (seraph.step == nil) seraph.step = 0
+  if (seraph.step < #d) wait.dialog_finish = true
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -798,122 +558,40 @@ function dialog_seraph(dialog)
 
   print("seraph", 4, 100, fnt_color)
 
-  print(sub(d, 0, min(dialog.step, 30)), 5, 107, fnt_color)
-  if (dialog.step > 30) print(sub(d, 31, min(dialog.step, 60)), 5, 113, fnt_color)
-  if (dialog.step > 60) print(sub(d, 61, min(dialog.step, 90)), 5, 119, fnt_color)
-  dialog.step = min(dialog.step+1, #d+30)
-  if (dialog.step == #d+30) wait.dialog_finish = false
+  print(sub(d, 0, min(seraph.step, 30)), 5, 107, fnt_color)
+  if (seraph.step > 30) print(sub(d, 31, min(seraph.step, 60)), 5, 113, fnt_color)
+  if (seraph.step > 60) print(sub(d, 61, min(seraph.step, 90)), 5, 119, fnt_color)
+  seraph.step = min(seraph.step+1, #d+30)
+  if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
+function drawcountdown()
+  --local x, y, clr = 57, 15, 12
+  local countdown = timers["leveltimer"]
+  local hours = flr(countdown/3600);
+  local mins = flr(countdown/60 - (hours * 60));
+  local secs = -flr(-(countdown - hours * 3600 - mins * 60));
+  if (secs == 60) mins += 1; secs = 0
+  if (secs < 10) secs = "0" .. secs
 
-function fill_enemy_table(level, lvl_timer)
-  local types = {"shooter", "basic", "exploder"}
-  local baseline = 20
-  for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+  print(mins .. ":" .. secs, 57, 15, 12)
+
+  if (countdown == 0) wait.timer = false; coresume(game)
+end
+
+function opendoor()
+  if (doorh == nil) doorh = 1
+  rectfill(124+level_sx-((level_lvl-1)*128), 71+level_sy, 131+level_sx-((level_lvl-1)*128), 71-doorh+level_sy, 13)
+  rectfill(124+level_sx-((level_lvl-1)*128), 72+level_sy, 131+level_sx-((level_lvl-1)*128), 72+doorh+level_sy, 13)
+  if (doorh < 13) then
+    doorh += 0.5
+  elseif doorh == 13 then
+     coresume(game)
+     doorh += 1
   end
 end
 
-function gameflow()
-  -- start game
-  music(11,1)
-
-  --wait.controls = true -- stop player controls
-  init_tele_anim(player)
-  level_sprites = { 239, 0, 0,
-                    239, 15*8, 0,
-                    238, 0*8, 15*8,
-                    238, 15*8, 15*8,
-
-                    235, 15*8, 5*8,
-                    235, 15*8, 6*8,
-                    235, 15*8, 7*8,
-                    235, 15*8, 8*8,
-                    235, 15*8, 9*8,
-                    235, 15*8, 10*8,
-
-                    255, 15*8, 12*8,
-                    255, 15*8, 13*8,
-                    255, 15*8, 14*8
-
-                    --251, 50, 26
-
-                  }
-  --timers["leftclick"] = 1
-  yield()
-
-  seraph = {}
-  seraph.text = "ready to get to work?"
-  drawdialog = true -- show seraph's dialog
-  yield()
-
-  titlescreen = true -- stop showing titlescreen
-
-  seraph = {} -- reset seraph table to defaults
-  seraph.text = "alright, i see a door. give mea minute and i'll try and openit."
-  drawdialog = true -- show seraph's dialog
-  --wait.controls = true -- stop player controls
-  yield()
-
-  --wait.controls = false  -- resume player controls
-  drawdialog = false -- stop showing seraph's dialog
-
-  fill_enemy_table(1, 65)
-  spawn_enemies = true -- tell the game we want to spawn enemies
-  wait.start_time = time() -- used for timer and spawn time to compare when to spawn
-  timers["leveltimer"] = 60
-  wait.timer = true -- tells the game we want to wait for the timer to finish
-  yield()
-
-  kill_all_enemies(true)
-  wait.timer = false
-  spawn_enemies = false
-
-  seraph = {}
-  seraph.text = "okay, that should do-"
-  drawdialog = true
-  --wait.controls = true
-  yield()
-
-  --wait.controls = false
-  drawdialog = false
-
-  --add(boss_table, boss(60, 60, 128, 1))
-  init_tele_anim(boss(60, 60, 128, 1))
-  yield()
-
-  kill_all_enemies()
-
-  wait.controls = true
-  open_door = true
-  level_change = true
-  yield()
-
-  --level.border.right = 248
-  wait.controls = false
-  yield()
-
-  fill_enemy_table(2, 60)
-  wait.start_time = time()
-  --wait.timer = true
-  spawn_enemies = true
-  add(boss_table, boss(56, 56, 139, 2))
-  yield()
-
-  kill_all_enemies(true)
-  --level.border.right = 432
-  level_change = true
-  yield()
-
-  yield()
-  level_change = true
-end
-
---[[
-    skill-tree menu (needs to be called continuously from draw to work)
-]]
 function skilltree()
-
   rectfill(-50, -50, 200, 200, 0)
   spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], 20, 20, 2, 2)
   print(" - " .. player_tokens, 36, 26, 7)
@@ -922,9 +600,206 @@ function skilltree()
   print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, 7+((skills_selected[2] and 1 or 0)*3))
   print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, 7+((skills_selected[3] and 1 or 0)*3))
   print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
-
 end
 
+function draw_playerhp()
+  --local hpcolor = 11
+  local hpratio = player_health/player_max_health
+  if (invtx == nil) invtx = 4
+  if (invtx > 4) invtx -= 1
+
+  if hpratio >= .5 then
+    hpcolor = 11
+  elseif hpratio >= .3 then
+    hpcolor = 9
+  elseif player_health == 1 and flr(time()*10000)%2==0 then
+    hpcolor = 6
+  else
+    hpcolor = 8
+  end
+
+  rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6)
+  rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor)
+  if (player_shield > 0) rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player_shield / 4.8)), player.y + 1, 12)
+
+  if timers["showinv"] > 0 then
+    if (#player_inventory > 0) spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
+    if (#player_inventory > 1) spr(player_inventory[2].sprite, player.x + invtx + 9, player.y + 14)
+    if (#player_inventory > 2) spr(player_inventory[#player_inventory].sprite, player.x + invtx - 9, player.y + 14)
+    spr(112, player.x + 4, player.y + 14)
+  end
+  if timers["showinv2"] > 0 and #player_inventory > 0 then
+    local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
+    rectfill(player.x + 4, player.y + (21 - flr(7  * ammoratio)) , player.x + 11, player.y + 21, 13)
+    spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
+  end
+end
+
+function enem_spawned()
+  for e in all(enemy_spawned) do
+    -- this should never happen, but just in case:
+    delete_offscreen(enemy_spawned, e)
+
+    -- check if this sprite has been shot
+    for b in all(player_bullets) do
+      if ent_collide(e, b) then
+        player_killed += 1
+        del(enemy_spawned, e)
+        sfx(5,1)
+        add(destroyed_enemies, e)
+        del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if (b.rocket) rocket_kill(b)
+        b = nil
+        e = nil
+        break
+      end
+    end
+
+
+    if e ~= nil then
+      if timers["playerlasthit"] == 0 and ent_collide(player, e) then
+        if player_shield <= 0 then
+          player_hit(1)
+        else
+          player_shield -= .15
+        end
+      end
+
+      if e.exploding and flr(time()*500)%2==0 then
+        pal()
+        pal(2,8,0)
+      end
+
+      if e.type == "shooter" then
+        pal(2,1,0)
+        pal(5,13,0)
+      elseif e.type == "exploder" then
+        pal(8,10,0)
+        pal(2,8,0)
+        pal(5,9,0)
+      end
+      spr(e.sprite, e.x, e.y)
+      pal()
+
+      if (e.explode_step == e.explode_wait) add(exploding_enemies, e)
+
+      e.move()
+    end
+  end
+end
+
+function item_drops()
+  for d in all(dropped) do
+    if ent_collide(player, d) then
+      if d.type == "heart" and player_health < player_max_health then
+        player_health = min(player_max_health, player_health+3)
+        sfx(17)
+        del(dropped, d)
+      elseif d.type == "shield" then
+        player_shield = 5 --player_shield_dur
+        sfx(6)
+        del(dropped, d)
+      elseif d.type ~= "heart" and #player_inventory < 4 --[[player_inv_max]] then
+        add(player_inventory, d)
+        if (#player_inventory < 4) timers["showinv"] = .5
+        sfx(19)
+        del(dropped, d)
+      end
+    end
+
+    if (d.type == "shotgun" and (pget(d.x+2, d.y+4) == 4) or pget(d.x+3, d.y+4) == 4) pal(4,0,0)
+    if (d.type == "shield" and (pget(d.x+4,d.y+7) == 9) or pget(d.x, d.y) == 9) pal(9,12,0)
+
+    if abs(time() - d.init_time) <= d.drop_duration then
+      if abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
+        spr(d.sprite, d.x+level_sx, d.y+level_sy)
+      elseif flr(time()*1000)%2==0 then
+        spr(d.sprite, d.x+level_sx, d.y+level_sy)
+      end
+    else
+      del(dropped, d)
+    end
+  end
+  pal()
+end
+
+function bullets_player()
+  for b in all(player_bullets) do
+    -- first delete offscreen bullets:
+    delete_offscreen(player_bullets, b)
+
+    if bump(b.x, b.y) then
+      del(player_bullets, b)
+      add(boss_hit_anims, b)
+      if (b.rocket) rocket_kill(b)
+      return
+    end
+
+    spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    b.move()
+    if (b.duration <= 0) del(player_bullets, b); return
+
+    for bos in all(boss_table) do
+      if ent_collide(bos, b) then
+        sfx(23,1)
+        bos.health -= ((b.sprite == 48) and 3 or 1)
+        bos.shot_last = time()
+        bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
+        del(player_bullets, b)
+        add(boss_hit_anims, b)
+        if (b.rocket) rocket_kill(b)
+        if bos.health <= 0 then
+          sfx(22,1)
+          add(destroyed_bosses, bos)
+          player_killed += 1
+          del(boss_table, bos)
+          coin.x,coin.y = bos.x,bos.y
+          if (#boss_table == 0) coresume(game)
+        end
+        break
+      end
+    end
+  end
+end
+
+function bullets_enemies()
+  for b in all(enemy_bullets) do
+    -- first delete offscreen bullets:
+    delete_offscreen(enemy_bullets, b)
+
+    if ent_collide(player, b) then
+      if timers["playerlasthit"] == 0 then
+        if player_shield <= 0 then
+          player_hit(1)
+        else
+          add(shield_anims, {b.x, b.y, 10})
+          player_shield = player_shield - .15
+        end
+      end
+      del(enemy_bullets, b)
+      return
+    end
+
+    spr(b.sprite, b.x, b.y)
+    b.move()
+    if (bump(b.x, b.y)) del(enemy_bullets, b); add(boss_hit_anims, b)
+  end
+end
+
+function show_leaderboard()
+  rectfill(0,0,128,128,0)
+  print("you died",hcenter(8), 55, 8)
+  --k = min(player_killed, k+0.5)
+  if (k<player_killed-1) k += 0.5
+  local t = "killed: "..flr(k)
+  print(t, hcenter(#t), 63, 5)
+  print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
+  if (flr(k)==player_killed-1) timers["invalid"] = 0.5; k+=1
+  if (timers["invalid"] > 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
+end
+
+--======================= animation functions ================================--
 --[[
     draw enemy destruction animation to screen
   ]]
@@ -953,23 +828,19 @@ function step_destroy_animation(e)
   end
 end
 
---[[
-    draw boss hit animation
-]]
 function boss_hit_animation(bul)
   local colors = {8, 9}
 
   if bul.current_step <= bul.max_anim_steps then
     local c = colors[flr(time()*100)%(#colors) + 1]
-    local s = flr(time()*100)%4
-    local r = 1
-    if (rnd(1) > .5) r = 0xffff
+    local r = sgn(sin(rnd(10)))
+    -- if (rnd(1) > .5) r = 0xffff
     if (not bul.rocket) then
-      circ(bul.x, bul.y, s, c)
+      circ(bul.x, bul.y, flr(time()*100)%4, c)
     else
       for i=1,3 do
-        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, (r*rnd(bul.max_anim_steps/2))+bul.y, rnd(4), c)
-        circfill((r*rnd(bul.max_anim_steps))+bul.x, (r*rnd(bul.max_anim_steps))+bul.y, .1, c)
+        circfill((r*rnd(bul.max_anim_steps/2))+bul.x, r*rnd(bul.max_anim_steps/2)+bul.y, rnd(4), c)
+        circfill((r*rnd(bul.max_anim_steps))+bul.x, r*rnd(bul.max_anim_steps)+bul.y, .1, c)
       end
       circ(bul.x, bul.y, bul.current_step, c)
     end
@@ -980,19 +851,14 @@ function boss_hit_animation(bul)
   bul.current_step += 1
 end
 
---[[
-  draw boss destruction animation
-]]
 function step_boss_destroyed_animation(b)
-  local s = 1 s1 = 1
-  if (flr(rnd(10))%2 == 0) s = 0xffff
-  if (flr(rnd(10))%2 == 0) s1 = 0xffff
-  if b.destroyed_step <= b.destroy_anim_length then
-    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
-    spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+s*flr(rnd(8)), b.y+s1*flr(rnd(8)))
+  if (b.destroyed_step <= b.destroy_anim_length) then
+    for i=1,3 do
+      spr(b.destroy_sequence[flr(b.destroyed_step/30)+1], b.x+sgn(sin(rnd(10)))*flr(rnd(8)), b.y+sgn(sin(rnd(10)))*flr(rnd(8)))
+    end
   else
-    del(destroyed_bosses, b)
-    coin.dropped = true
+    if (b~= player) del(destroyed_bosses, b)
+    if (#boss_table == 0) coin.dropped = true
   end
 
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
@@ -1001,17 +867,16 @@ function step_boss_destroyed_animation(b)
 end
 
 function init_tele_anim(e)
-  --  loop_func(destroyed_enemies, step_destroy_animation)
-  e.anim_length = 90
-  e.anim_step = 0
+  e.anim_length,e.anim_step = 90,0
   add(tele_animation, e)
 end
 
 function step_teleport_animation(e)
   local offset = -1
   if (e == player) offset = 4
-  if e.anim_step <= e.anim_length then
+  if e.anim_step < e.anim_length then
     if (e == player) wait.controls = true
+    if (e.anim_step == 15) sfx(21)
 
     if e.anim_step >= e.anim_length - 15 then
       circfill(e.x +offset + (e.size/2), e.y + offset + (e.size/2), e.anim_step%18, 12)
@@ -1033,24 +898,6 @@ function step_teleport_animation(e)
   end
 end
 
-function drop_item(e)
-  if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
-end
-
-function distance(n, d)
-  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
-end
-
-function loop_func(table, func)
-  for e in all(table) do
-    func(e)
-  end
-end
-
-function time_diff(time_var, thresh)
-  return ((time() - (time_var or (time()-2))) > thresh)
-end
-
 function move_anim(l)
   local col = {8,9,10}
   for i=1,5 do
@@ -1058,7 +905,191 @@ function move_anim(l)
   end
 end
 
+function water_anim()
+  for i=0,16 do
+    for j=0,16 do
+      if (fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
+    end
+  end
+end
+
+
+--================================ functions =================================--
+function shoot(x, y, a, spr, friendly, boss, shotgun)
+  if (boss) sfx(2)
+  if friendly then
+    local offx, offy = (player.x + 5), (player.y + 5)
+    local ang = angle_btwn((stat(32) - 3), (stat(33) - 3), offx, offy)
+    offx, offy = (offx - 8*sin(ang / 360)), (offy - 8*cos(ang / 360))
+    for i=(shotgun and 0xffff or 0),(shotgun and 1 or 0),1 do
+      add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
+    end
+  elseif boss then
+    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
+  else
+    add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
+  end
+end
+
+function skill_tree()
+  skills_selected[currently_selected] = false
+  local diff = 0
+  if btnp(2) then
+    diff = 0xffff
+    sfx(0)
+  elseif btnp(3) then
+    diff = 1
+    sfx(0)
+  elseif btnp(5) then
+    if selection_set[currently_selected] == "quit" then
+      in_skilltree = false
+      sfx(0)
+    elseif (selection_set[currently_selected] == "health" and player_tokens >= next_cost[currently_selected]) then
+        player_max_health += 1
+        player_health += 1
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
+    elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
+        player_fire_rate = max(.1, player_fire_rate-.15)
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
+    elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
+        player_speed += .2
+        player_tokens -= next_cost[currently_selected]
+        next_cost[currently_selected] += 1
+    else
+      timers["invalid"] = 0.5
+      sfx(3)
+    end
+  end
+  currently_selected = ((currently_selected+diff)%#skills_selected)
+  if (currently_selected == 0) currently_selected = 4
+  skills_selected[currently_selected] = true
+  if player_tokens == 0 then
+    for i=1,10 do
+      flip()
+    end
+    in_skilltree = false
+  end
+  return
+end
+
+function enem_exploder()
+  for e in all(exploding_enemies) do
+    if step_destroy_animation(e) then
+      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
+        if player_shield <= 0 then
+          player_hit(1)
+        else
+          player_shield -= .15
+        end
+      end
+    end
+  end
+end
+
+function fill_enemy_table(level, lvl_timer)
+  local types = {"shooter", "basic", "exploder"}
+  local baseline = 20
+  for i=1,(baseline*level) do
+    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+  end
+end
+
+function spawnenemies()
+  if (#enemy_table == 0) timers["spawn"] = 0; return
+  if (timers["spawn"] == 0) timers["spawn"] = spawn_time_start
+  local types = {"basic", "shooter", "exploder"} --1, 2, 3
+  for enemy in all(enemy_table) do
+    if spawn_time_start - timers["spawn"] >= enemy.time then
+      repeat
+        enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
+      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
+
+      if (level_lvl == 1) enemy.type = types[1]
+      if level_lvl == 2 then
+        enemy.type = "basic"
+        if (rnd(99) < 20) enemy.type = "shooter"
+      end
+      if level_lvl == 3 then
+        if enemy.type == "exploder" then
+          if (rnd(99) < 80) enemy.type = types[1+rnd(1)]
+        end
+      end
+
+      add(enemy_spawned, enemy)
+      del(enemy_table, enemy)
+    end
+  end
+end
+
+function detect_kill_enemies()
+  if #enemy_spawned == 0 and #enemy_table == 0 then
+    detect_killed_enemies = false
+    coresume(game)
+  end
+end
+
+function kill_all_enemies(no_drop_items)
+  enemy_table = {}
+
+  for e in all(enemy_spawned) do
+    if (no_drop_items) e.drop_prob = 0
+    del(enemy_spawned, e)
+    add(destroyed_enemies, e)
+  end
+
+  for b in all(boss_table) do
+    del(boss_table, b)
+    add(destroyed_bosses, b)
+    coin.x = b.x - level_sx
+    coin.y = b.y - level_sy
+    b = nil
+  end
+end
+
+function levelchange()
+  local farx = 100
+
+  level_i = 3*level_lvl+1
+  if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
+
+  --todo add map centering on player in the beginning
+
+  if not move_map then
+    if btn(0) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
+      level_sx += player_speed
+      if player.x < farx then player.x = farx end
+    end
+    if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
+      level_sx -= player_speed
+      if player.x > farx then player.x = farx end
+    end
+  end
+
+  if move_map ~= nil and move_map then
+    wait.controls = true
+
+    if level_transition[level_i+1]*8 > abs(level_sx - ((level_lvl-1) * 128)) then
+      level_sx = flr(level_sx) - 1
+      player.x -= 1
+
+    --[[elseif check we go down then]]
+
+    else
+      dropped = {}
+      level_sprites = {}
+      --open_door = false
+      level_sx, level_sy, level_x, level_y = 0, 0, level_transition[level_i+1], level_transition[level_i+2]
+      wait.controls, move_map, level_change, coin.dropped = false, false, false, false
+      level_lvl += 1
+      coresume(game)
+    end
+  end
+end
+
 function rocket_kill(rocket)
+  sfx(22)
   for enemy in all(enemy_spawned) do
     if distance(enemy, rocket) <= rocket.max_anim_steps then
       player_killed += 1
@@ -1071,41 +1102,39 @@ function rocket_kill(rocket)
   end
 end
 
-function draw_playerhp()
-  local hpcolor = 11
-  local hpratio = player_health/player_max_health
-  if (invtx == nil) invtx = 4
-  if (invtx > 4) invtx -= 1
+function drop_item(e)
+  if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
+end
 
-  if hpratio >= .5 then
-    hpcolor = 11
-  elseif hpratio >= .3 then
-    hpcolor = 9
-  elseif player_health == 1 and flr(time()*10000)%2==0 then
-    hpcolor = 6
-  else
-    hpcolor = 8
-  end
-
-  rectfill(player.x + 3, player.y + 1, player.x + 12, player.y + 1, 6) --background
-  rectfill(player.x + 3, player.y + 1, player.x + 3 + (9 * hpratio), player.y + 1, hpcolor) --hp bar
-  if (player_shield > 0) rectfill(player.x + 3, player.y + 1, player.x + 4 + (8 * (player_shield / 4.8)), player.y + 1, 12)
-
-  --if not time_diff(player.last_middle_click, .5) --[[or not time_diff(player.last_right, .5)]] then
-  if timers["showinv"] > 0 then
-    if (#player_inventory > 0) spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
-    if (#player_inventory > 1) spr(player_inventory[2].sprite, player.x + invtx + 9, player.y + 14)
-    if (#player_inventory > 2) spr(player_inventory[#player_inventory].sprite, player.x + invtx - 9, player.y + 14)
-    spr(112, player.x + 4, player.y + 14)
+function collide_all_enemies()
+  local e = enemy_spawned[1]
+  for o in all(enemy_spawned) do
+    if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
   end
 end
 
+function fix_enemy(o, e)
+  local function fix_coord(o,e,c)
+    if (o[c] - e[c]) < 0 then
+      o[c] = o[c] - 8
+    elseif (o[c] - e[c]) > 0 then
+      o[c] = o[c] + 8
+    elseif (o[c] == e[c]) then
+      o[c] = o[c] + 8
+    end
+  end
+  fix_coord(o,e,'x')
+  fix_coord(o,e,'y')
+end
 
---------------------------------------------------------------------------------
+function player_hit(d)
+  player_health -= d
+  sfx(18)
+  timers["playerlasthit"] = 2
+end
 ---------------------------------- constructor ---------------------------------
---------------------------------------------------------------------------------
 function _init()
-  init_mem()
+  k=0
   poke(0x5f2d, 1)
 
   title.init = time()
@@ -1115,482 +1144,202 @@ function _init()
 end --end _init()
 
 
---------------------------------------------------------------------------------
----------------------------------- update --------------------------------------
---------------------------------------------------------------------------------
+--================================ update ====================================--
 function _update()
-  --player.last_hit = abs(time() - 0.5) --uncomment for god mode
-  --collision()
+  --timers["playerlasthit"] = 1 --uncomment for god mode
   collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
-  -- local previousy = player.y
+  local move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
 
-  for k,t in pairs(timers) do
-    timers[k] = max(0, timers[k] - (1/30))
-  end
-
-  if not titlescreen then
-    if (btnp(c.x_button) or btnp(c.z_button)) titlescreen = true; --music(0)
-    return
-  end
-
-  if in_skilltree then
-    skills_selected[currently_selected] = false
-    local diff = 0
-    local function update_selec()
-            if selection_set[currently_selected] == "health" then
-              player_max_health += 1
-              player_health += 1
-            elseif selection_set[currently_selected] == "fire rate" then
-
-            elseif selection_set[currently_selected] == "speed" then
-              player_speed += .2
-            end
-            next_cost[currently_selected] = next_cost[currently_selected] + 1
-            player_tokens -= 1
-            sfx(2, 1, 0)
-          end
-    if btnp((c.up_arrow)) then
-      diff = 0xffff
-      sfx(4, 1, 0)
-    elseif btnp(c.down_arrow) then
-      diff = 1
-      sfx(4, 1, 0)
-    elseif btnp(c.x_button) then
-      if selection_set[currently_selected] == "quit" then
-        in_skilltree = false
-        sfx(1, 1, 0)
-      elseif (selection_set[currently_selected] == "health" and player_tokens >= next_cost[currently_selected]) then
-        update_selec()
-      elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
-        update_selec()
-      elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
-        update_selec()
-      else
-        --invalid = time()
-        timers["invalid"] = 0.5
-        sfx(2, 1, 0)
-      end
+  -- count down timers
+  for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
+  if (level_change)  levelchange()
+  if (titlescreen == nil and continuebuttons()) titlescreen = true; return
+  if (drawcontrols and continuebuttons()) showcontrols = false coresume(game); return
+  if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
+  if (in_skilltree) skill_tree(); return;
+  if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
+  if not wait.controls and seraph.text == nil then
+    --========================
+    --left mouse button-------
+    --========================
+    if stat(34) == 1 and timers["firerate"] == 0 then
+        shoot(player.x, player.y, player_angle, 34, true, false)
+        timers["firerate"] = player_fire_rate
+        sfx(2)
     end
-    currently_selected = ((currently_selected+diff)%#skills_selected)
-    if (currently_selected == 0) currently_selected = 4
-    skills_selected[currently_selected] = true
-    if player_tokens == 0 then
-      for i=1,5 do
-        flip()
-      end
-      in_skilltree = false
-    end
-    return
-  end
 
-  if not wait.controls and not drawdialog then
-    move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
-    --[[
-      up arrow
-    ]]
-    if (btn(c.up_arrow)) then
-      player.y -= move
-      add(moves, {player.x, player.y})
-      if (bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3)) player.y = previousy
-    end --end up button
-
-    --[[
-      down arrow
-    ]]
-    if (btn(c.down_arrow)) then
-      player.y += move
-      add(moves, {player.x, player.y})
-      if (bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12)) player.y = previousy
-    end --end down button
-
-    --[[
-      left arrow
-    ]]
-    if (btn(c.left_arrow)) then
-      player.x -= move
-      add(moves, {player.x, player.y})
-      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
-    end --end left button
-
-    --[[
-      right arrow
-    ]]
-    if (btn(c.right_arrow)) then
-      player.x += move
-      add(moves, {player.x, player.y})
-      if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
-    end --end right button
-
-    -- middle mouse button
-    if (stat(34) == 4) then -- cycle inventory
+    --========================
+    --middle mouse button-----
+    --========================
+    if stat(34) == 4 and timers["middleclick"] == 0 then -- cycle inventory
       local temp = 0
-      --if #player_inventory > 1 and time_diff(player.last_middle_click, .15) then
-      if timers["middleclick"] == 0 then
-        if #player_inventory > 1 then
-          for i=1,#player_inventory do
-            if i == 1 then
-              temp = player_inventory[i]
-            elseif i == #player_inventory then
-              player_inventory[i] = temp
-              break
-            end
-            player_inventory[i] = player_inventory[i+1]
+      if #player_inventory > 1 then
+        for i=1,#player_inventory do
+          if i == 1 then
+            temp = player_inventory[i]
+          elseif i == #player_inventory then
+            player_inventory[i] = temp
+            break
           end
+          player_inventory[i] = player_inventory[i+1]
         end
 
         timers["middleclick"] = .25
-        timers["showinv"] = .5
         if (#player_inventory == 2) invtx = 7
         if (#player_inventory > 2) invtx = 13
       end
-      --player.last_middle_click = time()
+      timers["showinv"], timers["showinv2"] = .5, 0
     end
 
-    --right mouse button
+    --========================
+    --right mouse button------
+    --========================
     if (stat(34) == 2) and #player_inventory > 0 and timers["rightclick"] == 0 then
-      timers["rightclick"] = player_power_fire_rate
+      local invt = player_inventory[1]
+      timers["rightclick"] = 1 -- player_power_fire_rate
 
-      if player_inventory[1].type == "shotgun" then
-        for i=-1,1 do
-          shoot(player.x, player.y, i*30, 34, true, false, true)
-        end
-        --timers["rightclick"] = .1 --allows for custom firespeed
-        --sfx(1,1)
-
-      elseif player_inventory[1].type == "rockets" then
-        shoot(player.x, player.y, 0, 48, true, false)
-        --sfx(10,1)
+      if invt.type == "shotgun" then
+        shoot(player.x, player.y, player_angle, 34, true, false, true)
+        sfx(20)
+      elseif invt.type == "rockets" then
+        shoot(player.x, player.y, player_angle, 48, true, false)
+        sfx(16)
       end
 
-      if player_inventory[1].ammo == 1 then
-        if (player_inventory[1].type ~= "rockets") sfx(3)
+      if invt.ammo == 1 then
+        if (invt.type ~= "rockets") sfx(3)
         del(player_inventory, player_inventory[1])
-        timers["showinv"] = .5
-        timers["rightclick"] = 1
-      else player_inventory[1].ammo -= 1 end
+        timers["rightclick"], timers["showinv"], timers["showinv2"] = 1, .5, 0
+      else
+        invt.ammo -= 1
+        timers["showinv2"] = 1.2 --player_power_fire_rate + 0.2
+      end
     end
 
+    --========================
+    --up button---------------
+    --========================
+    if btn(2) then
+      player.y -= move
+      add(moves, {player.x, player.y})
+      if (bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3)) player.y = previousy
+    end
+
+    --========================
+    --down button-------------
+    --========================
+    if btn(3) then
+      player.y += move
+      add(moves, {player.x, player.y})
+      if (bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12)) player.y = previousy
+    end
+
+    --========================
+    --left button-------------
+    --========================
+    if btn(0) then
+      player.x -= move
+      add(moves, {player.x, player.y})
+      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
+    end
+
+    --========================
+    --right button------------
+    --========================
+    if btn(1) then
+      player.x += move
+      add(moves, {player.x, player.y})
+      if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
+    end
+
+    --========================================================================--
     player_angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
+
+    if (player.x < 0) player.x = 0
+    if (player.y < 0) player.y = 0
+    if (player.x > 112) player.x = 112
+    if (player.y > 112) player.y = 112
+
+    if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
+
+    enem_exploder()
+    spawnenemies()
+    if (detect_killed_enemies) detect_kill_enemies()
+
   else
-    -- player.last_hit = time() - player_immune_time --make player invulnerable so they dont get hit when they can't move
+
     timers["playerlasthit"] = 0x.0001 --make player invulnerable so they dont get hit when they can't move
   end -- end wait.controls
 
-  --[[
-    z button
-    -- shoot for now, this can be changed later
-  ]]
-  -- if (btn(c.z_button)) then
-  --stat(34) -> button bitmask (1=primary, 2=secondary, 4=middle)
-  -- if (stat(34) == 1) then
-  --   --if drawdialog and not wait.dialog_finish and time_diff(player.last_click, 1)then
-  --   if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
-  --     --player.last_click = time()
-  --     timers["leftclick"] = 1
-  --     coresume(game)
-  --
-  --   elseif not drawdialog and not wait.controls then
-  --     player_b_count = inc(player_b_count)
-  --     --if time_diff(player.last_click, .25) or player_b_count%player_fire_rate == 0 then
-  --     if timers["leftclick"] == 0 or player_b_count%player_fire_rate == 0 then
-  --       --player.last_click = time()
-  --       timers["leftclick"] = .25
-  --       shoot(player.x, player.y, player_angle, 34, true, false)
-  --       sfx(1,1)
-  --     end
-  --   end
-  -- end --end z button
-  if (stat(34) == 1) then
-    if drawdialog and not wait.dialog_finish and timers["leftclick"] == 0 then
-      coresume(game)
-      timers["leftclick"] = 1
-
-    elseif not wait.controls and not drawdialog and timers["firerate"] == 0 then
-      shoot(player.x, player.y, player_angle, 34, true, false)
-      --sfx(1,1)
-      timers["firerate"] = player_fire_rate
+  --========================
+  --x button----------------
+  --========================
+  if btnp(5) and not level_change then
+    for t in all(tele_animation) do
+      t.anim_step = t.anim_length
     end
-  end
-
-  -- right mouse button
-  -- if (stat(34) == 2) and #player_inventory > 0 then
-  --   save_data()
-  --   load_data()
-  --   --if player_inventory[1] == 48 and time_diff(player.last_right, .25) then
-  --   if player_inventory[1].sprite == 48 and timers["rightclick"] == 0 then
-  --     shoot(player.x,player.y, 0, 48, true, false)
-  --     sfx(10,1)
-  --     if player_inventory[1].ammo == 1 then
-  --       del(player_inventory, player_inventory[1])
-  --     else
-  --       player_inventory[1].ammo -= 1
-  --     end
-  --     --player.last_right = time()
-  --     --player.last_middle_click = time() --so when the inventory switches after firing, it shows inventory
-  --     timers["rightclick"] = .25
-  --     timers["middleclick"] = .25
-  --   end
-  --   --if player_inventory[1] == 33 or time_diff(player.last_right, .25) then
-  --   if player_inventory[1].sprite == 33 and timers["rightclick"] == 0 then
-  --     player_b_count = inc(player_b_count)
-  --     --if player_b_count%player_fire_rate == 0 and time_diff(player.last_click, .25) then
-  --     if --[[player_b_count%player_fire_rate == 0 and]] timers["leftclick"] == 0 then
-  --       shoot(player.x, player.y, player_angle, 34, true, false, true)
-  --       shoot(player.x, player.y, 30, 34, true, false, true)
-  --       shoot(player.x, player.y, -30, 34, true, false, true)
-  --       sfx(1,1)
-  --     end
-  --
-  --     if player_inventory[1].ammo == 1 then
-  --       del(player_inventory, player_inventory[1])
-  --     else
-  --       player_inventory[1].ammo -= 1
-  --     end
-  --     --player.last_right = time()
-  --     timers["rightclick"] = 1
-  --   end
-  -- end
-
-  --[[
-    x button
-  ]]
-  if (btnp(c.x_button)) and not level_change and #tele_animation == 0 then
+    --seraph = {}
+    wait.dialog_finish = false
+    if (seraph.text == nil) kill_all_enemies(true)
     coresume(game)
-  end --end x button
-
-  --player.x = player.x - player.current_speed * sin((player_angle - player_turn) / 360)
-  --player.y = player.y - player.current_speed * cos((player_angle - player_turn) / 360)
-
-  if (level_change)  levelchange()
-
-  --player.current_speed = 0
-  --player_turn = 0
-  if (player.x < 0) player.x = 0
-  if (player.y < 0) player.y = 0
-  if (player.x > 112) player.x = 112
-  if (player.y > 112) player.y = 112
-
-  if player_shield > 0 and not wait.controls then
-    player_shield = player_shield - .01
-  elseif player_shield < 0 then
-    player_shield = 0
+  elseif level_change then
+    kill_all_enemies(true)
   end
+end
 
-  if (btn(c.left_arrow, 1)) level_sx += 1
-  if (btn(c.right_arrow, 1)) level_sx -= 1
-end --end _update()
 
 --------------------------------------------------------------------------------
 --------------------------------- draw buffer ----------------------------------
 --------------------------------------------------------------------------------
 function _draw()
   cls()
+
+  if (in_leaderboard) show_leaderboard(); return
+
   map(level_x, level_y, level_sx, level_sy, 128, 128)
 
-  if not titlescreen then
-    draw_titlescreen()
-    return
+  if (rnd(10) > 9.5) water_anim()
+    for i in all(water_anim_list) do
+    circ(i[1], i[2], i[3], i[4])
+    i[5] -= 1; if (rnd(5) > 4.5) i[3] = (i[3]+1)%4
+    if (i[5] == 0) del(water_anim_list, i)
   end
 
+  if (titlescreen == nil) draw_titlescreen(); return
 
-  if level_sprites ~= nil then
-    palt(5, true)
-    for i = 1, #level_sprites, 3 do
-      local x = level_sprites[i+1] + level_sx
-      local y = level_sprites[i+2] + level_sy
-      --spr_r(level_sprites[i], level_sprites[i+1] + level_sx, level_sprites[i+2] + level_sy, level_sprites[i+3], 1, 1)
-      spr(level_sprites[i], x, y)
-      --if x < 128 then del(level_sprites, ) end todo make this delete offscreen sprites
-    end
+  if player_health <= 0 then
+    sfx(22)
+    if (player.destroyed_step < player.destroy_anim_length) step_boss_destroyed_animation(player); return
+    sfx(9,1)
+    in_leaderboard = true
   end
-  palt()
 
+  if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
+  if (drawcontrols) draw_controls(); return
   if (open_door) opendoor()
+  if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
+  if (showplayer ~= nil) draw_playerhp()
+  if (showplayer ~= nil and timers["playerlasthit"] <= 0x.0001) then
+    spr_r(0, player.x, player.y, player_angle, 2, 2)
+  elseif showplayer ~= nil and timers["playerlasthit"] > 0x.0001 and flr(time()*1000%2) == 0 then
+    spr_r(0, player.x, player.y, player_angle, 2, 2)
+  end
 
-  if (showplayer ~= nil) spr_r(player_sprite, player.x, player.y, player_angle, 2, 2)
-  loop_func(moves, move_anim)
+  if (wait.timer) drawcountdown()
+
+  --=======================
+  --animations-------------
+  --=======================
+  foreach(moves, move_anim)
   moves = {}
+  foreach(destroyed_enemies, step_destroy_animation)
 
-  if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 12)
-
-  for e in all(enemy_spawned) do
-    -- this should never happen, but just in case:
-    delete_offscreen(enemy_spawned, e)
-
-    -- check if this sprite has been shot
-    for b in all(player_bullets) do
-      if ent_collide(e, b) then
-        player_killed += 1
-        del(enemy_spawned, e)
-        sfx(5,1)
-        add(destroyed_enemies, e)
-        del(player_bullets, b)
-        add(boss_hit_anims, b)
-        if (b.rocket) rocket_kill(b)
-        b = nil
-        e = nil
-        break
-      end
-    end
-
-
-    if e ~= nil then
-      -- if time_diff(player.last_hit, player_immune_time) and ent_collide(e) then
-      if timers["playerlasthit"] == 0 and ent_collide(e) then
-        if player_shield <= 0 then
-          player_health -= 1
-          sfx(2,2)
-          --player.last_hit = time()
-          timers["playerlasthit"] = player_immune_time
-        else
-          player_shield = player_shield - .15
-        end
-      end
-
-      if e.exploding and flr(time()*500)%2==0 then
-        pal()
-        pal(2,8,0)
-      end
-
-      if e.type == "shooter" then
-        pal(2,9,0)
-        pal(5,10,0)
-      elseif e.type == "exploder" then
-        pal(8,10,0)
-        pal(2,8,0)
-        pal(5,9,0)
-      else
-        pal()
-      end
-      spr(e.sprite, e.x, e.y)
-      pal()
-
-      if (e.explode_step == e.explode_wait) add(exploding_enemies, e)
-
-      e.move()
-    end
-  end
-
-  for e in all(exploding_enemies) do
-    if step_destroy_animation(e) then
-      -- if distance(e, player) <= 15 and time_diff(player.last_hit, player_immune_time) then
-      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
-        if player_shield <= 0 then
-          player_health -= 1
-          sfx(2,2)
-          -- player.last_hit = time()
-          timers["playerlasthit"] = player_immune_time
-        else
-          player_shield = player_shield - .15
-        end
-      end
-    end
-  end
-
-  loop_func(destroyed_enemies, step_destroy_animation)
-
-  for d in all(dropped) do
-    if ent_collide(d) then
-      if d.type == "heart" and player_health < player_max_health then
-        player_health = min(player_max_health, player_health+3)
-        sfx(7,1)
-        del(dropped, d)
-      elseif d.type == "shield" then
-        player_shield = player_shield_dur
-        sfx(4,1)
-        del(dropped, d)
-      elseif d.type ~= "heart" and #player_inventory < player_inv_max then
-        add(player_inventory, d)
-        if (#player_inventory < 4) timers["showinv"] = .5
-        sfx(6,1)
-        del(dropped, d)
-      end
-    end
-
-    if abs(time() - d.init_time) <= d.drop_duration then
-      if abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
-        spr(d.sprite, d.x, d.y)
-      elseif flr(time()*1000)%2==0 then
-        spr(d.sprite, d.x, d.y)
-      end
-    else
-      del(dropped, d)
-    end
-  end
-
-  for b in all(player_bullets) do
-    -- first delete offscreen bullets:
-    delete_offscreen(player_bullets, b)
-
-    if bump(b.x, b.y) then
-      del(player_bullets, b)
-      add(boss_hit_anims, b)
-      if (b.rocket) rocket_kill(b)
-      b = nil
-    end
-
-    if b ~= nil then
-      spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
-      b.move()
-      if (b.duration <= 0) del(player_bullets, b); b = nil
-
-    end
-
-    if b~=nil then
-      for bos in all(boss_table) do
-        if ent_collide(bos, b) then
-          sfx(4,1)
-          bos.health -= ((b.sprite == 48) and 3 or 1)
-          bos.shot_last = time()
-          bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
-          del(player_bullets, b)
-          add(boss_hit_anims, b)
-          if (b.rocket) rocket_kill(b)
-          if (bos.health <= 0) then
-            sfx(5,1)
-            add(destroyed_bosses, bos)
-            player_killed = player_killed+1
-            del(boss_table, bos)
-            coin.x = bos.x - level_sx
-            coin.y = bos.y - level_sy
-            bos = nil
-            coresume(game)
-          end
-          break
-        end
-      end
-    end
-  end
-
-  for b in all(enemy_bullets) do
-    -- first delete offscreen bullets:
-    delete_offscreen(enemy_bullets, b)
-
-    -- if time_diff(player.last_hit, player_immune_time) and ent_collide(player, b) then
-    if ent_collide(player, b) then
-      if timers["playerlasthit"] == 0 then
-        if player_shield <= 0 then
-          player_health -= 1
-          sfx(2,2)
-          -- player.last_hit = time()
-          timers["playerlasthit"] = player_immune_time
-        else
-          add(shield_anims, {b.x, b.y, 10})
-          player_shield = player_shield - .15
-        end
-      end
-      del(enemy_bullets, b)
-      b = nil
-    end
-
-    if b~=nil then
-      spr(b.sprite, b.x, b.y)
-      b.move()
-      if (bump(b.x, b.y)) del(enemy_bullets, b); b = nil
-    end
-  end
+  enem_spawned()
+  item_drops()
+  bullets_player()
+  bullets_enemies()
 
   for s in all(shield_anims) do
     local colors = {12, 13, 1}
@@ -1600,93 +1349,78 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    -- if time_diff(player.last_hit, player_immune_time) and ent_collide(player, b) then
-    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_health -= 2; timers["playerlasthit"] = player_immune_time
-    spr(b.sprite, b.x, b.y, 2, 2)
+    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
+    if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
+    else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
   end
 
-  loop_func(boss_hit_anims, boss_hit_animation)
+  foreach(boss_hit_anims, boss_hit_animation)
 
-  loop_func(destroyed_bosses, step_boss_destroyed_animation)
+  foreach(destroyed_bosses, step_boss_destroyed_animation)
 
-  loop_func(tele_animation, step_teleport_animation)
-
-  if player_health <= 0 then
-    sfx(9,1)
-    show_leaderboard()
-    run()
-  end
-
-  if (showplayer ~= nil) draw_playerhp()
+  foreach(tele_animation, step_teleport_animation)
 
   if (pget(stat(32), stat(33)) == 8 or pget(stat(32), stat(33)) == 2)  pal(8, 6)
   spr(96, stat(32) - 3, stat(33) - 3)
   pal()
 
-  --draw_hud()
-  if (spawn_enemies) spawnenemies()
-  if (detect_killed_enemies) detect_kill_enemies()
-  if (wait.timer) drawcountdown()
+
   if coin.dropped then
      spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], coin.x+level_sx, coin.y+level_sy, 2, 2)
      if ent_collide(player, coin) then
+       sfx(17,1)
        player_tokens += 1
-       coin.dropped = false
-       direction = nil
-       in_skilltree = true
+       coin.dropped,direction,in_skilltree = false, nil, true
      end
   end
 
-  if (drawdialog) dialog_seraph(seraph)
+  if (seraph.text ~= nil) draw_dialog()
 
-  -- if (abs(time() - player.last_hit) < 0.5) or (abs(time() - invalid) < 0.5) then
-  if (timers["playerlasthit"] > player_immune_time - 0.5) or (timers["invalid"] > 0) then
+  if (timers["playerlasthit"] > 2 --[[player_immune_time]] - 0.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
   end
 
   if (in_skilltree) skilltree()
-  if (in_leaderboard) draw_leaderboard()
 
   debug() -- always on bottom
-end --end _draw()
-
+end
 
 __gfx__
-000000000000000000000000555555555555555555555555533333355222222552a99a250000000000000000000000000000000000c00c000000000000000000
-00000000000000000000000055555555555555555555555533777b3322aaa92252a99a256601106666011066660110666601106666c11c660000000000000000
-000000000000000000000000555555555555555555555555377bbbb32aa9999252a99a2566199166661991666619916666199166661991660000000000000000
-0000000000000000000000005555555555999a5999a5555537bbbbb32a99999252a99a2566199166661991666619916666199166661991660000000000000000
-0000600000060000000000005555555555aaa559aaaa55553bbbbbb329999992529aa92566199166661991666619916666199166661991660000000000000000
-0000660cc06600000000000055555555555555555555555537bbbbb32a999992529aa92500511500005115000051150000511500005115000000000000000000
-00006619916600000000000055555555559a55599a59a55533bbbb3322999922522992250001100000c11c000c011000000110c0000110000000000000000000
-0000661991660000000000005555555555999a5aa55aaa555333333552222225555225550000000000c00c00c00000000000000c000000000000000000000000
-000066199166000000000000bb55555b555555555555555599555559000000005555555500000000000000000000000000000000000000000000000000000000
-00000051150000000000000053b555b555a5a99995559a5559955595000000005552255500000000000000000000000000000000000000000000000000000000
-000000011000000000000000553b55b555aa5aaaa55aaa5555999995000000005229922500000000000000000000000000000000000000000000000000000000
-000000000000000000000000553b55b555555555555555555559955500000000529aa92500000000000000000000000000000000000000000000000000000000
-000000000000000000000000553b5b55555555999aa555555559995500000000529aa92500000000000000000000000000000000000000000000000000000000
-00000000000000000000000053bbbb55555555aaaa555555559959950000000052a99a2500000000000000000000000000000000000000000000000000000000
-0000000000000000000000003bb355b55555555555555555559555950000000052a99a2500000000000000000000000000000000000000000000000000000000
-000000000000000000000000b355555b5555555555555555999555590000000052a99a2500000000000000000000000000000000000000000000000000000000
-00000000000000000000000053b00b35000000005bbbbbb522222222000000000000000000000000555555555555555500000000000000000000000000000000
-0ee00ee0000000000000000053b00b3507000070bb7773bb25555552000000000000000000000000555555555555555500000000000000000000000000000000
-e88ee88e000000000000000053b00b3507700770b773333b25555552000000000000000000000000555555555555555500000000000000000000000000000000
-e888888e666666600a0000a053b00b3578899887b733333b2555555200000000000000000000000055bbb35bbb35555500000000000000000000000000000000
-e888888e044004400a0000a0530bb03500899800b333333b255555520000000000000000000000005533355b3333555500000000000000000000000000000000
-0e8888e00000004400000000530bb03503088030b733333b25555552000000000000000000000000555555555555555500000000000000000000000000000000
-00e88e0000000000000000005330033500000000bb3333bb2225555200000000000000000000000055b3555bb35b355500000000000000000000000000000000
-000ee000000000000000000055533555000000005bbbbbb55522222200000000000000000000000055bbb3533553335500000000000000000000000000000000
-00088000990000990000000055555555771111770000000000000000a55a55550000000000000000555555555555555550000005000000000000000000000000
-00066000967766690003000055533555711111170000000000000000aa5aa55a000000000000000055353bbbb555b35500777600000000000000000000000000
-0006600097666669003b3000533003351111111100000000000000005a55a5aa0000000000000000553353333553335507766660000000000000000000000000
-000660009666665903b30000530bb0351111111100000000000000005aa5aaa50000000000000000555555555555555507666660000000000000000000000000
-000660000966669003b30000530bb03511111111000000000000000055aa55550000000000000000555555bbb335555507666660000000000000000000000000
-0086680009666590003b300053b00b3571111117000000000000000055a5a5550000000000000000555555333355555507666660000000000000000000000000
-08866880009559000003000053b00b357711117700000000000000005aa5aaaa0000000000000000555555555555555500666600000000000000000000000000
-00000000000990000000000053b00b35aaaaaaaa0000000000000000aa55555a0000000000000000555555555555555550000005000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000333333330000000076668888cccccccccccccccc
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000333333330000000065558222cccccccccccccccc
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000333333330000000065558222cccccccccccccccc
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb0000000065558888cccccccccccccccc
+0000600000060000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb0000000065558888cccccccccccccccc
+0000660cc0660000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb0000000065558222bbbbbbbbcc3bbbbb
+0000661991660000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb0000000065558222bbbbbbbbc333bbbb
+0000661991660000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb00000000d1118888bbbbbbbb33033bbb
+00006619916600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbb30003bbb
+00000051150000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb3333333330003bbb
+00000001100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbb30003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb3333333330003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbb30003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbb3333333330003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbb30003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000bbbbbbbbbbbbbbbb30003bbb
+00000000000000000000000000000000000000000000000000000000000000000000000076666661166666677666666666666667766111157666666730003bbb
+0ee00ee00000000000000000000000000000000000000000000000000000000000000000677777122177777d6555555555555551650000006555555130003bbb
+e88ee88e0000000000000000000000000000000000000000000000000000000000000000677771222217777d6555555555555551650000006555555330003bbb
+e888888e666666600a0000a0000000000000000000000000000000000000000000000000677712222221777d6555555555555551600000006555555bb3303bbb
+e888888e044004400a0000a0000000000000000000000000000000000000000000000000677122222222177d6555555555555551600000006555553330003bbb
+0e8888e00000004400000000000000000000000000000000000000000000000000000000671222222222217d655555555555555160000000655555bbb3303bbb
+00e88e000000000000000000000000000000000000000000000000000000000000000000612222222222221d6555555555555551600000006555533330003bbb
+000ee00000000000000000000000000000000000000000000000000000000000000000001222222222222221655555555555555150000000d1111bbbb3303bbb
+0008800099000099000000000000000000000000000000000000000000000000000000001222222222222221655555555555555100003bbb7111111500003bbb
+000660009677666900000000000000000000000000000000000000000000000000000000612222222222221d655555555555555100003bbb6000000000033333
+000660009766666900000000000000000000000000000000000000000000000000000000671222222222217d655555555555555100003bbb60000000000bbbbb
+000660009666665900000000000000000000000000000000000000000000000000000000677122222222177d655555555555555100003bbb6000000000333333
+000660000966669000000000000000000000000000000000000000000000000000000000677712222221777d655555555555555100003bbb6000000000bbbbbb
+008668000966659000000000000000000000000000000000000000000000000000000000677771222217777d655555555555555100003bbb6000000003333333
+088668800095590000000000000000000000000000000000000000000000000000000000677777122177777d655555555555555100003bbb650000000bbbbbbb
+0000000000099000000000000000000000000000000000000000000000000000000000007dddddd11dddddddd11111111111111d00003bbbd10000000bbbbbbb
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1719,14 +1453,14 @@ e888888e044004400a0000a0530bb03500899800b333333b25555552000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0300000000000300000a000000000000200000200000000000000000000000000000000000000000000000000c0000111000000c000700000000000000000000
-00300000000030000009000000000000020202000000000000000000000990000909909000000000000000000110011111000011007670000000000000000000
-0003000000030000000a00000000000002222200008880000000000000999900009aa90000000000000000000011011111000110076167000000000000000000
-00025555503000000a9a9a0000000000025552000082800000000000099aa99009aaaa9000000000000000000001111111111100761116700000000000000000
-0003885883200000000a000000000000028582000088800000000000099aa99009aaaa9000000000000000001111551515511110076167000000000000000000
-0333553553333000000900000000000002050200000000000000000000999900009aa90000000000000000001001885158810010007670000000000000000000
-3003333333000300000a000000000000202020200000000000000000000990000909909000000000000000001001555155510011000700000000000000000000
-00303030303000300000000000000000202020200000000000000000000000009090090900000000000000001101111111110001000000000000000000000000
+0300000000000300000a000000000000200000200000000099090990000000009090090988080880000000000c0000111000000c000700000000000000000000
+00300000000030000009000000000000020202000000000009090900000990000909909008080800000000000110011111000011007670000002200000000000
+0003000000030000000a00000000000002222200008880000999990000999900009aa90008888800000000000011011111000110076167000026620000000000
+00025555503000000a9a9a0000000000025552000082800099aaa990099aa99009aaaa9088999880000000000001111111111100761116700026620000000000
+0003885883200000000a0000000000000285820000888000098a8900099aa99009aaaa9008a9a800000000001111551515511110076167000002200000000000
+033355355333300000090000000000000205020000000000090a090000999900009aa90008090800000000001001885158810010007670000000000000000000
+3003333333000300000a000000000000202020200000000090909090000990000909909080808080000000001001555155510011000700000000000000000000
+00303030303000300000000000000000202020200000000090909090000000009090090980808080000000001101111111110001000000000000000000000000
 20303030300300000000000000000000000000000000000000000000000000000000000000000000000000000101000100010001000000000000000000000000
 33030030030300200000000000000000000000000000000000000000000000000000000000000000000000001101000100010011000000000000000000000000
 20003000300032000000000000000000000000000000000000000000000000000000000000000000000000001001000c00010010000000000000000000000000
@@ -1735,109 +1469,75 @@ e888888e044004400a0000a0530bb03500899800b333333b25555552000000000000000000000000
 0020000000200000000000000000000000000000000000000000000000000000000000000000000000000000c0110000001000c0000000000000000000000000
 02000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000c000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00555500000000009000000900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-05999950000000009008800900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-58855885000000009008800900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-05955950000000000998899000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00555500000000000098890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00099000000000000098890000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00055000000000000009900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00055000000000000009900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-666555663333333344444449cccccccfffccccccffcccccccccccccffccccccc55555555ccc7ccffcccccccc33333333633333339ddddddd5555555995555555
-677555773333333394444449c77ccccfffccc7ccffccc77cccccccff6cccc7cc53333333ccccccffcccccccc33333333633333339ddddddd5555559dd9555555
-675555553333333344444499cccccccfffccccccffccccccc77cccfffccccccc53333333cccccccfccc777cc33333333633333339ddddddd555559dddd955555
-675555553333b33344944999ccccccf6f6c777ccf6fcccccccccccfffcc77ccc53333333c77cccc6cccccccc33333333633333339ddddddd55559dddddd95555
-5555555533b3b3b344499999cc77ccffffccccccfffcccccccccccff6fcccccc53333333cccccccfc77ccccc33333333633333339ddddddd5559dddddddd9555
-675555763333333349999999cccccc6ff6fcccccffcc77cccc77ccfffffccccc53333333ccccccffcccccccc33333333633333339ddddddd559dddddddddd955
-555557763333333344999999ccff6fffffffffcc6fccccccccccccfff6ffccff53333333cffcccffff6ccccc33333333633333339ddddddd59dddddddddddd95
-555556663333333349999999fffffff336ff6ffffffcccccccccccff3fffff6f53333333ff6ffff3f6fff6ff33333333633333339ddddddd9dddddddddddddd9
-44444444449999999999996599999999cccccccc7663b6653333333355555555533333335555555599999999cccccccc33333333dddddddd9dddddddddddddd9
-44544444944999999999656599999999c7cccccc6553b5553333333355555555533333333333333599699999cccccccc33333333dddddddd59dddddddddddd95
-44444454444499999965656599999999cccc77cc653b65553333333366655555533333333333333599659999cccc7ccc33333333dddddddd559dddddddddd955
-44444444449449999935656599999999ccccc7cc6563b6553333333355655555533333333333333599650099cccccccc33333333dddddddd5559dddddddd9555
-44544444444449999965656599999999cccccccc656b33553333333366665555533333333333333599650000cccc777c33333333dddddddd55559dddddd95555
-44444544494449999965656500000000cc7ccccc6556bb356666333355565555533333333333333599655000cccccccc33333333dddddddd555559dddd955555
-45444444444444999965656500000000cccc77cc655553b55556633366666555533333333333333599655500c77ccccc33333333dddddddd5555559dd9555555
-44444444444444999965656500000000ccccc7cc55555b555555633355556555555555553333333596065550cccccccc33333333dddddddd5555555995555555
-3333333333999999996565657666666555555555766666656000655506666550555567753333333560006555055555bb55555555dddddddd555555556bb66bb6
-333333333339339999656535655555555555555565555555600065550555655055556ff53333333560006555055555b655555555dddddddd5555555566666666
-333339393933333999656565655555555555555560000000000065550555655055556ff53333333560006555055555b655555555dddddddd5555555555555555
-333333333333933999656565655555555555555565550000000065550555655055556ff53333333560006555055555bb55555555dddddddd5555555555555555
-333393933399933999656565100000005555555565000000000065550555655055556ff53333333560006555055555bb55555555dddddddd5555555555555555
-333333333933393999656510000000655555555565555500000065550555655055556ff53333333560006555055555b655555555dddddddd5555555555555555
-333333933333339999651000000065655555555565000000000065550555655055556ff53333333560006555055555b6bbbbbbbbdddddddd6666666655555555
-333339393339999999100000006565655555555555555000000065550555655055556ff55555555560006555055555bbb66bb66b999999996bb66bb655555555
-9999999999999999444444447666666576666665766111105116555555556775555563330000000044444445ddddddddddddddd9999999996655555555555566
-9999999999999999944944446555555565555555650000001006666666666ff5555563331111110044fff445d4444444ddddddd9ddddddddb65555555555556b
-99999999999999994444449465555555655555556555000010655555555556f555556333000000004f4f4f45d44fff44ddddddd9ddddddddb65555555555556b
-999999999999a9994494444465555555655555556555500010666666666666f555556333111110004ff4ff45d4f4f4f4ddddddd9dddddddd6655555555555566
-9999999999a9a9a944444944100000006555555565000000165555555555556555556333000000004f4f4f45d4ff4ff4ddddddd9dddddddd6655555555555566
-9999999999999999494444440000000065555555655500001666666666666665555563331111000044fff445d4f4f4f4ddddddd9ddddddddb65555555555556b
-9999999999999999444449440000000065555555655550001000000065555555555563330000000044444445d44fff44ddddddd9ddddddddb65555555555556b
-9999999999999999444444440000000055555555555555555555555555555555555563335555555555555555d4444444ddddddd9dddddddd6655555555555566
+00555500000000009000000900000000000000000000000000000000000000000000000000808000008080000000000000000000777777777777777700000000
+05dddd50000000009008800900000000000080000008000000000200002000000000000000505558555050000002220000000000777777777777777700000000
+5885588500000000900880090000000000005000000500000002020000202000000000000055588588555000002ddd2000000000777777777777777700000000
+05d55d5000000000099889900000000000005500005500000002002002002000c0000000000005555500000002dd2dd200000000777707777770777700000000
+0055550000000000009889000000000000050500005050000000202002020000cccccccc2000558585500020002d2d2000000000777707777770777700000000
+000dd000000000000098890000000000008005055050080000002022220200000000000c020800585008020002dd2dd2000000000777077dd770777000000000
+0005500000000000000990000000000000000555555000000000221111220000000000000020000500002000002ddd20000000000777072dd270777000000000
+000550000000000000099000000000000000054444500000002028822882020000000000020000555000020000022200000000000777072dd270770000000000
+0000000000000000000000000000000000555884488555500d020212212020d000000000200005555500002000000000000000000077002dd200770000000000
+00000000000000000000000000000000008005444450008000002022220200000000000000005005005000000000000000000000007700299200770000000000
+00000000000000000000000000000000000005544550000000020001100020000000000000080055500800000000000000000000007700299200770000000000
+00000000000000000000000000000000000055055055000000200002200002000000000000200058500020000000000000000000000000299200000000000000
+000000000000000000000000000000000005050000505000000d00222200d0000000000002000005000002000000000000000000777777022077777700000000
+00000000000000000000000000000000005005000050050000000200002000000000000000002055502000000000000000000000777777722777777700000000
+00000000000000000000000000000000008005000050080000000200002000000000000000020558550200000000000000000000777777277277777700000000
+00000000000000000000000000000000000008000080000000000000000000000000000022200505050022200000000000000000777772777727777700000000
+7666666733333333bbbbbbbbcccccccfffccccccffcccccccccccccffccccccc00000000ccccccffcccccccc55555555633333339ddddddd5555555995555555
+6555555133333333bbbbbbbbcccccccfffccccccffccccccccccccff6ccccccc00000000ccccccffcccccccc55555555633333339ddddddd5555559dd9555555
+6555555133333333bbbbbbbbcccccccfffccccccffccccccccccccfffccccccc00000000cccccccfcccccccc55555555633333339ddddddd555559dddd955555
+6553b5513333b333bbbbbbbbccccccf6f6ccccccf6fcccccccccccfffccccccc00000000ccccccc6cccccccc55555555633333339ddddddd55559dddddd95555
+655b355133b3b3b3bbbbbbbbccccccffffccccccfffcccccccccccff6fcccccc00000000cccccccfcccccccc55555555633333339ddddddd5559dddddddd9555
+6555555133333333bbbbbbbbcccccc6ff6fcccccffccccccccccccfffffccccc00000000ccccccffcccccccc55555555633333339ddddddd559dddddddddd955
+6555555133333333bbbbbbbbccff6fffffffffcc6fccccccccccccfff6ffccff00000000cffcccffff6ccccc55555555633333339ddddddd59dddddddddddd95
+d111111d33333333bbbbbbbbfffffff336ff6ffffffcccccccccccff3fffff6f00000000ff6ffff3f6fff6ff55555555633333339ddddddd9dddddddddddddd9
+4444444400000000ffffffffcccc6665ccccccccffffffff00000000665555556bb66bb66655555500000000cccccccc33333333dddddddd9dddddddddddddd9
+4454444400000000ffffffffcc656555ccccccccffffffff00000000b65555556666666bb655555500000000cccccccc33333333dddddddd59dddddddddddd95
+44444454000000006666666665656555ccccccccffffcccc00000000b65555555555556bb655555500000000cccccccc33333333dddddddd559dddddddddd955
+44444444000000006666666665656555ccccccccfffccccc0000000066555555555555666655555500000000cccccccc33333333dddddddd5559dddddddd9555
+44544444000000006666666665656555ccccccccfffccccc0000000066555555555555666655555500000000cccccccc33333333dddddddd55559dddddd95555
+44444544000000006666666665656555ccccccccffcccccc00000000b65555555555556bb655555500000000cccccccc33333333dddddddd555559dddd955555
+45444444000000006666666665656555ccccccccffcccccc00000000b66555555555556bb666666600000000cccccccc33333333dddddddd5555559dd9555555
+44444444000000006666666665656555ccccccccffcccccc0000000066665555555555666bb66bb600000000cccccccc33333333dddddddd5555555995555555
+3393399333339333666666666565666576666665f9fff9ff000000006666555555555566000000006bb66bb69ddd888888885555dddddddd555555556bb66bb6
+3339333339999393666666666565655565555555ff9fffff00000000b66555555555556b00000000b66666669ddd822222285555dddddddd5555555566666666
+3339393933393393666666666565655565555555fffffff900000000b65555555555556b00000000b65555559ddd822222285555dddddddd5555555555555555
+3399333339339993666666666565655565555555f9ff9fff00000000665555555555556600000000665555559ddd888888885555dddddddd5555555555555555
+3339939339399393666666666565655565555555ffffff9f00000000665555555555556600000000665555559ddd888888885555dddddddd5555555555555555
+3399333339399399666666666565000000000000ff9fffff00000000b65555555555556b00000000b65555559ddd822222285555dddddddd5555555555555555
+3393339333399393555555556500000000000000f9fff9ff00000000b65555556666666b00000000b65555559ddd822222285555dddddddd6666666655555555
+3339393939399993000000000000000000000000fff9ffff00000000665555556bb66bb600000000665555559ddd888888885555999999996bb66bb655555555
+9999999999999999444444447666666776666665ffffffffffffffff9ddd6666555555660000000044444445ddddddddddddddd9999999996655555555555566
+9999999999999999944944446555555165555555ffffffffffffffff59ddd66b5555556b0000000044fff445d4444444ddddddd9ddddddddb65555555555556b
+9999999999999999444444946555555165555555ffffffffffffffff559ddd6b5555596b000000004f4f4f45d44fff44ddddddd9ddddddddb65555555555556b
+999999999999a999449444446555555165555555ffffffffffffdfff5559dd6655559d66000000004ff4ff45d4f4f4f4ddddddd9dddddddd6655555555555566
+9999999999a9a9a9444449446555555165555555ffffffffffdfdfdf55559d665559dd66000000004f4f4f45d4ff4ff4ddddddd9dddddddd6655555555555566
+9999999999999999494444446555555100000000ffffffffffffffff5555596b559ddd6b0000000044fff445d4f4f4f4ddddddd9ddddddddb65555555555556b
+9999999999999999444449446555555100006555ffffffffffffffff5555556b59ddd66b0000000044444445d44fff44ddddddd9ddddddddb65555555555556b
+999999999999999944444444d111111d00656555ffffffffffffffff555555669ddd66660000000055555555d4444444ddddddd9dddddddd6655555555555566
 
 __gff__
-0001000000000101000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000002020202020202020000000000000002000000020202000202000000000000020000000202020002000000000000000000000000000200010100000001
+0000000000000101000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000100010002000000000000000000000001000001000000010000000000000000010100010100000101
 __map__
-<<<<<<< HEAD
-feefefefefefefefefefefefefefeffffefafa03ccc5dbdbdbd4dbdbdbd4dbc3dcc1dcdcdce0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb00000303f4f3f4f3f9f90303f403030303f400fc03d2d2d2030303e4ebd2d20303f30300000000000000000000000000
-fe0303030303030303030303030303fffefafa03ccc5dbd4dbdbd4dbd4dbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f1f0f0f0f0f0f0f1f0f0f0f0f0dad3d6cbcbcbcbcbcbcbcbcbcbcbcbcbcbcb000003f9c0c0f3f403c003030303030303f300d503030303030303e3e9d2d203cbf40300000000000000000000000000
-fe0303030303030303030303030303fffefafa03ccc4dbdbdbdbdbd4d4dbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0ea00f8cbcbcbcbcbcbcbcbcbcbcbcbcbcbcb0000c003030303f303030303030303f303c000dd03ced7f8e3e9f40303030303c0f40300000000000000000000000000
-fe030303cefdfdcf03030303030303fffefa0303ccdcc5d4dbd4dbdbdbc3c1dcdcdce0dcdcdcf0f0f0f0f0f0f1f0f0f0f0f0f0f0f1f0f0f0f0f0f0d2d5f4ea00f8d5cbcbd5cbcbd5cbcbd5cbcbd5cbcb000003030303030303030303030303f9f3f400ddddddf8f8e4c8f3cbc003030303030300000000000000000000000000
-fe030303cdfbfbfc03030303030303fffe030303ccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0d2f4f4f4ea00e8f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f3f9030303030303030303f3f40303030303030303030303e3e403f903e4030303030300000000000000000000000000
-fe030303deddfbfc03030303030303fffe030303ccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f2d1f0f0f0f0f0f0d2f4f4f4e5e600e8f4f4f4f4f4f4f4f4f4f4f4f4f4f4f403030303f403030303f303030303030303030303030303030303030303e3030303030300000000000000000000000000
-fe03030303cdfbfc03030303030303fffe030303ccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2c2f0f0f0f0f0f0e2e3d5f4f5f6f9f7f4f4f4f4f4f4f4f4f4f4f4f4f4f4f4f3f9f303f303030303f40303030303c00303030303030303030303030303030303030300000000000000000000000000
-fe03030303deeddf03030303030303ce03030303ccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f0f0f0f0f0f0f0f0f0e2e3f4f4f4f4cbd5cbcbd5cbcbd5cbcbd5cbcbd5cbcb000003f3c00303c003f303f3f403030303c000f60303030303030303030303f9f3030300000000000000000000000000
-fe0303030303030303030303030303cd03030303d0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0f0f0f0f0f0f0f0f0e2f3f3f3f3cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb000003c0f30303030303030303030303030300f60303030303030303030303fbfbfb0300000000000000000000000000
-fe0303030303030303030303030303cd03030303d0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb00000303f30303030303030303030303030300f6030303d20303030303e4030303cb0300000000000000000000000000
-fe0303030303030303030303030303de03030303ccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f1f0f0f0f0f0f0f1f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb00000303030303030303f3f90303030303c000f6030303d2d203030303c8030303f30300000000000000000000000000
-fe0303030303030303030303030303fffe030303ccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb00000303030303030303f4c0cb03030303c000f603d2d2d2d2d20303e4e40303f4c00300000000000000000000000000
-fe0303030303030303030303cefdfdfdfe030303ccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f1f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb0000030303030303030303030303030303f300cd03d2d2d2d2d20303e9da0303f9030300000000000000000000000000
-fe0303030303030303030303cdfbfbddfefa0303ccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb0000cbf4c0f3f303030303030303030303c000cd03d203d2d20303030303030303030300000000000000000000000000
-fe0303030303030303030303deedededfefafa03ccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb0000c0cbc0cbf3030303f30303030303f3c000cd03d203d2d20303030303030303030300000000000000000000000000
-feeecefdfdcfeeeeeeeeeeeeeeeeeefffefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0f0cbcbcbcbcbcbcbcbcbcbcbcbcbcbcbcb000003030303cbf3f40303f4f303f3cb0303e1cdd2d2d2d2d2e4cbf3f3f3f9e4f4030300000000000000000000000000
-0000000000e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8e8d2d2d2d2d2d203030303e403d2d2d2d2d2000000000000000000000000000000005c5c5c5c5c5c5c5c000000000000000000000000000000000000e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1000000000000000000000000000000000000000000000000000000000000
-0000000000d50303f7f8f8f8f8f703f6f8d503030303d8d2d2d203030303e303dac80303c8d2d2d200000000000000000000000000000000000000005c5c5c00000000000000000000000000000000000000e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1000000000000000000000000000000000000000000000000000000000000
-0000000000d5030303f7f7f7f70303f6f6f503030303d8d2d2d2e9e303c803c80303e9e403d2d2d2000000000000000000000000000000000000000000000000000000000000000000000000000000000000e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1e1000000000000000000000000000000000000000000000000000000000000
-0000000000d503030303030303030303f6f503030303d803e90303c803e9e3e3e3e303e303c803d200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000d503030303030303030303f6f503030303d6030303c8da03d2d2d2d2d2d2e90303e4e303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000d5e5e50303030303030303030303030303f6e3e403e403e3d2d2d2d2d2d2e3e3e3e9e403000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00e8e8e8e8f6f8d50303030303030303030303030303f6e9e3c803e3e3d2d2d2d2d2d2d2d2d2e3e303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0003030303030303030303030303f6d5030303030303f60303dac803d2e3e9d2d2d2d2d2d2d2e4e303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0003030303030303030303030303f6d5030303030303f6030303e903d2e303d2d2d2d2d2d2d2c8030300005b5b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00030303030303f6030303030303030303030303f6d9e6e4e4e3c803c8030303c8e303e4e3e303e30000005b5b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00030303030303f6f80303030303030303030303f6e10303030303030303030303030303030303030000005b5b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00030303030303f6f7f7f7f70303030303030303f600030303d203e3e40303030303da03030303030300005b5b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00d9d9d9d9030303030303030303030303030303f60003d2d2d2030303e9c8e3e3e403030303d2030300005b5b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000030303030303030303030303030303f60000d2d2d2d203e3e4e903030303d2d2d2d20300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000e5e5e5e5e5e5d50303030303030303f60000000000d20303030303030303000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000e1e1e1e1e1e1e5e5e5e5e5e5e5e5e5e500000000005c5c5c5c5c5c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-=======
-eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbd4dbdbdbd4dbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5f6f5f5f5f5f5f5c5d4d4d4c6dddddddddddddddddddddddddddddddddcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdddddddddddddddddddddddddddddddd0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbd4dbdbd4dbd4dbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5f5f5f5f5f6f5f5c5d4d4d4c6dd0000000000000000000000000000dddc0000000000000000000000000000dcdd0000000000000000000000000000dd0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbd4d4dbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5f5f5f5f5f5f5d5d4d4d4d4c6dd0000000000000000000000000000dddc0000000000000000000000000000dcdd0000000000000000000000000000dd0000000000
-fecbcbcbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5d4dbd4dbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4d4c6dd0000000000000000000000000000dddc0000000000000000000000000000dcdd0000000000000000000000000000dd0000000000
-fecbcbcbcdfbfbfccbcbcbcbcbcbcbfffecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5f5f5f5f6f5f5c5d4d4d4d4c3dd0000000000000000000000000000dddc0000000000dc0000000000000000dcdd00000000dddddddddddddd000000dd0000000000
-fecbcbcbdeddfbfccbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5f5f5f5f5f5f5c5d4d4d4c600dd00000000dddddddddd0000000000dddc00000000dcdc0000000000000000dcdd00000000000000000000dd000000dd0000000000
-fecbcbcbcbcdfbfccbcbcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4c600dd00000000dd000000000000000000dddc00000000dc000000000000000000dcdd000000000000000000dd00000000dd0000000000
-fecbcbcbcbdeeddfcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0f2d0d0f5f5f5f5f6f5f5f5f5f5f5f5f5d5d4d4d4d4c600dd00000000dd000000000000000000dddc00000000dc000000000000000000dcdd000000000000000000dd00000000dd0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbd0d0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5d0f2d0f2d0d0f5f5f5f5f6f5f5f5f5f5c5d4d4d4d4c300dd00000000dddddddd000000000000dddc00000000dc000000000000000000dcdd0000000000000000dddd00000000dd0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbd0cbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5d0d0d0d0f5f5f5f5f5f5f6f5f5c5d4d4d4c60000dd00000000000000dd000000000000dddc00000000dcdcdcdcdc0000000000dcdd0000000000000000dd0000000000dd0000000000
-fecbcefdfdfdcfcbcbcbcbcbcbcbcbebeccbcbcbccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5d0d0d0d0d0f5f5f5f5f5f5c5d4d4d4c60000dd00000000000000dd000000000000dddc00000000dcdc000000dc00000000dcdd0000000000000000dd0000000000dd0000000000
-fecbcdfbddddfccbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0e5f0f5f5f5f5f5f5f5d0d0d0d0d0d0d0d0d2d2d2d2d2d2d2d200dd00000000000000dd000000000000dddc00000000dc00000000dc00000000dcdd0000000000000000dd0000000000dd0000000000
-fecbcdfbfbddfccbcbcbcbcbcefdfdfdfecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5d0d0d0d0d0e2e2e2e2e2e2e2e200dd00000000dddddddd000000000000dddc00000000dcdc0000dcdc00000000dcdd0000000000000000000000000000dd0000000000
-fecbcdfbfbfbfccbcbcbcbcbcdfbfbfbfefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4d4c30000dd0000000000000000000000000000dddc000000000000dcdcdc0000000000dcdd0000000000000000000000000000dd0000000000
-fecbdeedededdfcbcbcbcbcbdeedededfefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5f6f5f5c5d4d4d4c6000000dd0000000000000000000000000000dddc0000000000000000000000000000dcdd0000000000000000000000000000dd0000000000
-d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0e5f5e5f5f5f5f6f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4c6000000dddddddddddddddddddddddddddddddddcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdddddddddddddddddddddddddddddddd0000000000
+eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbd4dbdbdbd4dbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5f6f5f5f5f5f5f5c5d4d4d4d4c2c2c2c2c2c2c2c2c2c2c2c2c2c2c2c23b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbd4dbdbd4dbd4dbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5f5f5f5f5f6f5f5c5d4d4d4d4c2c0c0c2c2c2f3f3f3f3c2c2c2c0c0c22b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbd4d4dbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5f5f5f5f5f5f5d5d4d4d40f0ec2c00bc2f3f3f3f3f3f3f3f3c20bc0c23b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
+fecbcbcbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5d4dbd4dbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4d41f1dc20bc2f32b2c2b2c2b2c2b2cf3c20bc22b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d2b2c3b3c2b0000000000
+fecbcbcbcdfbfbfccbcbcbcbcbcbcbfffecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5f5f5f5f6f5f5c5d4d4c01f1df3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c3b3c3b3c3b3c3b3c3bc01dc01dc01dc01d1d1d2b2c3b3c2b2c3b0000000000
+fecbcbcbdeddfbfccbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5f5f5f5f5f5f5c5d4d3f31f1d2b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf30dec2b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcdfbfccbcbcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0f5f5f5f5f5f5f5f5c5d3c02e2f1d3b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf30dec3b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbdeeddfcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0f5f5f5f5f5f5f5d5d3c0f32d3d1d2b2c2b2c2b2cf3c2c2f32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf30dec2b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbd0d0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5f5f5f5f5dbe3f4c03e3f1e3b3c3b3c3b3cf3c2c2f33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf30dec3b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbd0cbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f6f5f5c5d4e3f4c0f3c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf30dec2b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcefdfdfdcfcbcbcbcbcbcbcbcbebeccbcbcbccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4e3e4e4e43b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3c3b3cf30dec3b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcdfbddddfccbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0e5f0f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5d5d4d4d4d4d4d4d4f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2c2b2c2b2c2bc00bc00bc00bc00b0b0b3b3c2b2c3b3c2b0000000000
+fecbcdfbfbddfccbcbcbcbcbcefdfdfdfecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5f5f5f5f5f5f5c5d4d4d4d4d4d4d40b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d0b1d0b1d0b1d1d1d0b0b3b3c2b2c3b0000000000
+fecbcdfbfbfbfccbcbcbcbcbcdfbfbfbfefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4d4d4d4d4c2c0c20bf3f33b3c3b3cf3f30bc2c0c22b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d0b0b3b3c2b0000000000
+fecbdeedededdfcbcbcbcbcbdeedededfefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5f6f5f5c5d4d4d4d4d4d4d4c2c0c0c20b0bf3f3f3f30b0bc2c0c0c23b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
+d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0e5f5e5f5f5f5f6f5f5f5f5f5f5f5f5f5f5f5c5d4d4d4d4d4d4d4c20b0bc2c2c20b0b0b0bc2c2c20b0bc22b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0b0000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1854,16 +1554,15 @@ d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000005c5c5c5c5c5c000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
->>>>>>> master
 __sfx__
-000100000d1501215016150191501b150000000000006000190000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00040000160501620016100191001b100000000000006000190000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00100000070500a5500e0000e70000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000263006010061101b3001b4001b5001b6001b700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0002000030340194402b34011430223300b4301e33008430163200541011310024100b31000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000001c150151500f1000100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00100000080500d0500f0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000c6500e65011650136200e620096100b6100b6001420000000000000000000000000000000000000000000000000000000000c2000220000000000000000000000000000000000000000000000000000
-001000000e35010350143500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00100000055500a550105701971009100171002310000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000b0000080500d0500f0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00050000162300b43012220064200d210054100b6000b6001420000000000000000000000000000000000000000000000000000000000c2000220000000000000000000000000000000000000000000000000000
+000a00000e35010350143500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500001b060232601606027260100602b2600c0602f2600705033250382501b0501f2501705025250100502c2500c050352503a2500b340103301432018310213001f3001d3001b30019300173000000000000
 001000001335013350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000d0500d0500d0500d0500d0500d0500c0500c0500c0500c0500c0500c0500c05007050070500705007050070500704007040070300702007010070100701007010010000400003000030000300003000
 000a000013040140501805014000190001e0002400020500016000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1872,14 +1571,14 @@ __sfx__
 0010000e096501b650036001b50009600000000a6501a6501860000000000000c6000b600000000000000000000000000000000000000000000000000003f7000000000000000000000000000000000000000000
 0010000b073000255005350053100a3500a3100735007310103501031013300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00100013047500675006750067500675004750097500975009750097500975009750097500675006750067500575005750057500a7500a7500a7500a750097500975008750057500675006750057500575004750
-001000000362004620046200462003630036200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000900000362004620046200462003630036200160001600016000160001600016000160001600000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000500001c05021050260502c0503105031000280002d000280002a0002c0002e0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000200002d65026650206501c64017640116400b620356201a620156200d620136202b6002a600216001f6000c600096000860000000000000000000000000000000000000000000000000000000000000000000
+00040000062100a210132501a250052100b210162501c250000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0003000019650176400f6400c63009620036100361003610036100361000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000900002f0502b150242501c1402f0202c110232101c1202f0302c130212501c1502f0502c150202301b1202e0202c110202201b1202f0502d00000000000002265022630216301f6201a610166101361010610
+000600000d65013650186501b6500231012650166501f650256502265030650033101b650166401463013630126300f6300d6200b6200a6100961008610076100661000000000000000000000000000000000000
+0003000028250202301a230102200c220082100720005200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
