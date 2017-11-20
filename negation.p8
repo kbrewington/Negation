@@ -22,7 +22,6 @@ player_killed = 0
 player_tokens = 0
 
 level_lvl = 1
-level_i = 3*level_lvl+1
 level_sx = 0
 level_sy = 0
 level_x = 0
@@ -122,9 +121,9 @@ function debug()
 
   print(""..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
   print(level_lvl, 0, 12, debug_color)
---if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
-  print((level_transition[level_i+1] - 12) * 8, 0, 18, debug_color)
-  print(abs(level_sx - ((level_lvl-1) * 128)), 45, 18, debug_color)
+
+  print("", 0, 18, debug_color)
+  print("", 45, 18, debug_color)
 end
 
 function gameflow()
@@ -204,6 +203,7 @@ function gameflow()
   spawn_time_start,detect_killed_enemies = 90, true
   yield()
 
+  kill_all_enemies(true)
   init_tele_anim(boss(60, 60, 128, 1, 40))
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
 
@@ -214,12 +214,31 @@ function gameflow()
   yield()
 
   -- start level 5 (aoe boss)
-  fill_enemy_table(1, 10)
-  spawn_time_start,detect_killed_enemies = 10, true
+  fill_enemy_table(3, 75)
+  spawn_time_start,detect_killed_enemies = 75, true
   yield()
 
-  init_tele_anim(boss(60, 60, 164, 4, 40))
+  init_tele_anim(boss(56, 52, 164, 4, 40))
   yield()
+
+  kill_all_enemies(true)
+  level_change = true
+  yield()
+
+  -- start level 6 "final" boss
+  fill_enemy_table(3, 75)
+  spawntime_start,detect_killed_enemies = 75, true
+  yield()
+
+  kill_all_enemies(true)
+  init_tele_anim(boss(50, 50, 169, 6, 50))
+  yield()
+
+  level_change = true
+  yield()
+
+  -- start level 7 final boss
+
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -240,7 +259,7 @@ function minimum_neighbor(start, goal)
       for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) and not bump(nx, ny, 2) then
           local current = enemy(nx, ny)
           local cur_distance = distance(current, goal)
           if cur_distance < minimum_dist then
@@ -1038,21 +1057,21 @@ function detect_kill_enemies()
 end
 
 function kill_all_enemies(no_drop_items)
-  enemy_table = {}
-
   for e in all(enemy_spawned) do
     if (no_drop_items) e.drop_prob = 0
     del(enemy_spawned, e)
     add(destroyed_enemies, e)
   end
 
-  for b in all(boss_table) do
-    del(boss_table, b)
-    add(destroyed_bosses, b)
-    coin.x = b.x - level_sx
-    coin.y = b.y - level_sy
-    b = nil
-  end
+    for b in all(boss_table) do
+      del(boss_table, b)
+      add(destroyed_bosses, b)
+      coin.x = b.x - level_sx
+      coin.y = b.y - level_sy
+      b = nil
+    end
+
+  enemy_table = {}
 end
 
 function levelchange()
@@ -1065,11 +1084,11 @@ function levelchange()
 
   if not move_map then
     if btn(0) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
-      level_sx += player_speed
+      level_sx += move
       if player.x < farx then player.x = farx end
     end
     if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
-      level_sx -= player_speed
+      level_sx -= move
       if player.x > farx then player.x = farx end
     end
   end
@@ -1157,7 +1176,7 @@ function _update()
   collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
-  local move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
+  move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
   if ((bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) and timers["playerlasthit"] == 0) player_hit(1)
 
   -- count down timers
@@ -1526,9 +1545,8 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 999999999999999944444444d111111d00656555ffffffffffffffff555555669ddd66660000000055555555d4444444ddddddd9dddddddd6655555555555566
 
 __gff__
-0000000000000101000000060000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000101010002000000000000000000000001010101000000000000000000000000010100010100000100
-
+0000000000000101000000860000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000820200000101010002000000000000008200000001010101000000000000000000000000010100010100000100
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
