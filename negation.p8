@@ -78,7 +78,6 @@ tele_animation = {}
 boss_hit_anims = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
-exploding_enemies = {}
 water_anim_list = {}
 
 -- inventory
@@ -151,7 +150,8 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 1, 40))
+  -- 128, 1
+  init_tele_anim(boss(60, 60, 128, 3, 40))
   yield()
 
   kill_all_enemies(true)
@@ -322,12 +322,14 @@ end
 
 function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
+  e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
   e.destroy_sequence = {135, 136, 135}
+  e.walking = {132, 134, 137}
   e.drops = {32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
-  e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
+  e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 8, 132, type
+  e.speed = type == "exploder" and .7 or .35
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -408,12 +410,24 @@ function boss(startx, starty, sprite, lvl, hp)
                end
              end
            elseif b.level == 3 then
+             if #enemy_spawned > 0 or #enemy_table > 0 then
               local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
               if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
               if (distance(player, b) <= 30+8) shoot(b.x, b.y, p_ang, 141, false, true)
+            else
+              b.angle = (b.angle+2)%360
+              b.x = 60
+              b.y = 60
+              for i=1,360,180 do
+                shoot(b.x, b.y, i+b.angle, 141, false, true)
+                -- for j=1,120,15 do
+                --   if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+j+b.angle, 141, false, true)
+                -- end
+              end
+            end
            elseif b.level == 4 then
              if abs(time()*10)%2 == 0 then
                b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
@@ -454,6 +468,10 @@ function boss(startx, starty, sprite, lvl, hp)
                  add(boss_table, boss(b.x+rnd(10), b.y+rnd(10), b.sprite, 6))
                end
              end
+           elseif b.level == 10 then
+             b.x = player.x+50*sin(p_ang/360)
+             b.y = player.y+50*cos(p_ang/360)
+             if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -705,10 +723,10 @@ function enem_spawned()
         pal()
         pal(2,8,0)
       end
-      spr(e.sprite, e.x, e.y)
+      if (not e.dont_move) then spr(e.walking[flr(time()*5)%#e.walking+1], e.x, e.y) else spr(e.sprite, e.x, e.y) end
       pal()
 
-      if (e.explode_step == e.explode_wait) add(exploding_enemies, e)
+      if (e.explode_step == e.explode_wait) add(destroyed_enemies, e); del(enemy_spawned, e)
 
       e.move()
     end
@@ -830,28 +848,28 @@ end
     draw enemy destruction animation to screen
   ]]
 function step_destroy_animation(e)
-
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
+    if e.type == "exploder" then
+      circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+      if e.destroyed_step >= e.destroy_anim_length then
+        del(destroyed_enemies, e)
+        del(enemy_spawned, e)
+        if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
+          if player_shield <= 0 then
+            player_hit(1)
+          else
+            player_shield -= .15
+          end
+        end
+      end
+    end
   else
     drop_item(e)
     del(destroyed_enemies, e)
   end
-
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step += 1
-
-  if e.type == "exploder" then
-    circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
-    e.destroyed_step += 1
-    if e.destroyed_step >= e.destroy_anim_length then
-      del(destroyed_enemies, e)
-      del(exploding_enemies, e)
-      del(enemy_spawned, e)
-      return true
-    end
-    return false
-  end
 end
 
 function boss_hit_animation(bul)
@@ -951,6 +969,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
       add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
     end
   elseif boss then
+    -- if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet((x-sin(a/360)),(y-cos(a/360)),a,spr,friendly)) end; return
     add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
@@ -975,14 +994,17 @@ function skill_tree()
         player_health += 1
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
         player_fire_rate = max(.1, player_fire_rate-.15)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
         player_speed += .2
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     else
       timers["invalid"] = 0.5
       sfx(3)
@@ -1000,48 +1022,22 @@ function skill_tree()
   return
 end
 
-function enem_exploder()
-  for e in all(exploding_enemies) do
-    if step_destroy_animation(e) then
-      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
-        if player_shield <= 0 then
-          player_hit(1)
-        else
-          player_shield -= .15
-        end
-      end
-    end
-  end
-end
-
 function fill_enemy_table(level, lvl_timer)
-  local types = {"shooter", "basic", "exploder"}
+  local types = {"basic", "shooter", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
   end
 end
 
 function spawnenemies()
   if (#enemy_table == 0) timers["spawn"] = 0; return
   if (timers["spawn"] == 0) timers["spawn"] = spawn_time_start
-  local types = {"basic", "shooter", "exploder"} --1, 2, 3
   for enemy in all(enemy_table) do
     if spawn_time_start - timers["spawn"] >= enemy.time then
       repeat
         enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
       until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
-
-      if (level_lvl == 1) enemy.type = types[1]
-      if level_lvl == 2 then
-        enemy.type = "basic"
-        if (rnd(99) < 20) enemy.type = "shooter"
-      end
-      if level_lvl == 3 then
-        if enemy.type == "exploder" then
-          if (rnd(99) < 80) enemy.type = types[1+rnd(1)]
-        end
-      end
 
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -1291,7 +1287,6 @@ function _update()
 
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
 
-    enem_exploder()
     spawnenemies()
     if (detect_killed_enemies) detect_kill_enemies()
 
@@ -1376,7 +1371,8 @@ function _draw()
 
   for b in all(boss_table) do
     if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
-    if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
+    if (b.level ~= 3 and b.level ~= 10) then spr(b.sprite, b.x, b.y, 2, 2)
+    elseif b.level == 10 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
   end
@@ -1403,7 +1399,7 @@ function _draw()
 
   if (seraph.text ~= nil) draw_dialog()
 
-  if (timers["playerlasthit"] > 2 --[[player_immune_time]] - 0.5) or (timers["invalid"] > 0) then
+  if (timers["playerlasthit"] > 1.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
@@ -1479,14 +1475,14 @@ e888888e044004400a0000a000000000000000000000000000000000000000000000000067712222
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0300000000000300000a000000000000200000200000000099090990000000009090090988080880000000000c0000111000000c000700000000000000000000
-00300000000030000009000000000000020202000000000009090900000990000909909008080800000000000110011111000011007670000002200000000000
-0003000000030000000a00000000000002222200008880000999990000999900009aa90008888800000000000011011111000110076167000026620000000000
-00025555503000000a9a9a0000000000025552000082800099aaa990099aa99009aaaa9088999880000000000001111111111100761116700026620000000000
-0003885883200000000a0000000000000285820000888000098a8900099aa99009aaaa9008a9a800000000001111551515511110076167000002200000000000
-033355355333300000090000000000000205020000000000090a090000999900009aa90008090800000000001001885158810010007670000000000000000000
-3003333333000300000a000000000000202020200000000090909090000990000909909080808080000000001001555155510011000700000000000000000000
-00303030303000300000000000000000202020200000000090909090000000009090090980808080000000001101111111110001000000000000000000000000
+0300000000000300000a000000000000200000020000000020000002000000009090090920000002000000000c0000111000000c000700000000000000000000
+00300000000030000009000000000000020220200000000002022020000990000909909002022020000000000110011111000011007670000002200000000000
+0003000000030000000a00000000000002222220008880000222222000999900009aa90002222220000000000011011111000110076167000026620000000000
+00025555503000000a9a9a0000000000025555200082800002555520099aa99009aaaa9002555520000000000001111111111100761116700026620000000000
+0003885883200000000a000000000000028558200088800002855820099aa99009aaaa9002855820000000001111551515511110076167000002200000000000
+0333553553333000000900000000000002055020000000000205502000999900009aa90002055020000000001001885158810010007670000000000000000000
+3003333333000300000a000000000000202002020000000020200202000990000909909020200202000000001001555155510011000700000000000000000000
+00303030303000300000000000000000202002020000000000200002000000009090090920000200000000001101111111110001000000000000000000000000
 20303030300300000000000000000000000000000000000000000000000000000000000000000000000000000101000100010001000000000000000000000000
 33030030030300200000000000000000000000000000000000000000000000000000000000000000000000001101000100010011000000000000000000000000
 20003000300032000000000000000000000000000000000000000000000000000000000000000000000000001001000c00010010000000000000000000000000
