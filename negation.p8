@@ -1,9 +1,7 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
---============================================================================--
 --=============================== global variables  ==========================--
---============================================================================--
 player = {
   x = 60,
   y = 60,
@@ -24,6 +22,7 @@ player_killed = 0
 player_tokens = 0
 
 level_lvl = 1
+level_i = 3*level_lvl+1
 level_sx = 0
 level_sy = 0
 level_x = 0
@@ -121,11 +120,11 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print("m "..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
-  print(rev, 0, 12, debug_color)
-
-  print(124+level_sx-((level_lvl-1)*127), 0, 18, debug_color)
-  print("", 45, 18, debug_color)
+  print(""..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
+  print(level_lvl, 0, 12, debug_color)
+--if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
+  print((level_transition[level_i+1] - 12) * 8, 0, 18, debug_color)
+  print(abs(level_sx - ((level_lvl-1) * 128)), 45, 18, debug_color)
 end
 
 function gameflow()
@@ -211,19 +210,24 @@ function gameflow()
   level_change = true
 
   -- start level 5 (aoe boss)
-  seraph.text = "dig bick"
-  yield()
-
-  init_tele_anim(boss(100, 60, 160, 6, 40))
+  fill_enemy_table(1, 10)
+  spawn_time_start,detect_killed_enemies = 10, true
   yield()
 
   level_change = true
-  --start level 6
-  yield()
-  level_change = true
-  --start 7?
   yield()
 
+  seraph.text = "test"
+  yield()
+
+  yield()
+
+  level_change = true
+  yield()
+
+  yield()
+
+  level_change = true
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -544,7 +548,7 @@ function draw_dialog()
   local d = seraph.text
 
   if (seraph.step == nil) seraph.step = 0
-  if (seraph.step < #d) wait.dialog_finish = true
+  if (seraph.step < #d) wait.dialog_finish = false
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -685,18 +689,18 @@ function enem_spawned()
         end
       end
 
-      if e.exploding and flr(time()*500)%2==0 then
-        pal()
-        pal(2,8,0)
-      end
-
       if e.type == "shooter" then
         pal(2,1,0)
         pal(5,13,0)
-      elseif e.type == "exploder" then
+      elseif e.type == "exploder" and not e.exploding then
         pal(8,10,0)
         pal(2,8,0)
         pal(5,9,0)
+      end
+
+      if e.exploding and flr(time()*500)%2==0 then
+        pal()
+        pal(2,8,0)
       end
       spr(e.sprite, e.x, e.y)
       pal()
@@ -727,8 +731,8 @@ function item_drops()
       end
     end
 
-    if (d.type == "shotgun" and (pget(d.x+2, d.y+4) == 4) or pget(d.x+3, d.y+4) == 4) pal(4,0,0)
-    if (d.type == "shield" and (pget(d.x+4,d.y+7) == 9) or pget(d.x, d.y) == 9) pal(9,12,0)
+    if (d.type == "shotgun" and (pget(d.x+2, d.y+4) == 4 or pget(d.x+3, d.y+4) == 4)) pal(4,0,0)
+    if (d.type == "shield" and (pget(d.x+4,d.y+7) == 9 or pget(d.x, d.y) == 9)) pal(9,12,0)
 
     if abs(time() - d.init_time) <= d.drop_duration then
       if abs(time() - d.init_time) <= 2*(d.drop_duration/3) then
@@ -1071,7 +1075,7 @@ function levelchange()
   local farx = 100
 
   level_i = 3*level_lvl+1
-  if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
+  if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - level_x * 8)) move_map = true
 
   --todo add map centering on player in the beginning
 
@@ -1089,7 +1093,7 @@ function levelchange()
   if move_map ~= nil and move_map then
     wait.controls = true
 
-    if level_transition[level_i+1]*8 > abs(level_sx - ((level_lvl-1) * 128)) then
+    if level_transition[level_i+1]*8 > abs(level_sx - level_x * 8) then
       level_sx = flr(level_sx) - 1
       player.x -= 1
 
