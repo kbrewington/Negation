@@ -122,7 +122,7 @@ function debug()
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
   print("m "..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
-  print("", 0, 12, debug_color)
+  print(rev, 0, 12, debug_color)
 
   print(124+level_sx-((level_lvl-1)*127), 0, 18, debug_color)
   print("", 45, 18, debug_color)
@@ -375,6 +375,7 @@ function boss(startx, starty, sprite, lvl, hp)
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
   timers["bossstart"] = (lvl == 6) and 12 or 1000
+  rev = 1
   b.draw_healthbar = function()
              --health bar
              if (b.sprite == 128 or 139) xoffset = 1
@@ -383,16 +384,14 @@ function boss(startx, starty, sprite, lvl, hp)
            end
   b.update = function()
            local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
+           if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
            if b.level == 1 then
              b.angle = (b.angle+1)%360
-             for i=0,3 do
-               if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, (b.angle + (90*i)), 130, false, true)
+             for i=1,360,90 do
+               if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+(rev*b.angle), 141, false, true)
              end
-
-             path = minimum_neighbor(b, player)
-             b.x = b.x + ((b.x-path.x)*b.speed)*(-1)
-             b.y = b.y + ((b.y-path.y)*b.speed)*(-1)
-
+             b.x = b.x - .01*sin(p_ang/360)
+             b.y = b.y - .01*cos(p_ang/360)
            elseif b.level < 3 then
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%b.fire_rate == 0 then
