@@ -152,7 +152,8 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 1, 40))
+  -- 128, 1
+  init_tele_anim(boss(60, 60, 5, 10, 40))
   yield()
 
   kill_all_enemies(true)
@@ -444,6 +445,10 @@ function boss(startx, starty, sprite, lvl, hp)
                  add(boss_table, boss(b.x+rnd(10), b.y+rnd(10), b.sprite, 6))
                end
              end
+           elseif b.level == 10 then
+             b.x = player.x+50*sin(p_ang/360)
+             b.y = player.y+50*cos(p_ang/360)
+             if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -941,6 +946,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
       add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
     end
   elseif boss then
+    if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly)) end; return
     add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
@@ -1366,7 +1372,8 @@ function _draw()
 
   for b in all(boss_table) do
     if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
-    if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
+    if (b.level ~= 3 and b.level ~= 10) then spr(b.sprite, b.x, b.y, 2, 2)
+    elseif b.level == 10 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
   end
@@ -1537,7 +1544,6 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 __gff__
 0000000000000101000000060000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000101010002000000000000000000000001010101000000000000000000000000010100010100000100
-
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
