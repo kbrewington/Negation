@@ -79,7 +79,6 @@ tele_animation = {}
 boss_hit_anims = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
-exploding_enemies = {}
 water_anim_list = {}
 
 -- inventory
@@ -153,7 +152,7 @@ function gameflow()
   yield()
 
   -- 128, 1
-  init_tele_anim(boss(60, 60, 5, 10, 40))
+  init_tele_anim(boss(60, 60, 128, 1, 40))
   yield()
 
   kill_all_enemies(true)
@@ -313,12 +312,13 @@ end
 
 function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
+  e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
   e.destroy_sequence = {135, 136, 135}
   e.drops = {32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
-  e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
+  e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, type
+  e.speed = type == "exploder" and .7 or .35
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -703,7 +703,7 @@ function enem_spawned()
       spr(e.sprite, e.x, e.y)
       pal()
 
-      if (e.explode_step == e.explode_wait) add(exploding_enemies, e)
+      if (e.explode_step == e.explode_wait) add(destroyed_enemies, e)
 
       e.move()
     end
@@ -825,28 +825,28 @@ end
     draw enemy destruction animation to screen
   ]]
 function step_destroy_animation(e)
-
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
+    if e.type == "exploder" then
+      circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+      if e.destroyed_step >= e.destroy_anim_length then
+        del(destroyed_enemies, e)
+        del(enemy_spawned, e)
+        if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
+          if player_shield <= 0 then
+            player_hit(1)
+          else
+            player_shield -= .15
+          end
+        end
+      end
+    end
   else
     drop_item(e)
     del(destroyed_enemies, e)
   end
-
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step += 1
-
-  if e.type == "exploder" then
-    circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
-    e.destroyed_step += 1
-    if e.destroyed_step >= e.destroy_anim_length then
-      del(destroyed_enemies, e)
-      del(exploding_enemies, e)
-      del(enemy_spawned, e)
-      return true
-    end
-    return false
-  end
 end
 
 function boss_hit_animation(bul)
@@ -946,7 +946,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
       add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
     end
   elseif boss then
-    if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly)) end; return
+    -- if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet((x-sin(a/360)),(y-cos(a/360)),a,spr,friendly)) end; return
     add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
@@ -971,14 +971,17 @@ function skill_tree()
         player_health += 1
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
         player_fire_rate = max(.1, player_fire_rate-.15)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
         player_speed += .2
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(17)
     else
       timers["invalid"] = 0.5
       sfx(3)
@@ -994,20 +997,6 @@ function skill_tree()
     in_skilltree = false
   end
   return
-end
-
-function enem_exploder()
-  for e in all(exploding_enemies) do
-    if step_destroy_animation(e) then
-      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
-        if player_shield <= 0 then
-          player_hit(1)
-        else
-          player_shield -= .15
-        end
-      end
-    end
-  end
 end
 
 function fill_enemy_table(level, lvl_timer)
@@ -1287,7 +1276,6 @@ function _update()
 
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
 
-    enem_exploder()
     spawnenemies()
     if (detect_killed_enemies) detect_kill_enemies()
 
@@ -1400,7 +1388,7 @@ function _draw()
 
   if (seraph.text ~= nil) draw_dialog()
 
-  if (timers["playerlasthit"] > 2 --[[player_immune_time]] - 0.5) or (timers["invalid"] > 0) then
+  if (timers["playerlasthit"] > 1.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
@@ -1543,7 +1531,7 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 
 __gff__
 0000000000000101000000060000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000101010002000000000000000000000001010101000000000000000000000000010100010100000100
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000082828282820082820000000000000000008280000101010002000000000000000000000001010101000000000000000000000000010100010100000100
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
