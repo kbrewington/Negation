@@ -424,8 +424,8 @@ function boss(startx, starty, sprite, lvl, hp)
                end
              end
            elseif b.level == 6 then
-             b.x = b.x + .1*((b.x > 8 and b.x < 112) and sin(p_ang/360) or 0)
-             b.y = b.y + .1*((b.y > 8 and b.y < 112) and cos(p_ang/360) or 0)
+             b.x = b.x + .01*((b.x > 8 and b.x < 112) and sin(p_ang/360) or 0)
+             b.y = b.y + .01*((b.y > 8 and b.y < 112) and cos(p_ang/360) or 0)
              b.angle = (b.angle+1)%360
              b.fire_rate = 4
              for i=1,360,60 do
@@ -924,7 +924,7 @@ end
 function water_anim()
   for i=0,16 do
     for j=0,16 do
-      if (fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
+      if (not fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),7) and fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4)-level_sx,j*8+rnd(4)-level_sy, flr(rnd(3)), 7, 25});
     end
   end
 end
@@ -1537,6 +1537,7 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 __gff__
 0000000000000101000000060000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000101010002000000000000000000000001010101000000000000000000000000010100010100000100
+
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
