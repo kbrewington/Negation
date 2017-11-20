@@ -195,6 +195,7 @@ function gameflow()
   init_tele_anim(boss(100, 60, 160, 3, 40))
   yield()
 
+  kill_all_enemies(true)
   level_change = true
   yield()
 
@@ -207,28 +208,18 @@ function gameflow()
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
 
   yield()
+
+  kill_all_enemies(true)
   level_change = true
+  yield()
 
   -- start level 5 (aoe boss)
   fill_enemy_table(1, 10)
   spawn_time_start,detect_killed_enemies = 10, true
   yield()
 
-  -- start level 6 "final" boss
-  level_change = true
+  init_tele_anim(boss(60, 60, 164, 4, 40))
   yield()
-
-  seraph.text = "test"
-  yield()
-
-  yield()
-
-  level_change = true
-  yield()
-
-  yield()
-
-  level_change = true
 end
 
 -- http://lua-users.org/wiki/simpleround
