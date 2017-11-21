@@ -1155,27 +1155,6 @@ function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
--- function collide_all_enemies()
---   local e = enemy_spawned[1]
---   for o in all(enemy_spawned) do
---     if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
---   end
--- end
-
--- function fix_enemy(o, e)
---   local function fix_coord(o,e,c)
---     if (o[c] - e[c]) < 0 then
---       o[c] = o[c] - 8
---     elseif (o[c] - e[c]) > 0 then
---       o[c] = o[c] + 8
---     elseif (o[c] == e[c]) then
---       o[c] = o[c] + 8
---     end
---   end
---   fix_coord(o,e,'x')
---   fix_coord(o,e,'y')
--- end
-
 function player_hit(d)
   player_health -= d
   sfx(18)
