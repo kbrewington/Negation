@@ -151,13 +151,13 @@ function gameflow()
   --music(-1,300)
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 3, 40))
+  init_tele_anim(boss(60, 60, 128, 1, 40))
   --music(3)
   yield()
 
   kill_all_enemies(true)
   seraph.text = "nice work. the door should    open now."
-  music(-1,300)
+  -- music(-1,300)
   yield()
 
   wait.controls,level_change,open_door = true,true,true
@@ -179,8 +179,8 @@ function gameflow()
   seraph.text = "oh, who is this little guy?   seems to be checking you out."
   yield()
 
-  wait.controls,spawn_time_start  = false,60
   fill_enemy_table(2, 60)
+  wait.controls,spawn_time_start = false,60
   yield()
 
   kill_all_enemies(true)
@@ -206,7 +206,7 @@ function gameflow()
   -- start level 4
   fill_enemy_table(4, 90)
   spawn_time_start,detect_killed_enemies = 90, true
-  music(7)
+  -- music(7)
   yield()
 
   kill_all_enemies(true)
@@ -330,13 +330,13 @@ end
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
-  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
+  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
   e.drops = {32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 8, 132, type
-  e.speed = type == "exploder" and .7 or .35
+  e.speed = type == "exploder" and .9 or .35
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -403,14 +403,14 @@ function boss(startx, starty, sprite, lvl, hp)
            end
   b.update = function()
            local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
-           if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
            if b.level == 1 then
+             if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
              b.angle = (b.angle+1)%360
              for i=1,360,90 do
                if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+(rev*b.angle), 141, false, true)
              end
            elseif b.level < 3 then
-             if (#enemy_spawned > 0 or #enemy_table > 0) b.level = 2.5
+             if (#enemy_spawned == 0 and #enemy_table == 0 and not wait.controls) b.level = 2.5
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%b.fire_rate == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
@@ -1133,26 +1133,26 @@ function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
-function collide_all_enemies()
-  local e = enemy_spawned[1]
-  for o in all(enemy_spawned) do
-    if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
-  end
-end
+-- function collide_all_enemies()
+--   local e = enemy_spawned[1]
+--   for o in all(enemy_spawned) do
+--     if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
+--   end
+-- end
 
-function fix_enemy(o, e)
-  local function fix_coord(o,e,c)
-    if (o[c] - e[c]) < 0 then
-      o[c] = o[c] - 8
-    elseif (o[c] - e[c]) > 0 then
-      o[c] = o[c] + 8
-    elseif (o[c] == e[c]) then
-      o[c] = o[c] + 8
-    end
-  end
-  fix_coord(o,e,'x')
-  fix_coord(o,e,'y')
-end
+-- function fix_enemy(o, e)
+--   local function fix_coord(o,e,c)
+--     if (o[c] - e[c]) < 0 then
+--       o[c] = o[c] - 8
+--     elseif (o[c] - e[c]) > 0 then
+--       o[c] = o[c] + 8
+--     elseif (o[c] == e[c]) then
+--       o[c] = o[c] + 8
+--     end
+--   end
+--   fix_coord(o,e,'x')
+--   fix_coord(o,e,'y')
+-- end
 
 function player_hit(d)
   player_health -= d
@@ -1174,7 +1174,7 @@ end --end _init()
 --================================ update ====================================--
 function _update()
   --timers["playerlasthit"] = 1 --uncomment for god mode
-  collide_all_enemies()
+  -- collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
   move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
@@ -1326,7 +1326,7 @@ function _draw()
   if (in_leaderboard) show_leaderboard(); return
 
   map(level_x, level_y, level_sx, level_sy, 128, 128)
-  if (rnd(10) > 9.5) water_anim()
+  if (rnd(10) > 9.5 and not level_change) water_anim()
     for i in all(water_anim_list) do
     circ(i[1], i[2], i[3], i[4])
     i[5] -= 1; if (rnd(5) > 4.5) i[3] = (i[3]+1)%4
