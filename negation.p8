@@ -804,6 +804,7 @@ function bullets_player()
           player_killed += 1
           del(boss_table, bos)
           coin.x,coin.y = bos.x,bos.y
+          if (level_lvl == 5) coin.x,coin.y = 50, 100
           if (#boss_table == 0) coresume(game)
         end
         break
@@ -1067,8 +1068,8 @@ function kill_all_enemies(no_drop_items)
     for b in all(boss_table) do
       del(boss_table, b)
       add(destroyed_bosses, b)
-      coin.x = b.x - level_sx
-      coin.y = b.y - level_sy
+      coin.x, coin.y = b.x, b.y
+      if (level == 5) coin.x, coin.y = 50, 100
       b = nil
     end
 
