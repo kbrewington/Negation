@@ -148,11 +148,11 @@ function gameflow()
   kill_all_enemies(true)
   wait.timer = false
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
-  music(-1,300)
+  --music(-1,300)
   yield()
 
   init_tele_anim(boss(60, 60, 128, 3, 40))
-  music(3)
+  --music(3)
   yield()
 
   kill_all_enemies(true)
@@ -170,7 +170,7 @@ function gameflow()
   wait.controls = true
   seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
-  music(5)
+  --music(5)
   yield()
 
   seraph.text = "unfortunately we weren't alone"
@@ -190,8 +190,8 @@ function gameflow()
   -- start level 3
   open_door = false
   seraph.text = "so the main source of the     infestation is up here past   the desert."
-  music(-1,300)
-  music(6)
+  --music(-1,300)
+  --music(6)
   yield()
 
   fill_enemy_table(3, 90)
@@ -222,7 +222,7 @@ function gameflow()
   -- start level 5 (aoe boss)
   fill_enemy_table(3, 75)
   spawn_time_start,detect_killed_enemies = 75, true
-  music(9)
+  --music(9)
   yield()
 
   init_tele_anim(boss(56, 52, 164, 4, 40))
@@ -347,9 +347,10 @@ function enemy(x, y, type, time_spwn)
                 if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
+                    e.dont_move = false
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    e.b_count += 1
+                    e.b_count += 1; e.dont_move = true
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
                   end
                 elseif e.type == "exploder" then
@@ -367,7 +368,7 @@ function enemy(x, y, type, time_spwn)
   return e
 end
 
-function bullet(startx, starty, angle, sprite, friendly, shotgun)
+function bullet(startx, starty, angle, sprite, friendly, shotgun, sine)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 8
@@ -377,8 +378,10 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   b.move = function()
      if (b.sprite == 48) b.acceleration += 0.5
      if (b.shotgun) b.duration -= 1
-     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
+     if (sine) b.speed = .5
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
+     if (sine) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
+     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
    end
 
   return b
@@ -386,7 +389,7 @@ end
 
 function boss(startx, starty, sprite, lvl, hp)
   local b = {}
-  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, lvl, nil, 0, sprite
+  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite, b.idx, b.b_count = startx, starty, .01, 0, lvl, nil, 0, sprite, 2, 0
   b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health, b.full_health = 16, 2, 7, 0, 30, (hp or 50), (hp or 50)
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
@@ -406,9 +409,8 @@ function boss(startx, starty, sprite, lvl, hp)
              for i=1,360,90 do
                if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+(rev*b.angle), 141, false, true)
              end
-             b.x = b.x - .01*sin(p_ang/360)
-             b.y = b.y - .01*cos(p_ang/360)
            elseif b.level < 3 then
+             if (#enemy_spawned > 0 or #enemy_table > 0) b.level = 2.5
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%b.fire_rate == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
@@ -425,15 +427,15 @@ function boss(startx, starty, sprite, lvl, hp)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
               if (distance(player, b) <= 30+8) shoot(b.x, b.y, p_ang, 141, false, true)
             else
-              b.angle = (b.angle+2)%360
+              b.angle = (b.angle+6)%360
+              b.fire_rate = 5
+              b.b_count += 1
               b.x = 60
               b.y = 60
               for i=1,360,180 do
-                shoot(b.x, b.y, i+b.angle, 141, false, true)
-                -- for j=1,120,15 do
-                --   if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+j+b.angle, 141, false, true)
-                -- end
+                if (b.b_count%b.fire_rate == 0) shoot(b.x, b.y, i+b.angle+(time()*2), 141, false, true)
               end
+              if (b.b_count%(b.fire_rate+15)==0) for i=0,360,180 do shoot(b.x, b.y, i, 76, false, true, false, true) end
             end
            elseif b.level == 4 then
              if abs(time()*10)%2 == 0 then
@@ -454,6 +456,8 @@ function boss(startx, starty, sprite, lvl, hp)
                  end
                end
              end
+             local locs = {0,100,100,0}
+             if (timers["bossstart"]%20 == 0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; timers["bossstart"]=100
            elseif b.level == 6 then
              b.x = b.x + .01*((b.x > 8 and b.x < 112) and sin(p_ang/360) or 0)
              b.y = b.y + .01*((b.y > 8 and b.y < 112) and cos(p_ang/360) or 0)
@@ -469,12 +473,6 @@ function boss(startx, starty, sprite, lvl, hp)
                end
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 13
-             if (b.health/50) == 33/50 then
-               b.health -= 1
-               for i=1,3 do
-                 add(boss_table, boss(b.x+rnd(10), b.y+rnd(10), b.sprite, 6))
-               end
-             end
            elseif b.level == 10 then
              b.x = player.x+50*sin(p_ang/360)
              b.y = player.y+50*cos(p_ang/360)
@@ -780,7 +778,7 @@ function bullets_player()
     -- first delete offscreen bullets:
     delete_offscreen(player_bullets, b)
 
-    if bump(b.x, b.y) then
+    if bump_all(b.x, b.y) then
       del(player_bullets, b)
       add(boss_hit_anims, b)
       if (b.rocket) rocket_kill(b)
@@ -959,14 +957,14 @@ end
 function water_anim()
   for i=0,16 do
     for j=0,16 do
-      if (not fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),7) and fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4)-level_sx,j*8+rnd(4)-level_sy, flr(rnd(3)), 7, 25});
+      if (not fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),7) and fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
     end
   end
 end
 
 
 --================================ functions =================================--
-function shoot(x, y, a, spr, friendly, boss, shotgun)
+function shoot(x, y, a, spr, friendly, boss, shotgun, sine)
   if (boss) sfx(2)
   if friendly then
     local offx, offy = (player.x + 5), (player.y + 5)
@@ -977,7 +975,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
     end
   elseif boss then
     -- if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet((x-sin(a/360)),(y-cos(a/360)),a,spr,friendly)) end; return
-    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
+    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly, shotgun, sine))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
   end
@@ -1001,17 +999,17 @@ function skill_tree()
         player_health += 1
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
-        sfx(17)
+        sfx(0)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
         player_fire_rate = max(.1, player_fire_rate-.15)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
-        sfx(17)
+        sfx(0)
     elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
         player_speed += .2
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
-        sfx(17)
+        sfx(0)
     else
       timers["invalid"] = 0.5
       sfx(3)
@@ -1450,14 +1448,14 @@ e888888e044004400a0000a000000000000000000000000000000000000000000000000067712222
 008668000966659000000000000000000000000000000000000000000000000000000000677771222217777d6555555555555551000036666000000003333333
 088668800095590000000000000000000000000000000000000000000000000000000000677777122177777d6555555555555551000036666000000006666666
 0000000000099000000000000000000000000000000000000000000000000000000000007dddddd11dddddddd11111111111111d00003666d100000006666666
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000000000000000000000000000000000000
-0000a999999a000000000a9999a00000000000a9a000000000000a9999a000000000a999999a0000000000000000000000000000000000000000000000000000
-000a9979a999a0000000a9979a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
-000a979a9999a0000000a979a99a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000888800000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008222280000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000082288228000000000000000000000000
+00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000082822828000000000000000000000000
+0000a999999a000000000a9999a00000000000a9a000000000000a9999a000000000a999999a0000000000000000000082822828000000000000000000000000
+000a9979a999a0000000a9979a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000082288228000000000000000000000000
+000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000008222280000000000000000000000000
+000a979a9999a0000000a979a99a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000888800000000000000000000000000
 000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a99999a99a0000000a9799a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a999aaa99a0000000a999aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
@@ -1549,7 +1547,7 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 
 __gff__
 0000000000000101000000860000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000820200000101010002000000000000008200000001010101000000000000000000000000010100010100000100
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000082828282820082820000000000000000828280000101010002000000000000008200000001010101000000000000000000000000010100010100000100
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
@@ -1570,8 +1568,8 @@ d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000004a4b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000005a5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
