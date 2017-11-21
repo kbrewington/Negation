@@ -17,7 +17,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .75
+player_fire_rate = .1
 player_killed = 0
 player_tokens = 0
 
@@ -118,8 +118,8 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
-  print(""..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
-  print(level_lvl, 0, 12, debug_color)
+  print(mget((player.x + 12) / 8, (player.y + 4) / 8), 45, 12, debug_color)
+  print(fget(mget((player.x + 12) / 8, (player.y + 4) / 8)), 0, 12, debug_color)
 
   print("", 0, 18, debug_color)
   print("", 45, 18, debug_color)
@@ -135,10 +135,7 @@ function gameflow()
   init_tele_anim(player)
   yield()
 
-  seraph.text = "ready to get to work?"
-  yield()
-
-  seraph.text = "i see a door. give me a minuteand i'll get it open."
+  seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL GET IT OPEN."
   yield()
 
   fill_enemy_table(1, 65)
@@ -147,17 +144,15 @@ function gameflow()
 
   kill_all_enemies(true)
   wait.timer = false
-  seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
-  --music(-1,300)
+  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 3, 40))
+  init_tele_anim(boss(60, 60, 128, 1, 40))
   --music(3)
   yield()
 
   kill_all_enemies(true)
-  seraph.text = "nice work. the door should    open now."
-  music(-1,300)
+  seraph.text = "NICE WORK. THE DOOR SHOULD BE OPENED NOW."
   yield()
 
   wait.controls,level_change,open_door = true,true,true
@@ -168,19 +163,19 @@ function gameflow()
 
   --start level 2
   wait.controls = true
-  seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
+  seraph.text = "WELCOME TO THE PLANET HECLAO, SUPPOSE TO BE OUR HOME AWAY   FROM HOME."
   add(boss_table, boss(100, 56, 139, 2, 35))
   --music(5)
   yield()
 
-  seraph.text = "unfortunately we weren't alone"
+  seraph.text = "UNFORTUNATELY WE WEREN'T ALONE"
   yield()
 
-  seraph.text = "oh, who is this little guy?   seems to be checking you out."
+  seraph.text = "OH, WHO IS THIS LITTLE GUY?   SEEMS TO BE CHECKING YOU OUT."
   yield()
 
-  wait.controls,spawn_time_start  = false,60
   fill_enemy_table(2, 60)
+  wait.controls,spawn_time_start  = false,60
   yield()
 
   kill_all_enemies(true)
@@ -189,9 +184,7 @@ function gameflow()
 
   -- start level 3
   open_door = false
-  seraph.text = "so the main source of the     infestation is up here past   the desert."
-  --music(-1,300)
-  --music(6)
+  seraph.text = "SO THE MAIN SOURCE OF THE     INFESTATION IS UP HERE PAST   THE DESERT."
   yield()
 
   fill_enemy_table(3, 90)
@@ -203,16 +196,24 @@ function gameflow()
   level_change = true
   yield()
 
+  seraph.text = "EVER SINCE THE CULT MOVED INTOTHE TEMPLE THESE CREATURES    HAVE BEEN POURING OUT OF THERE."
+  yield()
+
+  seraph.text = "I'M PRETTY CERTAIN THAT THEY  ARE TRYING TO SUMMON SOME KINDOF MONSTER."
+  yield()
+
   -- start level 4
   fill_enemy_table(4, 90)
   spawn_time_start,detect_killed_enemies = 90, true
-  music(7)
+  --music(7)
   yield()
 
   kill_all_enemies(true)
   init_tele_anim(boss(60, 60, 128, 1, 40))
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
+  yield()
 
+  seraph.text = "ALMOST THERE, BE CAREFUL GOINGIN THE TEMPLE. NO IDEA WHAT'S IN THERE."
   yield()
 
   kill_all_enemies(true)
@@ -237,6 +238,9 @@ function gameflow()
   spawntime_start,detect_killed_enemies = 75, true
   yield()
 
+  seraph.text = "THIS IS IT. MOMENT OF TRUTH.  I'm CERTAIN YOU WILL BE NO    PROBLEM FOR IT."
+  yield()
+
   kill_all_enemies(true)
   init_tele_anim(boss(50, 50, 169, 6, 50))
   yield()
@@ -244,8 +248,19 @@ function gameflow()
   level_change = true
   yield()
 
-  -- start level 7 final boss
+  --start level 7 final boss
+  seraph.text = "YOU FOOL! DO YOU UNDERSTAND   HOW LONG IT TOOK US TO SUMMON THAT THING?"
+  yield()
 
+  seraph.text = "NO MATTER. WE'LL JUST USE YOURBODY TO SUMMON IT AGAIN."
+  yield()
+
+  seraph.text = "to be continued..."
+  yield()
+
+  player_health = 0
+
+  -- boss(50, 100, 5, 10, 50)
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -410,7 +425,7 @@ function boss(startx, starty, sprite, lvl, hp)
                if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+(rev*b.angle), 141, false, true)
              end
            elseif b.level < 3 then
-             if (#enemy_spawned > 0 or #enemy_table > 0) b.level = 2.5
+             if (#enemy_spawned == 0 and #enemy_table == 0 and not wait.controls) b.level = 2.5
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%b.fire_rate == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
@@ -803,7 +818,8 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
-          coin.x,coin.y = bos.x,bos.y
+          if (level_lvl == 5) then coin.x, coin.y = 50, 100
+          else coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
         break
@@ -1042,7 +1058,7 @@ function spawnenemies()
     if spawn_time_start - timers["spawn"] >= enemy.time then
       repeat
         enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
-      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
+      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y) and not bump(enemy.x, enemy.y, 2) and not bump(enemy.x, enemy.y, 2))
 
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -1064,33 +1080,39 @@ function kill_all_enemies(no_drop_items)
     add(destroyed_enemies, e)
   end
 
-    for b in all(boss_table) do
-      del(boss_table, b)
-      add(destroyed_bosses, b)
-      coin.x = b.x - level_sx
-      coin.y = b.y - level_sy
-      b = nil
-    end
+  for b in all(boss_table) do
+    del(boss_table, b)
+    add(destroyed_bosses, b)
+    if (level_lvl == 5) then coin.x, coin.y = 100, 50
+    else coin.x,coin.y = b.x,b.y end
+    b = nil
+  end
 
   enemy_table = {}
 end
 
 function levelchange()
   local farx = 100
+  local previoussx = level_sx
 
   level_i = 3*level_lvl+1
   if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - level_x * 8)) move_map = true
 
   --todo add map centering on player in the beginning
-
+  -- if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
+  -- if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
   if not move_map then
-    if btn(0) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
+    if btn(0) and abs(level_sx - level_x * 8) > level_x*8 and player.x < farx then
       level_sx += move
       if player.x < farx then player.x = farx end
+      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) level_sx = (previoussx%8)-2
+      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) level_sx = previoussx
     end
     if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
       level_sx -= move
       if player.x > farx then player.x = farx end
+
+      if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) level_sx = previoussx
     end
   end
 
@@ -1271,6 +1293,7 @@ function _update()
       player.x -= move
       add(moves, {player.x, player.y})
       if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
+      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) player.x -= previousx%8
     end
 
     --========================
@@ -1280,14 +1303,15 @@ function _update()
       player.x += move
       add(moves, {player.x, player.y})
       if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
+      if (bump(player.x + 12, player.y + 4, 3) or bump(player.x + 12, player.y + 11, 3)) player.x += min(move, previousx%8-2)
     end
 
     --========================================================================--
     player_angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
 
-    if (player.x < 0) player.x = 0
-    if (player.y < 0) player.y = 0
-    if (player.x > 112) player.x = 112
+    if (player.x < -2) player.x = -2
+    if (player.y < -2) player.y = -2
+    if (player.x > 107) player.x = 107
     if (player.y > 112) player.y = 112
 
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
@@ -1416,14 +1440,14 @@ function _draw()
 end
 
 __gfx__
-0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddd000000007666888876666667ffffffff
-0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddd000000006555822265555551ffffffff
-000000000000000000000000000000000000000077777777777777770000000000000000000000000000000022222222000000006555822265555551ffffffff
-000000000000000000000000000000000000000077770777777077770000000000000000000000000000000022222222000000006555888865555551ffffffff
-000060000006000000000000000000000000000077770777777077770000000000000000000000000000000022222222000000006555888865555551ffffffff
-0000660cc06600000000000000000000000000007077077dd77077070000000000000000000000000000000022222222000000006555822266666666ff366666
-00006619916600000000000000000000000000007077072dd27077070000000000000000000000000000000022222222000000006555822266666666f3336666
-00006619916600000000000000000000000000007077072dd2707007000000000000000000000000000000002222222200000000d11188886666666633033666
+0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddddddddd667666888876666667ffffffff
+0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddddddddd6b6555822265555551ffffffff
+000000000000000000000000000000000000000077777777777777770000000000000000000000000000000022222222dddddd6b6555822265555551ffffffff
+000000000000000000000000000000000000000077770777777077770000000000000000000000000000000022222222dddddd666555888865555551ffffffff
+000060000006000000000000000000000000000077770777777077770000000000000000000000000000000022222222dddddd666555888865555551ffffffff
+0000660cc06600000000000000000000000000007077077dd77077070000000000000000000000000000000022222222dddddd6b6555822266666666ff366666
+00006619916600000000000000000000000000007077072dd27077070000000000000000000000000000000022222222dddddd6b6555822266666666f3336666
+00006619916600000000000000000000000000007077072dd27070070000000000000000000000000000000022222222dddddd66d11188886666666633033666
 00006619916600000000000000000000000000007007002dd2007007000000000000000000000000000000000000000000000000222222226666666630003666
 00000051150000000000000000000000000000007007002992007007000000000000000000000000000000000000000000000000222222223333333330003666
 00000001100000000000000000000000000000007007002992007007000000000000000000000000000000000000000000000000222222226666666630003666
@@ -1520,14 +1544,14 @@ e888888e044004400a0000a000000000000000000000000000000000000000000000000067712222
 655555513333333366666666cccccc6ff6fcccccffccccccccccccfffffccccc00000650ccccccffcccccccc55555555633333339ddddddd559dddddddddd955
 655555513333333366666666ccff6fffffffffcc6fccccccccccccfff6ffccff00000650cffcccffff6ccccc55555555633333339ddddddd59dddddddddddd95
 d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3f6fff6ff55555555633333339ddddddd9dddddddddddddd9
-44444444ffffffffffffffffffff6665ffffffffffffffff4fffffff665555556bb66bb66655555500000000cccccccc33333333dddddddd9dddddddddddddd9
-44544444ffffffffffffffffff656555ccffffffffffffff4ff4ffffb65555556666666bb655555500000000cccccccc33333333dddddddd59dddddddddddd95
-44444454ffffffff6666666665656555cccfffffffffcccc4fffffffb65555555555556bb655555500000000cccccccc33333333dddddddd559dddddddddd955
-44444444655555516666666665656555ccccfffffffccccc444ff4ff66555555555555666655555500000000cccccccc33333333dddddddd5559dddddddd9555
-44544444655555516666666665656555ccccccfffffccccc4454ffff66555555555555666655555500000000cccccccc33333333dddddddd55559dddddd95555
-44444544655555516666666665656555ccccccffffcccccc4444ffffb65555555555556bb655555500000000cccccccc33333333dddddddd555559dddd955555
-45444444655555516666666665656555ccccccffffcccccc4544ffffb66555555555556bb666666600000000cccccccc33333333dddddddd5555559dd9555555
-44444444d111111d6666666665656555ccccccffffcccccc44444fff66665555555555666bb66bb600000000cccccccc33333333dddddddd5555555995555555
+44444444ffffffffffffffffffff6665ffffffffffffffff4fffffff665555556bb66bb66655555599999966cccccccc33333333dddddddd9dddddddddddddd9
+44544444ffffffffffffffffff656555ccffffffffffffff4ff4ffffb65555556666666bb6555555dddddd6bcccccccc33333333dddddddd59dddddddddddd95
+44444454ffffffff6666666665656555cccfffffffffcccc4fffffffb65555555555556bb6555555dddddd6bcccccccc33333333dddddddd559dddddddddd955
+44444444655555516666666665656555ccccfffffffccccc444ff4ff665555555555556666555555dddddd66cccccccc33333333dddddddd5559dddddddd9555
+44544444655555516666666665656555ccccccfffffccccc4454ffff665555555555556666555555dddddd66cccccccc33333333dddddddd55559dddddd95555
+44444544655555516666666665656555ccccccffffcccccc4444ffffb65555555555556bb6555555dddddd6bcccccccc33333333dddddddd555559dddd955555
+45444444655555516666666665656555ccccccffffcccccc4544ffffb66555555555556bb6666666dddddd6bcccccccc33333333dddddddd5555559dd9555555
+44444444d111111d6666666665656555ccccccffffcccccc44444fff66665555555555666bb66bb6dddddd66cccccccc33333333dddddddd5555555995555555
 3393399333339333666666666565666576666665f9fff9ff4444ffff6666555555555566fffff6506bb66bb69ddd888888885555dddddddd555555556bb66bb6
 3339333339999393666666666565655565555555ff9fffff445444ffb66555555555556bfffff650b66666669ddd822222285555dddddddd5555555566666666
 3339393933393393666666666565655565555555fffffff944444fffb65555555555556bfffff650b65555559ddd822222285555dddddddd5555555555555555
@@ -1536,34 +1560,34 @@ d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3
 3399333339399399666666666565000000000000ff9fffff4444ffffb65555555555556bfffff650b65555559ddd822222285555dddddddd5555555555555555
 3393339333399393555555556500000000000000f9fff9ff454fff4fb65555556666666bfffff650b65555559ddd822222285555dddddddd6666666655555555
 3339393939399993000000000000000000000000fff9ffffffffffff665555556bb66bb6fffff650665555559ddd888888885555999999996bb66bb655555555
-9999999999999999444444447666666776666665ffffffffffffffff9ddd6666555555660000000044444445ddddddddddddddd9999999996655555555555566
-9999999999999999944944446555555165555555ffffffffffffffff59ddd66b5555556b0000000044fff445d4444444ddddddd9ddddddddb65555555555556b
-9999999999999999444444946555555165555555ffffffffffffffff559ddd6b5555596b000000004f4f4f45d44fff44ddddddd9ddddddddb65555555555556b
-999999999999a999449444446555555165555555ffffffffffffdfff5559dd6655559d66000000004ff4ff45d4f4f4f4ddddddd9dddddddd6655555555555566
-9999999999a9a9a9444449446555555165555555ffffffffffdfdfdf55559d665559dd66000000004f4f4f45d4ff4ff4ddddddd9dddddddd6655555555555566
-9999999999999999494444446555555100000000ffffffffffffffff5555596b559ddd6b0000000044fff445d4f4f4f4ddddddd9ddddddddb65555555555556b
-9999999999999999444449446555555100006555ffffffffffffffff5555556b59ddd66b0000000044444445d44fff44ddddddd9ddddddddb65555555555556b
-999999999999999944444444d111111d00656555ffffffffffffffff555555669ddd66660000000055555555d4444444ddddddd9dddddddd6655555555555566
+9999999999999999444444447666666776666665ffffffffffffffff9ddd666655555566dddddd6644444445ddddddddddddddd9999999996655555555555566
+9999999999999999944944446555555165555555ffffffffffffffff59ddd66b5555556bdddddd6b44fff445d4444444ddddddd9ddddddddb65555555555556b
+9999999999999999444444946555555165555555ffffffffffffffff559ddd6b5555596bdddddd6b4f4f4f45d44fff44ddddddd9ddddddddb65555555555556b
+999999999999a999449444446555555165555555ffffffffffffdfff5559dd6655559d66dddddd664ff4ff45d4f4f4f4ddddddd9dddddddd6655555555555566
+9999999999a9a9a9444449446555555165555555ffffffffffdfdfdf55559d665559dd66dddddd664f4f4f45d4ff4ff4ddddddd9dddddddd6655555555555566
+9999999999999999494444446555555100000000ffffffffffffffff5555596b559ddd6bdddddd6b44fff445d4f4f4f4ddddddd9ddddddddb65555555555556b
+9999999999999999444449446555555100006555ffffffffffffffff5555556b59ddd66bdddddd6b44444445d44fff44ddddddd9ddddddddb65555555555556b
+999999999999999944444444d111111d00656555ffffffffffffffff555555669ddd66669999996655555555d4444444ddddddd9dddddddd6655555555555566
 
 __gff__
-0000000000000101000000860000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000082828282820082820000000000000000828280000101010002000000000000008200000001010101000000000000000000000000010100010100000100
+0000000000000101000000860100000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000082828282820082820000000000000000828280000100000102000000000000008200000001000100000000000000000000000000010101010100000001
 __map__
-eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbdbdbdbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
-fecbcbcbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5dbdbdbdbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
-fecbcbcbcdfbfbfccbcbcbcbcbcbcbcbfecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f5f5e9f3f3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c3b3c3b3c3b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
-fecbcbcbdeddfbfccbcbcbcbcbcbcbcbfecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcdfbfccbcbcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0d6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbdeeddfcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0e6f5f5c5dbc6f5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+eaefefefefefefefefefefefefefefd8fefafacbccdcdcdcc5dbdbdbdbdbc6dcdcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
+fecbcbcbcefdfdcfcbcbcbcbcbcbcbfffefafacbccdcdcdcc7dbdbdbdbdbc9dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
+fecbcbcbcdfbfbfccbcbcbcbcbcbcbfffefafacbccdcdcdcdcc7cacacac9dcdcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
+fecbcbcbcdddfbfccbcbcbcbcbcbcbfffefacbcbccdcdcdcdcdcdcdcdcdcc1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
+fecbcbcbcdddfbfccbcbcbcbcbcbcbfffecbcbcbccdcdcdcdcdcdcdcdcdcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f5f5e9f3f3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c3b3c3b3c3b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
+fecbcbcbdeededdfcbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0d6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0e6f5f5c5dbc6f5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbd0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5c5dbc6f5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcefdfdfdcfcbcbcbcbcbcbcbcbebeccbcbcbccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5e3e4c8c03b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcdddddddfccbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0e5f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2c2b2c2b2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
-fecbcdfbddfbfccbcbcbcbcbcefdfdfdfecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
-fecbcdfbfbddfccbcbcbcbcbcdfbfbfbfefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f31dc01d0bf3f33b3c3b3cf3f30b1dc01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d0b1d0b1d0b1d1d1d1d0b0b3b3c2b0000000000
-fecbdeedededdfcbcbcbcbcbdeedededfefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5c5dbc6f5f5f5f5f5f5e9f31dc0c01d0b0bf3f3f3f30b0b1dc0c01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
+fecbcdfbddfbfccbcbcbcbcbcefdfddafecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
+fecbcdfbfbddfccbcbcbcbcbcdfbfb0cfefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f31dc01d0bf3f33b3c3b3cf3f30b1dc01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d0b1d0b1d0b1d1d1d1d0b0b3b3c2b0000000000
+fecbdeedededdfcbcbcbcbcbdeededf9fefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5c5dbc6f5f5f5f5f5f5e9f31dc0c01d0b0bf3f3f3f30b0b1dc0c01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
 d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0e5f5e5f5f5f5f6f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9e41d0b0b1d1d1d0b0b0b0b1d1d1d0b0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0b0000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
