@@ -1327,17 +1327,17 @@ function _update()
   --========================
   --x button----------------
   --========================
-  if btnp(5) and not level_change then
-    for t in all(tele_animation) do
-      t.anim_step = t.anim_length
-    end
-    --seraph = {}
-    wait.dialog_finish = false
-    if (seraph.text == nil) kill_all_enemies(true)
-    coresume(game)
-  elseif level_change then
-    kill_all_enemies(true)
-  end
+  -- if btnp(5) and not level_change then
+  --   for t in all(tele_animation) do
+  --     t.anim_step = t.anim_length
+  --   end
+  --   --seraph = {}
+  --   wait.dialog_finish = false
+  --   if (seraph.text == nil) kill_all_enemies(true)
+  --   coresume(game)
+  -- elseif level_change then
+  --   kill_all_enemies(true)
+  -- end
 end
 
 
@@ -1436,7 +1436,7 @@ function _draw()
 
   if (in_skilltree) skilltree()
 
-  debug() -- always on bottom
+  --debug() -- always on bottom
 end
 
 __gfx__
@@ -1735,4 +1735,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
