@@ -17,7 +17,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .75
+player_fire_rate = .1
 player_killed = 0
 player_tokens = 0
 
@@ -79,7 +79,6 @@ tele_animation = {}
 boss_hit_anims = {}
 destroyed_bosses = {}
 destroyed_enemies = {}
-exploding_enemies = {}
 water_anim_list = {}
 
 -- inventory
@@ -120,11 +119,19 @@ function debug()
   if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
   print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
 
+<<<<<<< HEAD
   print(""..mget((stat(32) - 3)/8 + level_x, (stat(33) - 3)/8) + level_y, 45, 12, debug_color)
   print(level_lvl, 0, 12, debug_color)
 --if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - ((level_lvl-1) * 128))) move_map = true
   print((level_transition[level_i+1] - 12) * 8, 0, 18, debug_color)
   print(abs(level_sx - ((level_lvl-1) * 128)), 45, 18, debug_color)
+=======
+  print(mget((player.x + 12) / 8, (player.y + 4) / 8), 45, 12, debug_color)
+  print(fget(mget((player.x + 12) / 8, (player.y + 4) / 8)), 0, 12, debug_color)
+
+  print("", 0, 18, debug_color)
+  print("", 45, 18, debug_color)
+>>>>>>> master
 end
 
 function gameflow()
@@ -135,9 +142,6 @@ function gameflow()
   drawcontrols, wait.controls = false, false
 
   init_tele_anim(player)
-  yield()
-
-  seraph.text = "ready to get to work?"
   yield()
 
   seraph.text = "i see a door. give me a minuteand i'll get it open."
@@ -153,10 +157,11 @@ function gameflow()
   yield()
 
   init_tele_anim(boss(60, 60, 128, 1, 40))
+  --music(3)
   yield()
 
   kill_all_enemies(true)
-  seraph.text = "nice work. the door should    open now."
+  seraph.text = "nice work. the door should be opened now."
   yield()
 
   wait.controls,level_change,open_door = true,true,true
@@ -169,6 +174,7 @@ function gameflow()
   wait.controls = true
   seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
+  --music(5)
   yield()
 
   seraph.text = "unfortunately we weren't alone"
@@ -177,8 +183,8 @@ function gameflow()
   seraph.text = "oh, who is this little guy?   seems to be checking you out."
   yield()
 
-  wait.controls,spawn_time_start  = false,60
   fill_enemy_table(2, 60)
+  wait.controls,spawn_time_start = false,60
   yield()
 
   kill_all_enemies(true)
@@ -195,21 +201,36 @@ function gameflow()
   init_tele_anim(boss(100, 60, 160, 3, 40))
   yield()
 
+  kill_all_enemies(true)
   level_change = true
+  yield()
+
+  seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
+  yield()
+
+  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster."
   yield()
 
   -- start level 4
   fill_enemy_table(4, 90)
   spawn_time_start,detect_killed_enemies = 90, true
+  -- music(7)
   yield()
 
+  kill_all_enemies(true)
   init_tele_anim(boss(60, 60, 128, 1, 40))
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
-
   yield()
+
+  seraph.text = "almost there, be careful goingin the temple. no idea what's in there."
+  yield()
+
+  kill_all_enemies(true)
   level_change = true
+  yield()
 
   -- start level 5 (aoe boss)
+<<<<<<< HEAD
   fill_enemy_table(1, 10)
   spawn_time_start,detect_killed_enemies = 10, true
   yield()
@@ -221,14 +242,54 @@ function gameflow()
   seraph.text = "test"
   yield()
 
+=======
+  fill_enemy_table(3, 75)
+  spawn_time_start,detect_killed_enemies = 75, true
+  --music(9)
+  yield()
+
+  init_tele_anim(boss(56, 52, 164, 4, 40))
+  yield()
+
+  kill_all_enemies(true)
+  level_change = true
+  yield()
+
+  -- start level 6 "final" boss
+  fill_enemy_table(3, 75)
+  spawntime_start,detect_killed_enemies = 75, true
+  yield()
+
+  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it."
+  yield()
+
+  kill_all_enemies(true)
+  init_tele_anim(boss(50, 50, 169, 6, 50))
+>>>>>>> master
   yield()
 
   level_change = true
   yield()
 
+<<<<<<< HEAD
   yield()
 
   level_change = true
+=======
+  --start level 7 final boss
+  seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
+  yield()
+
+  seraph.text = "no matter. we'll just use yourbody to summon it again."
+  yield()
+
+  seraph.text = "to be continued..."
+  yield()
+
+  player_health = 0
+
+  -- boss(50, 100, 5, 10, 50)
+>>>>>>> master
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -249,7 +310,7 @@ function minimum_neighbor(start, goal)
       for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) then
+        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) and not bump(nx, ny, 2) then
           local current = enemy(nx, ny)
           local cur_distance = distance(current, goal)
           if cur_distance < minimum_dist then
@@ -283,6 +344,7 @@ function bump(x, y, flag)
   return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
 end
 
+<<<<<<< HEAD
 function bumpwall(x,y)
   temp = mget(flr(x/8),flr(y/8))
     if fget(temp,3) and sget((temp%16)*8+x%8,flr(temp/16)*8+y%8) == 6 then
@@ -291,6 +353,8 @@ function bumpwall(x,y)
   return false
 end
 
+=======
+>>>>>>> master
 function bump_all(x, y)
   return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
 end
@@ -320,12 +384,14 @@ end
 
 function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.speed, e.time, e.b_count =  x, y, .35, time_spwn, 0
-  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 100, 50
+  e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
+  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
   e.destroy_sequence = {135, 136, 135}
+  e.walking = {132, 134, 137}
   e.drops = {32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
-  e.exploding, e.dont_move, e.size, e.sprite, e.speed, e.type = false, false, 8, 132, .35, type
+  e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 8, 132, type
+  e.speed = type == "exploder" and .9 or .35
 
   e.update_xy = function()
                     path = minimum_neighbor(e, player)
@@ -336,9 +402,10 @@ function enemy(x, y, type, time_spwn)
                 if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
+                    e.dont_move = false
                   else
                     e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
-                    e.b_count += 1
+                    e.b_count += 1; e.dont_move = true
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
                   end
                 elseif e.type == "exploder" then
@@ -356,7 +423,7 @@ function enemy(x, y, type, time_spwn)
   return e
 end
 
-function bullet(startx, starty, angle, sprite, friendly, shotgun)
+function bullet(startx, starty, angle, sprite, friendly, shotgun, sine)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 8
@@ -366,8 +433,10 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun)
   b.move = function()
      if (b.sprite == 48) b.acceleration += 0.5
      if (b.shotgun) b.duration -= 1
-     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
+     if (sine) b.speed = .5
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
+     if (sine) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
+     b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
    end
 
   return b
@@ -375,7 +444,7 @@ end
 
 function boss(startx, starty, sprite, lvl, hp)
   local b = {}
-  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite = startx, starty, .01, 0, lvl, nil, 0, sprite
+  b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite, b.idx, b.b_count = startx, starty, .01, 0, lvl, nil, 0, sprite, 2, 0
   b.size, b.bullet_speed, b.fire_rate, b.destroyed_step, b.destroy_anim_length, b.health, b.full_health = 16, 2, 7, 0, 30, (hp or 50), (hp or 50)
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
@@ -391,13 +460,18 @@ function boss(startx, starty, sprite, lvl, hp)
            local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
            if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
            if b.level == 1 then
+             if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
              b.angle = (b.angle+1)%360
              for i=1,360,90 do
                if (b.angle%b.fire_rate == 0) shoot(b.x, b.y, i+(rev*b.angle), 141, false, true)
              end
+<<<<<<< HEAD
              b.x = b.x - .01*sin(p_ang/360)
              b.y = b.y - .01*cos(p_ang/360)
+=======
+>>>>>>> master
            elseif b.level < 3 then
+             if (#enemy_spawned == 0 and #enemy_table == 0 and not wait.controls) b.level = 2.5
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%b.fire_rate == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
@@ -406,12 +480,24 @@ function boss(startx, starty, sprite, lvl, hp)
                end
              end
            elseif b.level == 3 then
+             if #enemy_spawned > 0 or #enemy_table > 0 then
               local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
               if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
               if (distance(player, b) <= 30+8) shoot(b.x, b.y, p_ang, 141, false, true)
+            else
+              b.angle = (b.angle+6)%360
+              b.fire_rate = 5
+              b.b_count += 1
+              b.x = 60
+              b.y = 60
+              for i=1,360,180 do
+                if (b.b_count%b.fire_rate == 0) shoot(b.x, b.y, i+b.angle+(time()*2), 141, false, true)
+              end
+              if (b.b_count%(b.fire_rate+15)==0) for i=0,360,180 do shoot(b.x, b.y, i, 76, false, true, false, true) end
+            end
            elseif b.level == 4 then
              if abs(time()*10)%2 == 0 then
                b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
@@ -431,6 +517,8 @@ function boss(startx, starty, sprite, lvl, hp)
                  end
                end
              end
+             local locs = {0,100,100,0}
+             if (timers["bossstart"]%20 == 0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; timers["bossstart"]=100
            elseif b.level == 6 then
              b.x = b.x + .01*((b.x > 8 and b.x < 112) and sin(p_ang/360) or 0)
              b.y = b.y + .01*((b.y > 8 and b.y < 112) and cos(p_ang/360) or 0)
@@ -446,12 +534,10 @@ function boss(startx, starty, sprite, lvl, hp)
                end
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 13
-             if (b.health/50) == 33/50 then
-               b.health -= 1
-               for i=1,3 do
-                 add(boss_table, boss(b.x+rnd(10), b.y+rnd(10), b.sprite, 6))
-               end
-             end
+           elseif b.level == 10 then
+             b.x = player.x+50*sin(p_ang/360)
+             b.y = player.y+50*cos(p_ang/360)
+             if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -703,10 +789,14 @@ function enem_spawned()
         pal()
         pal(2,8,0)
       end
+<<<<<<< HEAD
       spr(e.sprite, e.x, e.y)
+=======
+      if (not e.dont_move) then spr(e.walking[flr(time()*5)%#e.walking+1], e.x, e.y) else spr(e.sprite, e.x, e.y) end
+>>>>>>> master
       pal()
 
-      if (e.explode_step == e.explode_wait) add(exploding_enemies, e)
+      if (e.explode_step == e.explode_wait) add(destroyed_enemies, e); del(enemy_spawned, e)
 
       e.move()
     end
@@ -753,7 +843,7 @@ function bullets_player()
     -- first delete offscreen bullets:
     delete_offscreen(player_bullets, b)
 
-    if bump(b.x, b.y) then
+    if bump_all(b.x, b.y) then
       del(player_bullets, b)
       add(boss_hit_anims, b)
       if (b.rocket) rocket_kill(b)
@@ -778,7 +868,8 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
-          coin.x,coin.y = bos.x,bos.y
+          if (level_lvl == 5) then coin.x, coin.y = 50, 100
+          else coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
         break
@@ -828,28 +919,28 @@ end
     draw enemy destruction animation to screen
   ]]
 function step_destroy_animation(e)
-
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
+    if e.type == "exploder" then
+      circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
+      if e.destroyed_step >= e.destroy_anim_length then
+        del(destroyed_enemies, e)
+        del(enemy_spawned, e)
+        if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
+          if player_shield <= 0 then
+            player_hit(1)
+          else
+            player_shield -= .15
+          end
+        end
+      end
+    end
   else
     drop_item(e)
     del(destroyed_enemies, e)
   end
-
   circ(e.x+4, e.y+4, e.destroyed_step%5, 8)
   e.destroyed_step += 1
-
-  if e.type == "exploder" then
-    circ(e.x+4, e.y+4, e.destroyed_step%15, 8)
-    e.destroyed_step += 1
-    if e.destroyed_step >= e.destroy_anim_length then
-      del(destroyed_enemies, e)
-      del(exploding_enemies, e)
-      del(enemy_spawned, e)
-      return true
-    end
-    return false
-  end
 end
 
 function boss_hit_animation(bul)
@@ -932,14 +1023,18 @@ end
 function water_anim()
   for i=0,16 do
     for j=0,16 do
+<<<<<<< HEAD
       if (not fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),7) and fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4)-level_sx,j*8+rnd(4)-level_sy, flr(rnd(3)), 7, 25});
+=======
+      if (not fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),7) and fget(mget(i+level_x-(level_sx/8), j+level_y-(level_sy/8)),1) and rnd(10) > 9.5) add(water_anim_list, {i*8+rnd(4),j*8+rnd(4), flr(rnd(3)), 7, 25});
+>>>>>>> master
     end
   end
 end
 
 
 --================================ functions =================================--
-function shoot(x, y, a, spr, friendly, boss, shotgun)
+function shoot(x, y, a, spr, friendly, boss, shotgun, sine)
   if (boss) sfx(2)
   if friendly then
     local offx, offy = (player.x + 5), (player.y + 5)
@@ -949,7 +1044,8 @@ function shoot(x, y, a, spr, friendly, boss, shotgun)
       add(player_bullets, bullet(offx, offy, ang+(i*30), spr, friendly, shotgun))
     end
   elseif boss then
-    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly))
+    -- if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet((x-sin(a/360)),(y-cos(a/360)),a,spr,friendly)) end; return
+    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly, shotgun, sine))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
   end
@@ -973,14 +1069,17 @@ function skill_tree()
         player_health += 1
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(0)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
         player_fire_rate = max(.1, player_fire_rate-.15)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(0)
     elseif (selection_set[currently_selected] == "speed" and player_tokens >= next_cost[currently_selected]) then
         player_speed += .2
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
+        sfx(0)
     else
       timers["invalid"] = 0.5
       sfx(3)
@@ -998,48 +1097,22 @@ function skill_tree()
   return
 end
 
-function enem_exploder()
-  for e in all(exploding_enemies) do
-    if step_destroy_animation(e) then
-      if distance(e, player) <= 15 and timers["playerlasthit"] == 0 then
-        if player_shield <= 0 then
-          player_hit(1)
-        else
-          player_shield -= .15
-        end
-      end
-    end
-  end
-end
-
 function fill_enemy_table(level, lvl_timer)
-  local types = {"shooter", "basic", "exploder"}
+  local types = {"basic", "shooter", "exploder"}
   local baseline = 20
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(#types))+1], flr(rnd(lvl_timer))))
+    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
   end
 end
 
 function spawnenemies()
   if (#enemy_table == 0) timers["spawn"] = 0; return
   if (timers["spawn"] == 0) timers["spawn"] = spawn_time_start
-  local types = {"basic", "shooter", "exploder"} --1, 2, 3
   for enemy in all(enemy_table) do
     if spawn_time_start - timers["spawn"] >= enemy.time then
       repeat
         enemy.x,enemy.y = flr(rnd(120)), flr(rnd(120))
-      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y))
-
-      if (level_lvl == 1) enemy.type = types[1]
-      if level_lvl == 2 then
-        enemy.type = "basic"
-        if (rnd(99) < 20) enemy.type = "shooter"
-      end
-      if level_lvl == 3 then
-        if enemy.type == "exploder" then
-          if (rnd(99) < 80) enemy.type = types[1+rnd(1)]
-        end
-      end
+      until (distance(player, enemy) > 50 and not bump_all(enemy.x, enemy.y) and not bump(enemy.x, enemy.y, 2) and not bump(enemy.x, enemy.y, 2))
 
       add(enemy_spawned, enemy)
       del(enemy_table, enemy)
@@ -1055,8 +1128,6 @@ function detect_kill_enemies()
 end
 
 function kill_all_enemies(no_drop_items)
-  enemy_table = {}
-
   for e in all(enemy_spawned) do
     if (no_drop_items) e.drop_prob = 0
     del(enemy_spawned, e)
@@ -1066,28 +1137,36 @@ function kill_all_enemies(no_drop_items)
   for b in all(boss_table) do
     del(boss_table, b)
     add(destroyed_bosses, b)
-    coin.x = b.x - level_sx
-    coin.y = b.y - level_sy
+    if (level_lvl == 5) then coin.x, coin.y = 100, 50
+    else coin.x,coin.y = b.x,b.y end
     b = nil
   end
+
+  enemy_table = {}
 end
 
 function levelchange()
   local farx = 100
+  local previoussx = level_sx
 
   level_i = 3*level_lvl+1
   if (level_transition[level_i] == level_lvl+1 and (level_transition[level_i+1] - 12) * 8 < abs(level_sx - level_x * 8)) move_map = true
 
   --todo add map centering on player in the beginning
-
+  -- if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
+  -- if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
   if not move_map then
-    if btn(0) and abs(level_sx - ((level_lvl-1) * 128)) > level_x*8 and player.x < farx then
-      level_sx += player_speed
+    if btn(0) and abs(level_sx - level_x * 8) > level_x*8 and player.x < farx then
+      level_sx += move
       if player.x < farx then player.x = farx end
+      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) level_sx = (previoussx%8)-2
+      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) level_sx = previoussx
     end
     if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
-      level_sx -= player_speed
+      level_sx -= move
       if player.x > farx then player.x = farx end
+
+      if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) level_sx = previoussx
     end
   end
 
@@ -1130,26 +1209,26 @@ function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
-function collide_all_enemies()
-  local e = enemy_spawned[1]
-  for o in all(enemy_spawned) do
-    if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
-  end
-end
+-- function collide_all_enemies()
+--   local e = enemy_spawned[1]
+--   for o in all(enemy_spawned) do
+--     if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
+--   end
+-- end
 
-function fix_enemy(o, e)
-  local function fix_coord(o,e,c)
-    if (o[c] - e[c]) < 0 then
-      o[c] = o[c] - 8
-    elseif (o[c] - e[c]) > 0 then
-      o[c] = o[c] + 8
-    elseif (o[c] == e[c]) then
-      o[c] = o[c] + 8
-    end
-  end
-  fix_coord(o,e,'x')
-  fix_coord(o,e,'y')
-end
+-- function fix_enemy(o, e)
+--   local function fix_coord(o,e,c)
+--     if (o[c] - e[c]) < 0 then
+--       o[c] = o[c] - 8
+--     elseif (o[c] - e[c]) > 0 then
+--       o[c] = o[c] + 8
+--     elseif (o[c] == e[c]) then
+--       o[c] = o[c] + 8
+--     end
+--   end
+--   fix_coord(o,e,'x')
+--   fix_coord(o,e,'y')
+-- end
 
 function player_hit(d)
   player_health -= d
@@ -1171,10 +1250,14 @@ end --end _init()
 --================================ update ====================================--
 function _update()
   --timers["playerlasthit"] = 1 --uncomment for god mode
-  collide_all_enemies()
+  -- collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
+<<<<<<< HEAD
   local move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
+=======
+  move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
+>>>>>>> master
   if ((bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) and timers["playerlasthit"] == 0) player_hit(1)
 
   -- count down timers
@@ -1278,12 +1361,17 @@ function _update()
     if btn(0) then
       player.x -= move
       add(moves, {player.x, player.y})
+<<<<<<< HEAD
       if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11))  player.x = previousx
       for y = player.y+4,player.y+11 do
         if bumpwall(player.x+3,y) then
           player.x = previousx
         end
       end
+=======
+      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
+      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) player.x -= previousx%8
+>>>>>>> master
     end
 
     --========================
@@ -1293,24 +1381,27 @@ function _update()
       player.x += move
       add(moves, {player.x, player.y})
       if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
+<<<<<<< HEAD
       for y = player.y+4,player.y+11 do
         if bumpwall(player.x+12,y) then
           player.x = previousx
         end
       end
+=======
+      if (bump(player.x + 12, player.y + 4, 3) or bump(player.x + 12, player.y + 11, 3)) player.x += min(move, previousx%8-2)
+>>>>>>> master
     end
 
     --========================================================================--
     player_angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
 
-    if (player.x < 0) player.x = 0
-    if (player.y < 0) player.y = 0
-    if (player.x > 112) player.x = 112
+    if (player.x < -2) player.x = -2
+    if (player.y < -2) player.y = -2
+    if (player.x > 107) player.x = 107
     if (player.y > 112) player.y = 112
 
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
 
-    enem_exploder()
     spawnenemies()
     if (detect_killed_enemies) detect_kill_enemies()
 
@@ -1322,17 +1413,17 @@ function _update()
   --========================
   --x button----------------
   --========================
-  if btnp(5) and not level_change then
-    for t in all(tele_animation) do
-      t.anim_step = t.anim_length
-    end
-    --seraph = {}
-    wait.dialog_finish = false
-    if (seraph.text == nil) kill_all_enemies(true)
-    coresume(game)
-  elseif level_change then
-    kill_all_enemies(true)
-  end
+  -- if btnp(5) and not level_change then
+  --   for t in all(tele_animation) do
+  --     t.anim_step = t.anim_length
+  --   end
+  --   --seraph = {}
+  --   wait.dialog_finish = false
+  --   if (seraph.text == nil) kill_all_enemies(true)
+  --   coresume(game)
+  -- elseif level_change then
+  --   kill_all_enemies(true)
+  -- end
 end
 
 
@@ -1345,7 +1436,7 @@ function _draw()
   if (in_leaderboard) show_leaderboard(); return
 
   map(level_x, level_y, level_sx, level_sy, 128, 128)
-  if (rnd(10) > 9.5) water_anim()
+  if (rnd(10) > 9.5 and not level_change) water_anim()
     for i in all(water_anim_list) do
     circ(i[1], i[2], i[3], i[4])
     i[5] -= 1; if (rnd(5) > 4.5) i[3] = (i[3]+1)%4
@@ -1395,7 +1486,8 @@ function _draw()
 
   for b in all(boss_table) do
     if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
-    if (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
+    if (b.level ~= 3 and b.level ~= 10) then spr(b.sprite, b.x, b.y, 2, 2)
+    elseif b.level == 10 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
     b.update()
   end
@@ -1422,7 +1514,7 @@ function _draw()
 
   if (seraph.text ~= nil) draw_dialog()
 
-  if (timers["playerlasthit"] > 2 --[[player_immune_time]] - 0.5) or (timers["invalid"] > 0) then
+  if (timers["playerlasthit"] > 1.5) or (timers["invalid"] > 0) then
     camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else
     camera()
@@ -1430,10 +1522,11 @@ function _draw()
 
   if (in_skilltree) skilltree()
 
-  debug() -- always on bottom
+  --debug() -- always on bottom
 end
 
 __gfx__
+<<<<<<< HEAD
 0000000000000000000000000000000000000000777777777777777700000000556222225222222205622222dddddddd056222227666888876666667ffffffff
 0000000000000000000000000000000000000000777777777777777700000000666222225222222205622222dddddddd056222226555822265555551ffffffff
 000000000000000000000000000000000000000077777777777777770000000022222222522222220562222222222222056222226555822265555551ffffffff
@@ -1474,6 +1567,48 @@ e888888e044004400a0000a00000000000000000000000000000000000000000ffffffff67712222
 000a9979a999a0000000a9979a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a979a9999a0000000a979a99a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
+=======
+0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddddddddd667666888876666667ffffffff
+0000000000000000000000000000000000000000777777777777777700000000000000000000000000000000dddddddddddddd6b6555822265555551ffffffff
+000000000000000000000000000000000000000077777777777777770000000000000000000000000000000022222222dddddd6b6555822265555551ffffffff
+000000000000000000000000000000000000000077770777777077770000000000000000000000000000000022222222dddddd666555888865555551ffffffff
+000060000006000000000000000000000000000077770777777077770000000000000000000000000000000022222222dddddd666555888865555551ffffffff
+0000660cc06600000000000000000000000000007077077dd77077070000000000000000000000000000000022222222dddddd6b6555822266666666ff366666
+00006619916600000000000000000000000000007077072dd27077070000000000000000000000000000000022222222dddddd6b6555822266666666f3336666
+00006619916600000000000000000000000000007077072dd27070070000000000000000000000000000000022222222dddddd66d11188886666666633033666
+00006619916600000000000000000000000000007007002dd20070070000000000000000000000000000000000000000dddddd66222222226666666630003666
+000000511500000000000000000000000000000070070029920070070000000000000000000000000000000000000000dddddd6b222222223333333330003666
+000000011000000000000000000000000000000070070029920070070000000000000000000000000000000000000000dddddd6b222222226666666630003666
+000000000000000000000000000000000000000070000029920000070000000000000000000000000000000000000000dddddd66222222223333333330003666
+000000000000000000000000000000000000000077777702207777770000000000000000000000000000000000000000dddddd66222222226666666630003666
+000000000000000000000000000000000000000077777772277777770000000000000000000000000000000000000000dddddd6b222222223333333330003666
+000000000000000000000000000000000000000077777727727777770000000000000000000000000000000000000000dddddd6b222222226666666630003666
+000000000000000000000000000000000000000077777277772777770000000000000000000000000000000000000000dddddd66222222226666666630003666
+00000000000000000000000000000000000000007777777777777777000000000000000076666661166666677666666666666667766111157666666730003666
+0ee00ee00000000000000000000000000000000000000000000000000000000000000000677777122177777d6555555555555551600000006555555130003666
+e88ee88e0000000000000000000000000000000000000000000000000000000000000000677771222217777d6555555555555551600000006555555330003666
+e888888e666666600a0000a0000000000000000000000000000000000000000000000000677712222221777d6555555555555551600000006555555663303666
+e888888e044004400a0000a0000000000000000000000000000000000000000000000000677122222222177d6555555555555551600000006555553330003666
+0e8888e00000004400000000000000000000000000000000000000000000000000000000671222222222217d6555555555555551600000006555556663303666
+00e88e000000000000000000000000000000000000000000000000000000000000000000612222222222221d6555555555555551600000006555533330003666
+000ee00000000000000000000000000000000000000000000000000000000000000000001222222222222221655555555555555150000000d111166663303666
+00088000990000990000000000000000000000000000000000000000000000000000000012222222222222216555555555555551000036667111111500003666
+000660009677666900000000000000000000000000000000000000000000000000000000612222222222221d6555555555555551000036666000000000033333
+000660009766666900000000000000000000000000000000000000000000000000000000671222222222217d6555555555555551000036666000000000066666
+000660009666665900000000000000000000000000000000000000000000000000000000677122222222177d6555555555555551000036666000000000333333
+000660000966669000000000000000000000000000000000000000000000000000000000677712222221777d6555555555555551000036666000000000666666
+008668000966659000000000000000000000000000000000000000000000000000000000677771222217777d6555555555555551000036666000000003333333
+088668800095590000000000000000000000000000000000000000000000000000000000677777122177777d6555555555555551000036666000000006666666
+0000000000099000000000000000000000000000000000000000000000000000000000007dddddd11dddddddd11111111111111d00003666d100000006666666
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000888800000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000008222280000000000000000000000000
+00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000082288228000000000000000000000000
+00000aaaaaa00000000000aaaa000000000000aaa0000000000000aaaa00000000000aaaaaa00000000000000000000082822828000000000000000000000000
+0000a999999a000000000a9999a00000000000a9a000000000000a9999a000000000a999999a0000000000000000000082822828000000000000000000000000
+000a9979a999a0000000a9979a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000082288228000000000000000000000000
+000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000008222280000000000000000000000000
+000a979a9999a0000000a979a99a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000888800000000000000000000000000
+>>>>>>> master
 000a979aaa99a0000000a979aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a99999a99a0000000a9799a9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
 000a999aaa99a0000000a999aa9a0000000000a9a00000000000a999999a0000000a99999999a000000000000000000000000000000000000000000000000000
@@ -1498,14 +1633,14 @@ e888888e044004400a0000a00000000000000000000000000000000000000000ffffffff67712222
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 60000006000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 66000066000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0300000000000300000a000000000000200000200000000099090990000000009090090988080880000000000c0000111000000c000700000000000000000000
-00300000000030000009000000000000020202000000000009090900000990000909909008080800000000000110011111000011007670000002200000000000
-0003000000030000000a00000000000002222200008880000999990000999900009aa90008888800000000000011011111000110076167000026620000000000
-00025555503000000a9a9a0000000000025552000082800099aaa990099aa99009aaaa9088999880000000000001111111111100761116700026620000000000
-0003885883200000000a0000000000000285820000888000098a8900099aa99009aaaa9008a9a800000000001111551515511110076167000002200000000000
-033355355333300000090000000000000205020000000000090a090000999900009aa90008090800000000001001885158810010007670000000000000000000
-3003333333000300000a000000000000202020200000000090909090000990000909909080808080000000001001555155510011000700000000000000000000
-00303030303000300000000000000000202020200000000090909090000000009090090980808080000000001101111111110001000000000000000000000000
+0300000000000300000a000000000000200000020000000020000002000000009090090920000002000000000c0000111000000c000700000000000000000000
+00300000000030000009000000000000020220200000000002022020000990000909909002022020000000000110011111000011007670000002200000000000
+0003000000030000000a00000000000002222220008880000222222000999900009aa90002222220000000000011011111000110076167000026620000000000
+00025555503000000a9a9a0000000000025555200082800002555520099aa99009aaaa9002555520000000000001111111111100761116700026620000000000
+0003885883200000000a000000000000028558200088800002855820099aa99009aaaa9002855820000000001111551515511110076167000002200000000000
+0333553553333000000900000000000002055020000000000205502000999900009aa90002055020000000001001885158810010007670000000000000000000
+3003333333000300000a000000000000202002020000000020200202000990000909909020200202000000001001555155510011000700000000000000000000
+00303030303000300000000000000000202002020000000000200002000000009090090920000200000000001101111111110001000000000000000000000000
 20303030300300000000000000000000000000000000000000000000000000000000000000000000000000000101000100010001000000000000000000000000
 33030030030300200000000000000000000000000000000000000000000000000000000000000000000000001101000100010011000000000000000000000000
 20003000300032000000000000000000000000000000000000000000000000000000000000000000000000001001000c00010010000000000000000000000000
@@ -1515,26 +1650,27 @@ e888888e044004400a0000a00000000000000000000000000000000000000000ffffffff67712222
 02000000002000000000000000000000000000000000000000000000000000000000000000000000000000000000c0000c000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00555500000000009000000900000000000000000000000000000000000000000000000000808000008080000000000000000000777777777777777700000000
-05dddd50000000009008800900000000000080000008000000000200002000000000000000505558555050000002220000000000777777777777777700000000
-5885588500000000900880090000000000005000000500000002020000202000000000000055588588555000002ddd2000000000777777777777777700000000
-05d55d5000000000099889900000000000005500005500000002002002002000c0000000000005555500000002dd2dd200000000777707777770777700000000
-0055550000000000009889000000000000050500005050000000202002020000cccccccc2000558585500020002d2d2000000000777707777770777700000000
-000dd000000000000098890000000000008005055050080000002022220200000000000c020800585008020002dd2dd2000000000777077dd770777000000000
-0005500000000000000990000000000000000555555000000000221111220000000000000020000500002000002ddd20000000000777072dd270777000000000
-000550000000000000099000000000000000054444500000002028822882020000000000020000555000020000022200000000000777072dd270770000000000
-0000000000000000000000000000000000555884488555500d020212212020d000000000200005555500002000000000000000000077002dd200770000000000
-00000000000000000000000000000000008005444450008000002022220200000000000000005005005000000000000000000000007700299200770000000000
-00000000000000000000000000000000000005544550000000020001100020000000000000080055500800000000000000000000007700299200770000000000
-00000000000000000000000000000000000055055055000000200002200002000000000000200058500020000000000000000000000000299200000000000000
-000000000000000000000000000000000005050000505000000d00222200d0000000000002000005000002000000000000000000777777022077777700000000
-00000000000000000000000000000000005005000050050000000200002000000000000000002055502000000000000000000000777777722777777700000000
-00000000000000000000000000000000008005000050080000000200002000000000000000020558550200000000000000000000777777277277777700000000
-00000000000000000000000000000000000008000080000000000000000000000000000022200505050022200000000000000000777772777727777700000000
+05dddd500000000090088009000000000000a000000a000000000200002000000000000000d0ddd8ddd0d0000002220000000000777777777777777700000000
+58855885000000009008800900000000000040000004000000020200002020000000000000ddd88d88ddd000002ddd2000000000777777777777777700000000
+05d55d5000000000099889900000000000004400004400000002002002002000c000000000000ddddd00000002dd2dd200000000777707777770777700000000
+0055550000000000009889000000000000040400004040000000202002020000cccccccc6000dd8d8dd00060002d2d2000000000777707777770777700000000
+000dd00000000000009889000000000000a0040440400a0000002022220200000000000c060800d8d008060002dd2dd2000000000777077dd770777000000000
+0005500000000000000990000000000000000444444000000000221111220000000000000060000d00006000002ddd20000000000777072dd270777000000000
+000550000000000000099000000000000000044444400000002028822882020000000000060000ddd000060000022200000000000777072dd270770000000000
+0000000000000000000000000000000000999884488999900d020212212020d00000000060000ddddd00006000000000000000000077002dd200770000000000
+0000000000000000000000000000000000a00944449000a00000202222020000000000000000d00d00d000000000000000000000007700299200770000000000
+000000000000000000000000000000000000099449900000000200011000200000000000000800ddd00800000000000000000000007700299200770000000000
+000000000000000000000000000000000000990990990000002000022000020000000000006000d8d00060000000000000000000000000299200000000000000
+000000000000000000000000000000000009090000909000000d00222200d000000000000600000d000006000000000000000000777777022077777700000000
+000000000000000000000000000000000090090000900900000002000020000000000000000060ddd06000000000000000000000777777722777777700000000
+0000000000000000000000000000000000a0090000900a0000000200002000000000000000060dd8dd0600000000000000000000777777277277777700000000
+0000000000000000000000000000000000000a0000a0000000000000000000000000000066600d0d0d0066600000000000000000777772777727777700000000
 766666673333333366666666cccccccfffccccccffcccccccccccccffccccccc76666665ccccccffcccccccc55555555633333339ddddddd5555555995555555
 655555513333333366666666cccccccfffccccccffccccccccccccff6ccccccc65555555ccccccffcccccccc55555555633333339ddddddd5555559dd9555555
 655555513333333366666666cccccccfffccccccffccccccccccccfffccccccc65555555cccccccfcccccccc55555555633333339ddddddd555559dddd955555
 6552d5513333b33366666666ccccccf6f6ccccccf6fcccccccccccfffccccccc6552d555ccccccc6cccccccc55555555633333339ddddddd55559dddddd95555
 655d255133b3b3b366666666ccccccffffccccccfffcccccccccccff6fcccccc655d2555cccccccfcccccccc55555555633333339ddddddd5559dddddddd9555
+<<<<<<< HEAD
 655555513333333366666666cccccc6ff6fcccccffccccccccccccfffffcccccddddddddccccccffcccccccc55555555633333339ddddddd559dddddddddd955
 655555513333333366666666ccff6fffffffffcc6fccccccccccccfff6ffccffddddddddcffcccffff6ccccc55555555633333339ddddddd59dddddddddddd95
 d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f22222222ff6ffff3f6fff6ff55555555633333339ddddddd9dddddddddddddd9
@@ -1583,11 +1719,61 @@ fecbcdfbddfbfccbcbd9cbcbcefdfdfdfecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0
 fecbcdfbfbddfccbcbcbcbcbcdfbfbfbfefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50c1d1dc01d0bf3f33b3c3b3cf3f30b1dc01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d0b1d0b1d0b1d1d1d1d0b0b3b3c2b0000000000
 fecbdeedededdfcbcbcbcbcbdeedededfefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5c5dbc6f5f5f5f5f5f50c1d1dc0c01d0b0bf3f3f3f30b0b1dc0c01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
 d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0e5f5e5f5f5f5f6f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50c1d1d0b0b1d1d1d0b0b0b0b1d1d1d0b0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0b0000000000
+=======
+655555513333333366666666cccccc6ff6fcccccffccccccccccccfffffccccc00000650ccccccffcccccccc55555555633333339ddddddd559dddddddddd955
+655555513333333366666666ccff6fffffffffcc6fccccccccccccfff6ffccff00000650cffcccffff6ccccc55555555633333339ddddddd59dddddddddddd95
+d111111d3333333366666666fffffff336ff6ffffffcccccccccccff3fffff6f00000650ff6ffff3f6fff6ff55555555633333339ddddddd9dddddddddddddd9
+44444444ffffffffffffffffffff6665ffffffffffffffff4fffffff665555556bb66bb666555555d666666dcccccccc33333333dddddddd9dddddddddddddd9
+44544444ffffffffffffffffff656555ccffffffffffffff4ff4ffffb65555556666666bb655555566555567cccccccc33333333dddddddd59dddddddddddd95
+44444454ffffffff6666666665656555cccfffffffffcccc4fffffffb65555555555556bb655555565566557cccccccc33333333dddddddd559dddddddddd955
+44444444655555516666666665656555ccccfffffffccccc444ff4ff6655555555555566665555556566d657cccccccc33333333dddddddd5559dddddddd9555
+44544444655555516666666665656555ccccccfffffccccc4454ffff665555555555556666555555656d6657cccccccc33333333dddddddd55559dddddd95555
+44444544655555516666666665656555ccccccffffcccccc4444ffffb65555555555556bb655555565566557cccccccc33333333dddddddd555559dddd955555
+45444444655555516666666665656555ccccccffffcccccc4544ffffb66555555555556bb666666666555567cccccccc33333333dddddddd5555559dd9555555
+44444444d111111d6666666665656555ccccccffffcccccc44444fff66665555555555666bb66bb6d777777dcccccccc33333333dddddddd5555555995555555
+3393399333339333666666666565666576666665f9fff9ff4444ffff6666555555555566fffff6506bb66bb69ddd888888885555dddddddd555555556bb66bb6
+3339333339999393666666666565655565555555ff9fffff445444ffb66555555555556bfffff650b66666669ddd822222285555dddddddd5555555566666666
+3339393933393393666666666565655565555555fffffff944444fffb65555555555556bfffff650b65555559ddd822222285555dddddddd5555555555555555
+3399333339339993666666666565655565555555f9ff9fff444444ff6655555555555566fffff650665555559ddd888888885555dddddddd5555555555555555
+3339939339399393666666666565655565555555ffffff9f44544fff6655555555555566fffff650665555559ddd888888885555dddddddd5555555555555555
+3399333339399399666666666565000000000000ff9fffff4444ffffb65555555555556bfffff650b65555559ddd822222285555dddddddd5555555555555555
+3393339333399393555555556500000000000000f9fff9ff454fff4fb65555556666666bfffff650b65555559ddd822222285555dddddddd6666666655555555
+3339393939399993000000000000000000000000fff9ffffffffffff665555556bb66bb6fffff650665555559ddd888888885555999999996bb66bb655555555
+9999999999999999444444447666666776666665ffffffffffffffff9ddd666655555566dddddd6644444445ddddddddddddddd9999999996655555555555566
+9999999999999999944944446555555165555555ffffffffffffffff59ddd66b5555556bdddddd6b44fff445d4444444ddddddd9ddddddddb65555555555556b
+9999999999999999444444946555555165555555ffffffffffffffff559ddd6b5555596bdddddd6b4f4f4f45d44fff44ddddddd9ddddddddb65555555555556b
+999999999999a999449444446555555165555555ffffffffffffdfff5559dd6655559d66dddddd664ff4ff45d4f4f4f4ddddddd9dddddddd6655555555555566
+9999999999a9a9a9444449446555555165555555ffffffffffdfdfdf55559d665559dd66dddddd664f4f4f45d4ff4ff4ddddddd9dddddddd6655555555555566
+9999999999999999494444446555555100000000ffffffffffffffff5555596b559ddd6bdddddd6b44fff445d4f4f4f4ddddddd9ddddddddb65555555555556b
+9999999999999999444449446555555100006555ffffffffffffffff5555556b59ddd66bdddddd6b44444445d44fff44ddddddd9ddddddddb65555555555556b
+999999999999999944444444d111111d00656555ffffffffffffffff555555669ddd66669999996655555555d4444444ddddddd9dddddddd6655555555555566
+
+__gff__
+0000000000000101000000860000000000000000000000000000000000060000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000082828282820082820000000000000000828280000100000102000000000000008200000001000100000000000000000000000000010100010100000101
+__map__
+eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f5f5f5e9f31dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbdbdbdbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3bdadada3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
+fecbcbcbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5dbdbdbdbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f5e9f31d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2bda2b2c2b2c2b2c2b2c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
+fecbcbcbcdfbfbfccbcbcbcbcbcbcbfffecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f5f5e9f3f3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3bda3b3c3b3c3b3c3b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
+fecbcbcbdeddfbfccbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcdfbfccbcbcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0d6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbdeeddfcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0e6f5f5c5dbc6f5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbd0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5c5dbc6f5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2cda2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcefdfdfdcfcbcbcbcbcbcbcbcbebeccbcbcbccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5e3e4c8c03b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3cda3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcdddddddfccbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0e5f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2cdadada2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
+fecbcdfbddfbfccbcbcbcbcefdfdcffffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
+fecbcdfbfbddfccbcbcbcbcdfbfbfcfffefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdce0dce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9f31dc01d0bf3f33b3c3b3cf3f30b1dc01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d0b1d0b1d0b1d1d1d1d0b0b3b3c2b0000000000
+fecbdeedededdfcbcbcbcbdeededdffffefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdce0e1f0f0e1f0f0f0f0f0f0f1f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f6f5c5dbc6f5f5f5f5f5f5e9f31dc0c01d0b0bf3f3f3f30b0b1dc0c01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
+d9eeeeeeeeeeeeeeeeeeeeeeeeeeeee8fefafafaccdcdcdcdcdcdcdcc1dcdcdcdce0e0e1f0e1f0f0f0f0f1f0f0f0f0f0f0e5f5e5f5f5f5f6f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5e9e41d0b0b1d1d1d0b0b0b0b1d1d1d0b0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0b0000000000
+>>>>>>> master
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c5c5c5c5c5c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005c5c5c0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000004a4b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0000005a5b000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1611,8 +1797,8 @@ __sfx__
 001000001335013350000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000d0500d0500d0500d0500d0500d0500c0500c0500c0500c0500c0500c0500c05007050070500705007050070500704007040070300702007010070100701007010010000400003000030000300003000
 000a000013040140501805014000190001e0002400020500016000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0010000705050080500b5500e55005110071103870006050080500c5500e5500615008150104001f000104001d300104001f000104001f000104001f000104001f000104001f000104001f000104001f00010400
-001000200375004750087500875008750087500875008750097500b7500b7500b7500b7500c7500e7500e7500e7500e7500e7501075012750127501275012750127501175011750107500f7500e7500000000000
+0010000e05050080500b5500e55005110071103870006050080500c5500e5500615008150104001f000104001d300104001f000104001f000104001f000104001f000104001f000104001f000104001f00010400
+001000200375004750087500875008750087500875008750097500e7500b7500b7500b7500c7500e7500e7500e7500e7500e750107501775012750127501275012750117501b7501e7500f7500e7500000000000
 0010000e096501b650036001b50009600000000a6501a6501860000000000000c6000b600000000000000000000000000000000000000000000000000003f7000000000000000000000000000000000000000000
 0010000b073000255005350053100a3500a3100735007310103501031013300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00100013047500675006750067500675004750097500975009750097500975009750097500675006750067500575005750057500a7500a7500a7500a750097500975008750057500675006750057500575004750
@@ -1624,19 +1810,19 @@ __sfx__
 000900002f0502b150242501c1402f0202c110232101c1202f0302c130212501c1502f0502c150202301b1202e0202c110202201b1202f0502d00000000000002265022630216301f6201a610166101361010610
 000600000d65013650186501b6500231012650166501f650256502265030650033101b650166401463013630126300f6300d6200b6200a6100961008610076100661000000000000000000000000000000000000
 0003000028250202301a230102200c220082100720005200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001200101c53020740130401a54014040217401204017740155401b0400f0401e540105401854012740157401b50020700020000a000110001570011700125000b0000f500140001950011700147001a7000f500
+001002010c15007050070500c150090500d050081500d150110500d05011150081500b050081500e550131500855010150081500e5500a1500e05012550071501315018550160501a5500c150111500000000000
+0012001205730095400574008030090300d0500e140100400a0500f550090500c0500675010540067500a150070400f050011000e0000b5000830000000000000000000000000000000000000000000000000000
+001000070a0500a050000000a05000000000000805000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000040675005450057500625001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000001d550265501a550215501355019550095500f550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0010000815720035400a740075400a740055400a740065400000000000000000c70000000000003e5000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0010000a017400733013700084000a330063200800004400033300775008100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0010000906050080500000000000010500505000000030500c0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001000040235000000023500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0010000414150081500e1500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+001400060545006450000000445007450000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+0014000d0a25003250000000425000000074500b2500f450016300a10001630077500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1665,20 +1851,20 @@ __sfx__
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
-01 0e0f4344
-00 0e0f4344
-02 0e0f4d45
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
-00 41424344
+01 1a5a4344
+02 1a184344
+02 4e0f4d45
+01 1b5c4344
+02 1b1c4344
+03 0b424344
+03 0c424344
+03 1e424344
+00 60424344
+03 201f4344
+01 22624344
+02 21424344
+01 23424344
+02 24424344
 00 41424344
 00 41424344
 00 4b4e4544
@@ -1729,4 +1915,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
