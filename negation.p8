@@ -1249,7 +1249,12 @@ function _update()
     if btn(2) then
       player.y -= move
       add(moves, {player.x, player.y})
-      if (bump(player.x + 4, player.y + 3) or bumpwall(player.x+4,player.y+3) or bump(player.x + 11, player.y + 3) or bumpwall(player.x+11,player.y+3)) player.y = previousy
+      if (bump(player.x + 4, player.y + 3) or bump(player.x + 11, player.y + 3)) player.y = previousy
+      for x = player.x+4,player.x+11 do
+        if bumpwall(x,player.y+3) then
+          player.y = previousy
+        end
+      end
     end
 
     --========================
@@ -1258,7 +1263,13 @@ function _update()
     if btn(3) then
       player.y += move
       add(moves, {player.x, player.y})
-      if (bump(player.x + 4, player.y + 12) or bumpwall(player.x+4,player.y+12) or bump(player.x + 11, player.y + 12) or bumpwall(player.x+11,player.y+12)) player.y = previousy
+      if (bump(player.x + 4, player.y + 12) or bump(player.x + 11, player.y + 12)) player.y = previousy
+      for x = player.x+4,player.x+11 do
+        if bumpwall(x,player.y+12) then
+          player.y = previousy
+        end
+      end
+    
     end
 
     --========================
@@ -1267,7 +1278,12 @@ function _update()
     if btn(0) then
       player.x -= move
       add(moves, {player.x, player.y})
-      if (bump(player.x + 3, player.y + 4) or bumpwall(player.x+3,player.y+4) or bump(player.x + 3, player.y + 11) or bumpwall(player.x+3,player.y+11)) player.x = previousx
+      if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11))  player.x = previousx
+      for y = player.y+4,player.y+11 do
+        if bumpwall(player.x+3,y) then
+          player.x = previousx
+        end
+      end
     end
 
     --========================
@@ -1276,7 +1292,12 @@ function _update()
     if btn(1) then
       player.x += move
       add(moves, {player.x, player.y})
-      if (bump(player.x + 12, player.y + 4) or bumpwall(player.x+12,player.y+4) or bump(player.x + 12, player.y + 11) or bumpwall(player.x+12,player.y+11)) player.x = previousx
+      if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
+      for y = player.y+4,player.y+11 do
+        if bumpwall(player.x+12,y) then
+          player.x = previousx
+        end
+      end
     end
 
     --========================================================================--
@@ -1547,15 +1568,15 @@ __gff__
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000002020202020002020000000000000000000200000808080002000000000000000000000008080108000000080800000000000000080800010100000808
 __map__
 eaefefefefefefefefefefefeaefefeffefafacbccc5dbdbdbdbdbdbdbdbdbc3dcc1dcdce0e0e1f0f0f0f0f0f0f0f0f0f0e5f0e5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f50c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f51bf50c1d1dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbdbdbdbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f51bf5f5f50c1d1dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
-fecbcbcbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5dbdbdbdbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f51af5f5f50c1d1d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2bc02b2c2b2cc02c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
-fecbcbcbcdfbfbfccbcbcbcbcbcbcbcbfecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f519081df3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c181818183b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
+fecbeacbcbcbcbcbcbcbcbcbcbfafafafefafacbccc5dbdbdbdbdbdbdbdbc6dcdcdcdce0e1f0f0f0f0f1f0f0f0f0f1f0f0f0f5f5e5f5f5f6f5f5f5f5f5f5f5c5dbc6f5f6f5f5f51bf50c1d1dc0c01d1d1df3f3f3f31d1d1dc0c01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d1d1d1d1d1d1d1d1d1d1d1d1d1d2b0000000000
+fecbfecbcbcbcbcbcbcbcbcbcbfafafafefafacbccc4dbdbdbdbdbdbdbdbc3dcdcdce0dce0e1f0f0f0f0f0f0f0f0f0f0f0e5f0f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f51bf5f5f50c1d1dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
+fecbfecbcefdfdcfcbcbcbcbd9eeeeeefefacbcbccdcc5dbdbdbdbdbdbc3c1dcdcdce0e1dcdcf0f0f0f0f0f0f1f0f0f0f0f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f51af5f5f50c1d1d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2bc02b2c2b2cc02c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
+fecbfecbcdfbfbfccbcbcbcbcbcbcbcbfecbcbcbccdcc4cacacacacac3dcdcdcc1dcdce0dce0e1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f519081df3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c181818183b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
 fecbcbcbdeddfbfccbcbcbd8cbcbd8cbfecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdce0e1f0f0f0f0f0f0f0f0f2f2f2f0f5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2bc02b2c2b2cc02c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcdfbfccbd7cbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0d6f5c7dbdbd4f5f51ad3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbdeeddfcbd7cbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0e6f5f5c5dbc6f5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0292ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcbcbcbcbd7cbcbcbcbcbebeccbcbcbd0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5c5dbc6f51be3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0393ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbeeeeeecbcbcbd7cbcbcbcbcbebeccbcbcbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcdfbfccbfecbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1e0e1f0f0f0f0f0f0f0f0f2f2f2f2f2f2d0d0d0d0d0d0d0d0d0d0d6f5c7dbdbd4f5f51ad3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbdeeddfcbfecbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdcdcd0d0d0f2d0d0f0f0f1f0f0d0f2f2f0f0f2d0d0d0d0d0d0d0d0d0d0d0e6f5f5c5dbc6f5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0292ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbfecbcbcbcbcbebeccbcbcbd0d0d0c1dcdcdcdcc1d0d0d0f2d0f2d0d0f2d0d0d0f2d0d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5c5dbc6f51be3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0393ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbeeeeeecbcbcbfecbcbcbcbcbebeccbcbcbd0d0d0d0d0d0dcd0d0d0d0d0d0dce0e1e1f0d0f2f2d0f2d0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcefdfdfdcfcbcbcbcbcbcbcbcbebeccbcbcbccdcd0d0d0d0d0d0d0dcdcdcdcdcdce0e0f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f51ae3dac8f93b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3bc03b3c3b3cc03c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcdddddddfccbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdce0e1f0f0e1f0f0f0f1f0f0f1f0f0f0e5f0f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f50a1c1df3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c181818182b2c2b2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
 fecbcdfbddfbfccbcbd9cbcbcefdfdfdfecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1e0e1f0f0f0f0f0f0f0f0f0f0f0f0f0f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50c1d0b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3bc03b3c3b3cc03c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
