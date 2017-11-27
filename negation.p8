@@ -968,7 +968,7 @@ end
 function move_anim(l)
   local col = {8,9,10}
   for i=1,5 do
-    pset(rnd(5)+(l[1]+8)+6*sin(player_angle / 360), rnd(5)+(l[2]+8)+6*cos(player_angle / 360), col[i%#col + 1])
+    pset((l[1]+8)+6*sin(player_angle / 360), (l[2]+8)+6*cos(player_angle / 360), col[i%#col + 1])
   end
 end
 
