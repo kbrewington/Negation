@@ -17,7 +17,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .1
+player_fire_rate = .75
 player_killed = 0
 player_tokens = 0
 
@@ -107,23 +107,6 @@ title = {
 }
 
 --============================= helper functions =============================--
-function debug()
-  local debug_color = 14
-  local cpucolor = debug_color
-
-  print("px: " .. player.x, 0, 0, debug_color)
-  print("py: " .. player.y, 45, 0, debug_color)
-
-  print("me: " .. round((stat(0)/1024)*100, 2) .. "%", 0, 6, debug_color)
-  if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
-  print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
-
-  print(mget((player.x + 12) / 8, (player.y + 4) / 8), 45, 12, debug_color)
-  print(fget(mget((player.x + 12) / 8, (player.y + 4) / 8)), 0, 12, debug_color)
-
-  print("", 0, 18, debug_color)
-  print("", 45, 18, debug_color)
-end
 
 function gameflow()
   -- start game
@@ -272,16 +255,28 @@ end
 function hcenter(s) return 64-flr((s*4)/2) end
 
 function minimum_neighbor(start, goal)
-  local map = {}
-  map.x, map.y = 128, 120
-  -- map.y = 120
+  -- closed = {}
+  -- open = {start}
+  -- camefrom = {}
+  -- gscore = {}
+  -- gscore[start] = 0
+  -- fscore = {}
+  -- fscore[start] = distance(start, goal, 'l')
+  -- while #open>0 do
+  --   mini = fscore[open[1]]
+  --   for i in all(open) do
+  --     if (fscore[i] < mini) mini = fscore[i]; curr = i
+  --   end
+  --   if (curr == goal) return camefrom
+  --   del(open, curr)
+  --   add(closed, curr)
+  -- end
   local minimum_dist, min_node = 8000, start
-  -- local min_node = start
     for i=0xffff,1 do
       for j=0xffff,1 do
         local nx = start.x+(i*enemy().speed)
         local ny = start.y+(j*enemy().speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) and not bump(nx, ny, 2) then
+        if 0 < nx and nx < 128 and 0 < ny and ny < 120 and not bump_all(nx, ny) and not bump(nx, ny, 2) then
           local current = enemy(nx, ny)
           local cur_distance = distance(current, goal)
           if cur_distance < minimum_dist then
@@ -289,13 +284,20 @@ function minimum_neighbor(start, goal)
             min_node = current
           end
         end
-      end -- end j for
-    end --end i for
+      end
+    end
     return min_node
 end
 
-function distance(n, d)
-  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
+-- function route(ang, x, y)
+--   for i in all({0,1,-1,2,-2,3,-3}) do
+--     angl = flr(ang/45)*45+i*45
+--     if (not bump_all(x-2*sin(angl),y-2*cos(angl))) return angl
+--   end
+-- end
+
+function distance(n, d, m)
+  return (m==nil) and sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) or abs(n.x-d.x)+abs(n.y-d.y)
 end
 
 function angle_btwn(tx, ty, fx, fy)
@@ -344,7 +346,7 @@ end
 
 function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
+  e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
@@ -354,17 +356,17 @@ function enemy(x, y, type, time_spwn)
   e.speed = type == "exploder" and .9 or .35
 
   e.update_xy = function()
-                    path = minimum_neighbor(e, player)
-                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xffff)
-                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xffff)
+                    path = --[[(route(e.angle, e.x, e.y) or 360)]]minimum_neighbor(e, player)
+                    e.x = --[[e.x - e.speed*sin(path/360) ]]e.x + ((e.x-path.x)*e.speed)*(0xffff)
+                    e.y = --[[e.y - (e.speed)*cos(path/360) ]]e.y + ((e.y-path.y)*e.speed)*(0xffff)
                 end
   e.move = function()
+                e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                 if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
                     e.dont_move = false
                   else
-                    e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                     e.b_count += 1; e.dont_move = true
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
                   end
@@ -1154,27 +1156,6 @@ end
 function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
-
--- function collide_all_enemies()
---   local e = enemy_spawned[1]
---   for o in all(enemy_spawned) do
---     if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
---   end
--- end
-
--- function fix_enemy(o, e)
---   local function fix_coord(o,e,c)
---     if (o[c] - e[c]) < 0 then
---       o[c] = o[c] - 8
---     elseif (o[c] - e[c]) > 0 then
---       o[c] = o[c] + 8
---     elseif (o[c] == e[c]) then
---       o[c] = o[c] + 8
---     end
---   end
---   fix_coord(o,e,'x')
---   fix_coord(o,e,'y')
--- end
 
 function player_hit(d)
   player_health -= d
