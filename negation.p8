@@ -591,7 +591,8 @@ function draw_dialog()
   local d = seraph.text
 
   if (seraph.step == nil) seraph.step = 0
-  if (seraph.step < #d) wait.dialog_finish = false
+  --if (seraph.step < #d) wait.dialog_finish = false
+  wait.dialog_finish = (seraph.step < 30) and true or false
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -628,7 +629,7 @@ function draw_dialog()
   if (seraph.step > 30) print(sub(d, 31, min(seraph.step, 60)), 5, 113, fnt_color)
   if (seraph.step > 60) print(sub(d, 61, min(seraph.step, 90)), 5, 119, fnt_color)
   seraph.step = min(seraph.step+1, #d+30)
-  if (seraph.step == #d+30) wait.dialog_finish = false
+  --if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
 function drawcountdown()
@@ -858,7 +859,7 @@ function show_leaderboard()
   rectfill(0,0,128,128,0)
   print("you died",hcenter(8), 55, 8)
   --k = min(player_killed, k+0.5)
-  if (k<player_killed-1) k += 0.5
+  if (k<player_killed-1) k += player_killed*.01--0.5
   local t = "killed: "..flr(k)
   print(t, hcenter(#t), 63, 5)
   print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
@@ -1008,7 +1009,8 @@ function skill_tree()
   elseif btnp(3) then
     diff = 1
     sfx(0)
-  elseif btnp(5) then
+  --elseif btnp(5) then
+  elseif continuebuttons() then
     if selection_set[currently_selected] == "quit" then
       in_skilltree = false
       sfx(0)
