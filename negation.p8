@@ -221,7 +221,10 @@ function gameflow()
   spawntime_start,detect_killed_enemies = 75, true
   yield()
 
-  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it."
+  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it..."
+  yield()
+
+  seraph.text = "it needs your blood so please do us a favor and just die!"
   yield()
 
   kill_all_enemies(true)
@@ -235,7 +238,7 @@ function gameflow()
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
   yield()
 
-  seraph.text = "no matter. we'll just use yourbody to summon it again."
+  seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
 
   seraph.text = "to be continued..."
@@ -1206,7 +1209,7 @@ function _update()
     --========================
     --middle mouse button-----
     --========================
-    if stat(34) == 4 and timers["middleclick"] == 0 then -- cycle inventory
+    if (stat(34) == 4 or btn(5)) and timers["middleclick"] == 0 then -- cycle inventory
       local temp = 0
       if #player_inventory > 1 then
         for i=1,#player_inventory do
@@ -1249,6 +1252,15 @@ function _update()
         invt.ammo -= 1
         timers["showinv2"] = 1.2 --player_power_fire_rate + 0.2
       end
+    end
+
+    --========================
+    --o button----------------
+    --========================
+    if btnp(4) and #player_inventory > 0 then
+      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite))
+      del(player_inventory, player_inventory[1])
+      timers["showinv"], timers["showinv2"] = .5, 0
     end
 
     --========================
