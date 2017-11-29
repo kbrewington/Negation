@@ -577,11 +577,18 @@ function draw_controls()
   rectfill(11, 21, 116, 100, 6)
 
   print("use the mouse to aim!", 21, 30, 8)
-  print("use: left click to shoot", 18, 55, 5)
-  print("middle click to", 38, 65, 5)
-  print("switch power ups", 38, 71, 5)
-  print("right click to", 38, 81, 5)
-  print("shoot power ups", 38, 87, 5)
+  print("wasd TO MOVE", 17, 38, 5)
+  print("left click  TO SHOOT", 17, 48, 5)
+  print("right click TO SHOOT", 17, 58, 5)
+  print("POWER UPS", 17, 64, 5)
+  print("e TO SWITCH POWER UPS", 17, 74, 5)
+  print("q TO DROP POWER UP", 17, 84, 5)
+
+  -- print("use: left click to shoot", 18, 55, 5)
+  -- print("middle click to", 38, 65, 5)
+  -- print("switch power ups", 38, 71, 5)
+  -- print("right click to", 38, 81, 5)
+  -- print("shoot power ups", 38, 87, 5)
 end
 
 function draw_dialog()
