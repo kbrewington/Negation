@@ -1,5 +1,14 @@
 #!/usr/bin/env python3
 
+# This script parses the html and javascript files in the current directory
+# with the aim to allow mouse usage while the html file is in "fullscreen"
+# mode. This script assumes that there is only one html and one js file
+# present in the current directory and its usage is undefined otherwise.
+# The changes made to the html and javascript files are sourced from 
+# TODO: cite this.. 
+#
+# This script has been tested on Arch Linux.
+
 import glob
 import os
 
