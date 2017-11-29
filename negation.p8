@@ -17,7 +17,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .1
+player_fire_rate = .75
 player_killed = 0
 player_tokens = 0
 
@@ -89,43 +89,25 @@ currently_selected = 1
 selection_set = {"speed", "fire rate", "health", "quit"}
 next_cost = {1, 1, 1}
 skills_selected = {true, false, false, false}
-
 title = {
-  startx = 23,
-  starty = 50,
-  text = {         "12,12,12,12, 0, 0, 0,12,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0, 0,12,12,12,12,12, 0, 0,12,12,12,12,12,12,12, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12,12, 0, 0, 0,12,12,12",
-                   "12, 1, 1, 1,12, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0,12, 1,12",
-                   "12, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0,12,12,12, 1,12,12,12, 0,12,12,12, 1,12,12, 0, 0,12, 1,12,12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12",
-                   "12, 1,12,12, 1, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0, 0, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12,12, 1, 1,12,12, 1,12",
-                   "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12,12,12, 0,12, 1, 1,12, 1, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
-                   "12, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1, 1, 1,12, 0, 0, 0, 12, 1,12, 0,12, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0,12, 1, 1, 1, 1,12",
-                   "12, 1,12, 0, 0,12, 1, 1, 1,12, 0,12, 1,12,12,12, 0, 0, 0, 12, 1,12, 0,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0,12, 1, 1, 1,12",
-                   "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0, 0, 12, 1,12, 0, 0,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
-                   "12, 1,12, 0, 0, 0,12, 1, 1,12, 0,12, 1,12,12,12,12,12, 0, 12, 1,12,12,12,12, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12,12,12, 1,12,12,12, 0,12, 1,12,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1, 1,12",
-                   "12, 1,12, 0, 0, 0, 0,12, 1,12, 0,12, 1, 1, 1, 1, 1,12, 0, 12, 1, 1, 1, 1, 1, 1,12, 0,12, 1,12, 0,12, 1,12, 0, 0, 0,12, 1,12, 0, 0, 0,12, 1, 1, 1, 1, 1,12, 0,12, 1, 1, 1, 1,12, 0,12, 1,12, 0, 0, 0, 0,12, 1,12",
-                   "12,12,12, 0, 0, 0, 0, 0,12,12, 0,12,12,12,12,12,12,12, 0, 12,12,12,12,12,12,12,12, 0,12,12,12, 0,12,12,12, 0, 0, 0,12,12,12, 0, 0, 0,12,12,12,12,12,12,12, 0, 0,12,12,12,12, 0, 0,12,12,12, 0, 0, 0, 0, 0,12,12"}
+  startx = 28,
+  starty = 20,
+  text = {         "12,12,12,12, 8, 8, 8,12,12,12, 8,12,12,12,12,12,12,12, 8, 12,12,12,12,12,12,12,12, 8, 8,12,12,12,12,12, 8, 8,12,12,12,12,12,12,12, 8,12,12,12,12,12,12,12, 8, 8,12,12,12,12, 8, 8,12,12,12,12, 8, 8, 8,12,12,12",
+                   "12, 1, 1, 1,12, 8, 8,12, 1,12, 8,12, 1, 1, 1, 1, 1,12, 8, 12, 1, 1, 1, 1, 1, 1,12, 8,12, 1, 1, 1, 1, 1,12, 8,12, 1, 1, 1, 1, 1,12, 8,12, 1, 1, 1, 1, 1,12, 8,12, 1, 1, 1, 1,12, 8,12, 1, 1, 1,12, 8, 8,12, 1,12",
+                   "12, 1, 1, 1, 1,12, 8,12, 1,12, 8,12, 1,12,12,12,12,12, 8, 12, 1,12,12,12,12,12,12, 8,12, 1, 1,12, 1, 1,12, 8,12,12,12, 1,12,12,12, 8,12,12,12, 1,12,12, 8, 8,12, 1,12,12, 1,12, 8,12, 1, 1, 1, 1,12, 8,12, 1,12",
+                   "12, 1,12,12, 1, 1,12,12, 1,12, 8,12, 1,12, 8, 8, 8, 8, 8, 12, 1,12, 8, 8, 8, 8, 8, 8,12, 1, 1, 1, 1, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1,12,12, 1,12, 8,12, 1,12,12, 1, 1,12,12, 1,12",
+                   "12, 1,12, 8,12, 1, 1, 1, 1,12, 8,12, 1,12,12,12, 8, 8, 8, 12, 1,12, 8,12,12,12,12, 8,12, 1, 1,12, 1, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1,12,12, 1,12, 8,12, 1,12, 8,12, 1, 1, 1, 1,12",
+                   "12, 1,12, 8,12, 1, 1, 1, 1,12, 8,12, 1, 1, 1,12, 8, 8, 8, 12, 1,12, 8,12, 1, 1,12, 8,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1,12,12, 1,12, 8,12, 1,12, 8,12, 1, 1, 1, 1,12",
+                   "12, 1,12, 8, 8,12, 1, 1, 1,12, 8,12, 1,12,12,12, 8, 8, 8, 12, 1,12, 8,12,12, 1,12, 8,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1,12,12, 1,12, 8,12, 1,12, 8, 8,12, 1, 1, 1,12",
+                   "12, 1,12, 8, 8, 8,12, 1, 1,12, 8,12, 1,12, 8, 8, 8, 8, 8, 12, 1,12, 8, 8,12, 1,12, 8,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1,12,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1, 1,12",
+                   "12, 1,12, 8, 8, 8,12, 1, 1,12, 8,12, 1,12,12,12,12,12, 8, 12, 1,12,12,12,12, 1,12, 8,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8,12,12,12, 1,12,12,12, 8,12, 1,12,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1, 1,12",
+                   "12, 1,12, 8, 8, 8, 8,12, 1,12, 8,12, 1, 1, 1, 1, 1,12, 8, 12, 1, 1, 1, 1, 1, 1,12, 8,12, 1,12, 8,12, 1,12, 8, 8, 8,12, 1,12, 8, 8, 8,12, 1, 1, 1, 1, 1,12, 8,12, 1, 1, 1, 1,12, 8,12, 1,12, 8, 8, 8, 8,12, 1,12",
+                   "12,12,12, 8, 8, 8, 8, 8,12,12, 8,12,12,12,12,12,12,12, 8, 12,12,12,12,12,12,12,12, 8,12,12,12, 8,12,12,12, 8, 8, 8,12,12,12, 8, 8, 8,12,12,12,12,12,12,12, 8, 8,12,12,12,12, 8, 8,12,12,12, 8, 8, 8, 8, 8,12,12"}
 }
 
 playonce = 0
 
 --============================= helper functions =============================--
-function debug()
-  local debug_color = 14
-  local cpucolor = debug_color
-
-  print("px: " .. player.x, 0, 0, debug_color)
-  print("py: " .. player.y, 45, 0, debug_color)
-
-  print("me: " .. round((stat(0)/1024)*100, 2) .. "%", 0, 6, debug_color)
-  if stat(1) > 1 then cpucolor = 8 end --means we're not using all 30 draws (bad)
-  print("cp: " ..round(stat(1)*100, 2) .. "%", 45, 6, cpucolor)
-
-  print(mget((player.x + 12) / 8, (player.y + 4) / 8), 45, 12, debug_color)
-  print(fget(mget((player.x + 12) / 8, (player.y + 4) / 8)), 0, 12, debug_color)
-
-  print("", 0, 18, debug_color)
-  print("", 45, 18, debug_color)
-end
 
 function gameflow()
   -- start game
@@ -240,7 +222,10 @@ function gameflow()
   spawntime_start,detect_killed_enemies = 75, true
   yield()
 
-  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it."
+  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it..."
+  yield()
+
+  seraph.text = "it needs your blood so please do us a favor and just die!"
   yield()
 
   kill_all_enemies(true)
@@ -254,7 +239,7 @@ function gameflow()
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
   yield()
 
-  seraph.text = "no matter. we'll just use yourbody to summon it again."
+  seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
 
   seraph.text = "to be continued..."
@@ -273,31 +258,25 @@ end
 -- http://pico-8.wikia.com/wiki/centering_text
 function hcenter(s) return 64-flr((s*4)/2) end
 
-function minimum_neighbor(start, goal)
-  local map = {}
-  map.x, map.y = 128, 120
-  -- map.y = 120
-  local minimum_dist, min_node = 8000, start
-  -- local min_node = start
-    for i=0xffff,1 do
-      for j=0xffff,1 do
-        local nx = start.x+(i*enemy().speed)
-        local ny = start.y+(j*enemy().speed)
-        if 0 < nx and nx < map.x and 0 < ny and ny < map.y and not bump_all(nx, ny) and not bump(nx, ny, 2) then
-          local current = enemy(nx, ny)
-          local cur_distance = distance(current, goal)
-          if cur_distance < minimum_dist then
-            minimum_dist = cur_distance
-            min_node = current
-          end
-        end
-      end -- end j for
-    end --end i for
-    return min_node
+function route(ang, x, y)
+  for i in all({0,-1,1,-2,2,-3,3}) do
+    angl = ang+i*45
+    if (look(angl,x,y)) return angl
+  end
+  return ang
 end
 
-function distance(n, d)
-  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
+function look(ang,x,y)
+  for i=1,8 do
+    x,y=x-i*sin(ang/360),y-i*cos(ang/360)
+    -- pset(x,y,10)
+    if (bump_all(x,y)) return false
+  end
+  return true
+end
+
+function distance(n, d, m)
+  return (m==nil) and sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) or abs(n.x-d.x)+abs(n.y-d.y)
 end
 
 function angle_btwn(tx, ty, fx, fy)
@@ -346,7 +325,7 @@ end
 
 function enemy(x, y, type, time_spwn)
   local e = {}
-  e.x, e.y, e.time, e.b_count =  x, y, time_spwn, 0
+  e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
@@ -356,17 +335,17 @@ function enemy(x, y, type, time_spwn)
   e.speed = type == "exploder" and .9 or .35
 
   e.update_xy = function()
-                    path = minimum_neighbor(e, player)
-                    e.x = e.x + ((e.x-path.x)*e.speed)*(0xffff)
-                    e.y = e.y + ((e.y-path.y)*e.speed)*(0xffff)
+                    path = route(e.angle, e.x, e.y)
+                    e.x = e.x - e.speed*sin(path/360)
+                    e.y = e.y - (e.speed)*cos(path/360)
                 end
   e.move = function()
+                e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                 if e.type == "shooter" then
                   if distance(e, player) >= e.shoot_distance then
                     e.update_xy()
                     e.dont_move = false
                   else
-                    e.angle = angle_btwn(player.x+5, player.y+5, e.x, e.y)
                     e.b_count += 1; e.dont_move = true
                     if (e.b_count%e.fire_rate == 0) shoot(e.x, e.y, e.angle, 133, false, false)
                   end
@@ -491,9 +470,14 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 13
            elseif b.level == 10 then
-             b.x = player.x+50*sin(p_ang/360)
-             b.y = player.y+50*cos(p_ang/360)
-             if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
+             if (flr(timers["bossstart"])%3 == 0) for i=-20,20,40 do b.circs[#b.circs+1] = {b.x-i*sin(p_ang/360),b.y,25} end
+             for c in all(b.circs) do
+               circ(c[1],c[2],25,8)
+               if c[3]>0 then c[3]-=1 else del(b.circs,c) end
+             end
+             -- b.x = player.x+50*sin(p_ang/360)
+             -- b.y = player.y+50*cos(p_ang/360)
+             -- if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -532,7 +516,14 @@ function spr_r(s,x,y,a,w,h)
 end
 
 function draw_titlescreen()
-  rectfill(0, 0, 127, 127, 0)
+  rectfill(0, 0, 127, 127, 13)
+  circfill(64, 35, 45+time()%2, 8)
+  rectfill(0, 35, 128, 128, 0)
+  line(0, 35, 128, 35, 12)
+  for i=0,10 do
+    line(14+i*10,35,-96+i*32,128,12)
+    line(0, 35+(i)*10+abs(time()*20%10),128, 35+(i)*10+abs(time()*20%10),12)
+  end
 
   if not title.drawn then
     sfx(7)
@@ -572,13 +563,13 @@ function draw_titlescreen()
     music(1)
     playonce+=1
   end
-  
-  if title.init+4 < (flr(time())-1) then
-    music(-1)
-  end
-  
+
+  --if title.init+4 < (flr(time())-1) then
+    --music(-1)
+  --end
+
   --print("press \x8e/\x97 to start", 20, 100, flr(time()*5)%15+1)
-  print("press left click to start", hcenter(25), 100, flr(time())%15+1)
+  print("left click to start", 28, 100, flr(time())%15+1)
 end
 
 function draw_controls()
@@ -600,7 +591,8 @@ function draw_dialog()
   local d = seraph.text
 
   if (seraph.step == nil) seraph.step = 0
-  if (seraph.step < #d) wait.dialog_finish = false
+  --if (seraph.step < #d) wait.dialog_finish = false
+  wait.dialog_finish = (seraph.step < 30) and true or false
 
   rectfill(3, 99, 27, 105, bck_color) -- name rect
   rectfill(27, 99, 27, 126, bck_color) -- angle
@@ -637,7 +629,7 @@ function draw_dialog()
   if (seraph.step > 30) print(sub(d, 31, min(seraph.step, 60)), 5, 113, fnt_color)
   if (seraph.step > 60) print(sub(d, 61, min(seraph.step, 90)), 5, 119, fnt_color)
   seraph.step = min(seraph.step+1, #d+30)
-  if (seraph.step == #d+30) wait.dialog_finish = false
+  --if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
 function drawcountdown()
@@ -810,8 +802,15 @@ function bullets_player()
       if (b.rocket) rocket_kill(b)
       return
     end
-
-    spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    if (b.sprite==34) then
+      for i=-1,6,7 do
+        -- pset(b.x,b.y,10)
+        pset(b.x+i*sin((90+b.angle)/360)+3, b.y+i*cos((90+b.angle)/360)+2, 10)
+        -- line(b.x+i*sin((90+b.angle)/360), b.y+i*cos((90+b.angle)/360), b.x-2*sin(b.angle/360)+i*sin((90+b.angle)/360),b.y-2*cos(b.angle/360)+i*cos((90+b.angle)/360),10)
+      end
+    else
+      spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    end
     b.move()
     if (b.duration <= 0) del(player_bullets, b); return
 
@@ -867,7 +866,7 @@ function show_leaderboard()
   rectfill(0,0,128,128,0)
   print("you died",hcenter(8), 55, 8)
   --k = min(player_killed, k+0.5)
-  if (k<player_killed-1) k += 0.5
+  if (k<player_killed-1) k += player_killed*.01--0.5
   local t = "killed: "..flr(k)
   print(t, hcenter(#t), 63, 5)
   print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
@@ -977,7 +976,7 @@ end
 function move_anim(l)
   local col = {8,9,10}
   for i=1,5 do
-    pset(rnd(5)+(l[1]+8)+6*sin(player_angle / 360), rnd(5)+(l[2]+8)+6*cos(player_angle / 360), col[i%#col + 1])
+    pset((l[1]+8)+6*sin(player_angle / 360), (l[2]+8)+6*cos(player_angle / 360), col[i%#col + 1])
   end
 end
 
@@ -1017,7 +1016,8 @@ function skill_tree()
   elseif btnp(3) then
     diff = 1
     sfx(0)
-  elseif btnp(5) then
+  --elseif btnp(5) then
+  elseif continuebuttons() then
     if selection_set[currently_selected] == "quit" then
       in_skilltree = false
       sfx(0)
@@ -1166,27 +1166,6 @@ function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
--- function collide_all_enemies()
---   local e = enemy_spawned[1]
---   for o in all(enemy_spawned) do
---     if (o~=e and ent_collide(e, o)) fix_enemy(o, e)
---   end
--- end
-
--- function fix_enemy(o, e)
---   local function fix_coord(o,e,c)
---     if (o[c] - e[c]) < 0 then
---       o[c] = o[c] - 8
---     elseif (o[c] - e[c]) > 0 then
---       o[c] = o[c] + 8
---     elseif (o[c] == e[c]) then
---       o[c] = o[c] + 8
---     end
---   end
---   fix_coord(o,e,'x')
---   fix_coord(o,e,'y')
--- end
-
 function player_hit(d)
   player_health -= d
   sfx(18)
@@ -1217,7 +1196,7 @@ function _update()
   for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
   if (level_change)  levelchange()
   if (titlescreen == nil and continuebuttons()) titlescreen = true; return
-  if (drawcontrols and continuebuttons()) showcontrols = false coresume(game); return
+  if (drawcontrols and continuebuttons()) music(-1) showcontrols = false coresume(game); return
   if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
   if (in_skilltree) skill_tree(); return;
   if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
@@ -1234,7 +1213,7 @@ function _update()
     --========================
     --middle mouse button-----
     --========================
-    if stat(34) == 4 and timers["middleclick"] == 0 then -- cycle inventory
+    if (stat(34) == 4 or btn(5)) and timers["middleclick"] == 0 then -- cycle inventory
       local temp = 0
       if #player_inventory > 1 then
         for i=1,#player_inventory do
@@ -1277,6 +1256,15 @@ function _update()
         invt.ammo -= 1
         timers["showinv2"] = 1.2 --player_power_fire_rate + 0.2
       end
+    end
+
+    --========================
+    --o button----------------
+    --========================
+    if btnp(4) and #player_inventory > 0 then
+      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite))
+      del(player_inventory, player_inventory[1])
+      timers["showinv"], timers["showinv2"] = .5, 0
     end
 
     --========================
@@ -1646,8 +1634,8 @@ __sfx__
 000d00000c0500c0500f0500c050090000d0000e100100000c0500c0500f0500c0500670010500067000a1000c0500c0500f0500c0501105013050140501505012050000000000011050000000f0500c0500c050
 000d00000c3530a000000000a0000c655000000c353000000c3530000000000000000c6550000000000000000c3530000000000000000c655000000c353000000c353000000c003000000c353000000c65500000
 001000040675005450057500625001400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-001000001d550265501a550215501355019550095500f550000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-0010000815720035400a740075400a740055400a740065400000000000000000c70000000000003e5000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+000d000012050265001a500110501100019500110500f0501205000000000001105011000000001305014050130500000000000110501100000000110500f0501205000000000001105011000000000f0500c050
+000d00001e050265001a5001d05011000195001d0501b0501e05000000000001d05011000000001f050200501f05000000000001d05011000000001d0501b0501e05000000000001d05000000000001b05018050
 0010000a017400733013700084000a330063200800004400033300775008100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 0010000906050080500000000000010500505000000030500c0500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000040235000000023500000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -1682,7 +1670,7 @@ __sfx__
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __music__
-01 525a0304
+01 1d181e1b
 02 1a18191b
 02 4e0f4d45
 01 1b5c4344
