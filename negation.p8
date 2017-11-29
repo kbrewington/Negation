@@ -266,7 +266,7 @@ end
 function look(ang,x,y)
   for i=1,8 do
     x,y=x-i*sin(ang/360),y-i*cos(ang/360)
-    pset(x,y,10)
+    -- pset(x,y,10)
     if (bump_all(x,y)) return false
   end
   return true
