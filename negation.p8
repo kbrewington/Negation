@@ -259,7 +259,7 @@ function hcenter(s) return 64-flr((s*4)/2) end
 function route(ang, x, y)
   for i in all({0,-1,1,-2,2,-3,3}) do
     angl = ang+i*45
-    if (look(angl,x,y)) line(x,y,x-24*sin(angl/360),y-24*cos(angl/360),8);return angl
+    if (look(angl,x,y)) return angl
   end
   return ang
 end
@@ -267,7 +267,7 @@ end
 function look(ang,x,y)
   for i=1,8 do
     x,y=x-i*sin(ang/360),y-i*cos(ang/360)
-    pset(x,y,10)
+    -- pset(x,y,10)
     if (bump_all(x,y)) return false
   end
   return true
