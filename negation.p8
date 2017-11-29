@@ -121,7 +121,7 @@ function gameflow()
   yield()
 
   fill_enemy_table(1, 65)
-  spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
+  spawn_time_start, timers["leveltimer"], wait.timer =  60, 2, true
   yield()
 
   kill_all_enemies(true)
@@ -129,7 +129,7 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(60, 60, 128, 1, 40))
+  init_tele_anim(boss(60, 60, 5, 10, 40))
   --music(3)
   yield()
 
@@ -257,16 +257,17 @@ end
 function hcenter(s) return 64-flr((s*4)/2) end
 
 function route(ang, x, y)
-  for i in all({0,-1,1,-2,2}) do
+  for i in all({0,-1,1,-2,2,-3,3}) do
     angl = ang+i*45
-    if (look(angl,x,y)) return angl
+    if (look(angl,x,y)) line(x,y,x-24*sin(angl/360),y-24*cos(angl/360),8);return angl
   end
+  return ang
 end
 
 function look(ang,x,y)
   for i=1,8 do
     x,y=x-i*sin(ang/360),y-i*cos(ang/360)
-    -- pset(x,y,10)
+    pset(x,y,10)
     if (bump_all(x,y)) return false
   end
   return true
@@ -417,7 +418,7 @@ function boss(startx, starty, sprite, lvl, hp)
               if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
-               line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
+              line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
               if (distance(player, b) <= 30+8) shoot(b.x, b.y, p_ang, 141, false, true)
             else
               b.angle = (b.angle+6)%360
@@ -467,9 +468,14 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 13
            elseif b.level == 10 then
-             b.x = player.x+50*sin(p_ang/360)
-             b.y = player.y+50*cos(p_ang/360)
-             if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
+             if (flr(timers["bossstart"])%3 == 0) for i=-20,20,40 do b.circs[#b.circs+1] = {b.x-i*sin(p_ang/360),b.y,25} end
+             for c in all(b.circs) do
+               circ(c[1],c[2],25,8)
+               if c[3]>0 then c[3]-=1 else del(b.circs,c) end
+             end
+             -- b.x = player.x+50*sin(p_ang/360)
+             -- b.y = player.y+50*cos(p_ang/360)
+             -- if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -785,8 +791,15 @@ function bullets_player()
       if (b.rocket) rocket_kill(b)
       return
     end
-
-    spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    if (b.sprite==34) then
+      for i=-1,6,7 do
+        -- pset(b.x,b.y,10)
+        pset(b.x+i*sin((90+b.angle)/360)+3, b.y+i*cos((90+b.angle)/360)+2, 10)
+        -- line(b.x+i*sin((90+b.angle)/360), b.y+i*cos((90+b.angle)/360), b.x-2*sin(b.angle/360)+i*sin((90+b.angle)/360),b.y-2*cos(b.angle/360)+i*cos((90+b.angle)/360),10)
+      end
+    else
+      spr_r(b.sprite, b.x, b.y, b.angle, 1, 1)
+    end
     b.move()
     if (b.duration <= 0) del(player_bullets, b); return
 
