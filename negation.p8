@@ -50,7 +50,8 @@ timers = {
   firerate = 0,
   invalid = 0,
   bossstart = 0,
-  spawn = 0
+  spawn = 0,
+  mvmt = 0
 }
 
 coin = {
@@ -300,10 +301,10 @@ end
 function ent_collide(firstent, secondent)
   offs = player_angle > 180 and 4+2*sin(player_angle/360) or 4-2*sin(player_angle/360)
   offset = (firstent == player) and offs or 0
-  -- pset(firstent.x + offset, firstent.y + offset, 12)
-  -- pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
-  -- pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
-  -- pset(secondent.x + level_sx, secondent.y, 11)
+  pset(firstent.x + offset, firstent.y + offset, 12)
+  pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
+  pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
+  pset(secondent.x + level_sx, secondent.y, 11)
 
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
@@ -373,8 +374,7 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
-
-  if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket = 0.5, 15, true
+  if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket, b.size = 0.5, 15, true, 4
   if (homing) b.duration = 50
 
   b.move = function()
@@ -399,8 +399,10 @@ function boss(startx, starty, sprite, lvl, hp)
   b.destroy_sequence = {135, 136, 135}
   b.circs = {}
   timers["bossstart"] = (lvl == 6) and 5 or 1000
+  timers["mvmt"] = 3
   rev = 1
   once = false
+  offst = 0
   b.draw_healthbar = function()
              --health bar
              if (b.sprite == 128 or 139) xoffset = 1
@@ -476,6 +478,8 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 5; once = false
            elseif b.level == 10 then
+             local locs = {40, 60, 80}
+             if (timers["mvmt"]==0) b.y = locs[b.idx%3+1]; b.idx+=1; timers["mvmt"]=3
              if (timers["bossstart"] > 990) then
                b.angle = (b.angle+8)%180 + 180
                if (flr(timers["bossstart"])%3 == 0 and not once) for i=p_ang-60,p_ang+60, 60 do shoot(b.x, b.y, i, 48, false, true, false, false, true) end; for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once = true
