@@ -4,8 +4,8 @@
 # with the aim to allow mouse usage while the html file is in "fullscreen"
 # mode. This script assumes that there is only one html and one js file
 # present in the current directory and its usage is undefined otherwise.
-# The changes made to the html and javascript files are sourced from 
-# TODO: cite this.. 
+# The changes made to the html and javascript files are sourced from the
+# following link: https://www.lexaloffle.com/bbs/?tid=28295
 #
 # This script has been tested on Arch Linux.
 
