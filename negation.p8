@@ -239,12 +239,10 @@ function gameflow()
   seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
 
-  seraph.text = "to be continued..."
+  boss(50, 50, 5, 10, 50)
   yield()
 
-  player_health = 0
 
-  -- boss(50, 100, 5, 10, 50)
 end
 
 -- http://lua-users.org/wiki/simpleround
@@ -1375,6 +1373,7 @@ function _draw()
   end
 
   if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
+  if ((level_lvl == 6 or level_lvl == 7) and #boss_table == 0) spr(5, 100+level_sx, 60, 2, 2)
   if (drawcontrols) draw_controls(); return
   if (open_door) opendoor()
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
