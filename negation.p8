@@ -246,11 +246,6 @@ function gameflow()
 
 end
 
--- http://lua-users.org/wiki/simpleround
-function round(num, numdecimalplaces)
-  local mult = 10^(numdecimalplaces or 0)
-  return flr(num * mult + 0.5) / mult
-end
 -- http://pico-8.wikia.com/wiki/centering_text
 function hcenter(s) return 64-flr((s*4)/2) end
 
@@ -299,10 +294,10 @@ end
 function ent_collide(firstent, secondent)
   offs = player_angle > 180 and 4+2*sin(player_angle/360) or 4-2*sin(player_angle/360)
   offset = (firstent == player) and offs or 0
-  pset(firstent.x + offset, firstent.y + offset, 12)
-  pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
-  pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
-  pset(secondent.x + level_sx, secondent.y, 11)
+  -- pset(firstent.x + offset, firstent.y + offset, 12)
+  -- pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
+  -- pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
+  -- pset(secondent.x + level_sx, secondent.y, 11)
 
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
@@ -310,7 +305,7 @@ end
 
 
 --====================== object-like structures ==============================--
-function drop_obj(sx, sy, sprite)
+function drop_obj(sx, sy, sprite, am)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 5
   d.init_time = time()
@@ -321,7 +316,8 @@ function drop_obj(sx, sy, sprite)
   d.ammos = {[33] = 10,
              [48] = 1}
   d.type = d.types[sprite]
-  if (d.ammos[sprite] ~= nil) d.ammo = d.ammos[sprite]
+  -- if (d.ammos[sprite] ~= nil) d.ammo = d.ammos[sprite]
+  d.ammo = (am ~= nil) and am or d.ammos[sprite]
   return d
 end
 
@@ -1273,7 +1269,7 @@ function _update()
     --o button----------------
     --========================
     if btnp(4) and #player_inventory > 0 then
-      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite))
+      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite, player_inventory[1].ammo))
       del(player_inventory, player_inventory[1])
       timers["showinv"], timers["showinv2"] = .5, 0
     end
