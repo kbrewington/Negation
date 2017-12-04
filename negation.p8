@@ -128,7 +128,7 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(20, 20, 128, 1, 40))
+  init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
   --music(3)
   yield()
 
@@ -300,10 +300,10 @@ end
 function ent_collide(firstent, secondent)
   offs = player_angle > 180 and 4+2*sin(player_angle/360) or 4-2*sin(player_angle/360)
   offset = (firstent == player) and offs or 0
-  pset(firstent.x + offset, firstent.y + offset, 12)
-  pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
-  pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
-  pset(secondent.x + level_sx, secondent.y, 11)
+  -- pset(firstent.x + offset, firstent.y + offset, 12)
+  -- pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
+  -- pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
+  -- pset(secondent.x + level_sx, secondent.y, 11)
 
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
@@ -369,16 +369,18 @@ function enemy(x, y, type, time_spwn)
   return e
 end
 
-function bullet(startx, starty, angle, sprite, friendly, shotgun, sine)
+function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
 
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket = 0.5, 15, true
+  if (homing) b.duration = 50
 
   b.move = function()
-     if (b.sprite == 48) b.acceleration += 0.5
-     if (b.shotgun) b.duration -= 1
+     if (b.sprite == 48 and b.friendly) b.acceleration += 0.5
+     if (shotgun or homing) b.duration -= 1
+     if (homing) b.speed, b.angle = .05, angle_btwn(player.x, player.y, b.x, b.y)
      if (sine) b.speed = .5
      if (sine and flr(rnd(2))==1) b.y -= sin(time()*5)*5*sin(b.y*.5*3.14); b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360); return
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
@@ -474,14 +476,17 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 5; once = false
            elseif b.level == 10 then
-             if (flr(timers["bossstart"])%3 == 0) for i=-20,20,40 do b.circs[#b.circs+1] = {b.x-i*sin(p_ang/360),b.y,25} end
-             for c in all(b.circs) do
-               circ(c[1],c[2],25,8)
-               if c[3]>0 then c[3]-=1 else del(b.circs,c) end
+             if (timers["bossstart"] > 990) then
+               b.angle = (b.angle+8)%180 + 180
+               if (flr(timers["bossstart"])%3 == 0 and not once) for i=p_ang-60,p_ang+60, 60 do shoot(b.x, b.y, i, 48, false, true, false, false, true) end; for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once = true
+               if (flr(timers["bossstart"])%3!=0) once = false
+               if (b.b_count%5==0) shoot(b.x, b.y, b.angle, 53, false)
+             else
+               b.angle = (b.angle+5)%180 + 180
+               if (b.b_count%3==0) shoot(b.x, b.y, b.angle, 53, false)
+               if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true)
+               if (timers["bossstart"] < 980) timers["bossstart"] = 1000
              end
-             -- b.x = player.x+50*sin(p_ang/360)
-             -- b.y = player.y+50*cos(p_ang/360)
-             -- if (timers["firerate"] > 0 and flr(time()*50)%b.fire_rate == 0) shoot(b.x, b.y, p_ang, 34, false, true)
            end
            b.draw_healthbar()
           end
@@ -509,7 +514,7 @@ function spr_r(s,x,y,a,w,h)
    xx=flr(dx*ca-dy*sa+x0)
    yy=flr(dx*sa+dy*ca+y0)
    if (xx>=0 and xx<sw and yy>=0 and yy<=sh) then
-    if sget(sx+xx, sy+yy) == clr then
+    if sget(sx+xx, sy+yy) == clr or sget(sx+xx, sy+yy) == 10 then
       pset(x+ix, y+iy, pget(x+ix, y+iy))
     else
       pset(x+ix,y+iy, sget(sx+xx,sy+yy))
@@ -852,6 +857,8 @@ function bullets_enemies()
     if ent_collide(player, b) then
       if timers["playerlasthit"] == 0 then
         if player_shield <= 0 then
+          add(boss_hit_anims, b)
+          if (b.rocket) rocket_kill(b)
           player_hit(1)
         else
           add(shield_anims, {b.x, b.y, 10})
@@ -862,7 +869,8 @@ function bullets_enemies()
       return
     end
 
-    spr(b.sprite, b.x, b.y)
+    if (b.duration <= 0) del(enemy_bullets, b); add(enemy_bullets, bullet(b.x, b.y, b.angle, b.sprite, false)) return
+    if (b.rocket) then spr_r(b.sprite, b.x, b.y, b.angle, 1, 1) else spr(b.sprite, b.x, b.y) end
     b.move()
     -- if (bump_all(b.x, b.y, 4)) del(enemy_bullets, b); rocket_kill(b); return
     if (bump_all(b.x, b.y)) del(enemy_bullets, b); add(boss_hit_anims, b)
@@ -990,7 +998,7 @@ end
 
 
 --================================ functions =================================--
-function shoot(x, y, a, spr, friendly, boss, shotgun, sine)
+function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
   if (boss) sfx(2)
   if friendly then
     local offx, offy = (player.x + 5), (player.y + 5)
@@ -1001,7 +1009,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun, sine)
     end
   elseif boss then
     -- if (spr == 2) for i=0xffff,1,2 do add(enemy_bullets, bullet((x-sin(a/360)),(y-cos(a/360)),a,spr,friendly)) end; return
-    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly, shotgun, sine))
+    add(enemy_bullets, bullet(((x + 5) - 16*sin(a / 360)), ((y + 5) - 16*cos(a / 360)), a, spr, friendly, shotgun, sine, homing))
   else
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
   end
