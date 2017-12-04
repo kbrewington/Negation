@@ -15,7 +15,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .75
+player_fire_rate = .6
 player_killed = 0
 player_tokens = 0
 
@@ -181,7 +181,7 @@ function gameflow()
   seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
   yield()
 
-  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster."
+  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
   yield()
 
   -- start level 4
@@ -195,7 +195,7 @@ function gameflow()
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
   yield()
 
-  seraph.text = "almost there, be careful goingin the temple. no idea what's in there."
+  seraph.text = "almost there, be careful goingin the temple. no idea what's in there..."
   yield()
 
   kill_all_enemies(true)
@@ -330,7 +330,7 @@ end
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
-  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
+  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 20, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
   e.drops = {32, 33, 48, 49} -- sprites of drops
@@ -692,7 +692,7 @@ function draw_playerhp()
   if hpratio >= .5 then
     hpcolor = 11
   elseif hpratio >= .3 then
-    hpcolor = 9
+    hpcolor = (level_lvl == 3) and 10 or 9
   elseif player_health == 1 and flr(time()*10000)%2==0 then
     hpcolor = 6
   else
@@ -713,6 +713,7 @@ function draw_playerhp()
     local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
     rectfill(player.x + 4, player.y + (21 - flr(7  * ammoratio)) , player.x + 11, player.y + 21, 13)
     spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
+    spr(112, player.x + 4, player.y + 14)
   end
 end
 
@@ -843,7 +844,7 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
-          if (level_lvl == 5) then coin.x, coin.y = 50, 100
+          if (level_lvl == 5) then coin.x, coin.y = 80, 50
           else enemy_bullets={}; coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
@@ -1040,7 +1041,7 @@ function skill_tree()
         next_cost[currently_selected] += 1
         sfx(0)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
-        player_fire_rate = max(.1, player_fire_rate-.15)
+        player_fire_rate = max(.1, player_fire_rate-.1)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
         sfx(0)
