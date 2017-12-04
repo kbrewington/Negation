@@ -239,7 +239,7 @@ function gameflow()
   seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
 
-  seraph.text = "to be continued..."
+  init_tele_anim(boss(100, 60, 5, 10, 40))
   yield()
 
   player_health = 0
