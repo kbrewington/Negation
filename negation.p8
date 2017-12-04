@@ -290,7 +290,7 @@ end
 
 
 --====================== object-like structures ==============================--
-function drop_obj(sx, sy, sprite)
+function drop_obj(sx, sy, sprite, am)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 5
   d.init_time = time()
@@ -301,7 +301,8 @@ function drop_obj(sx, sy, sprite)
   d.ammos = {[33] = 10,
              [48] = 1}
   d.type = d.types[sprite]
-  if (d.ammos[sprite] ~= nil) d.ammo = d.ammos[sprite]
+  -- if (d.ammos[sprite] ~= nil) d.ammo = d.ammos[sprite]
+  d.ammo = (am ~= nil) and am or d.ammos[sprite]
   return d
 end
 
@@ -1247,7 +1248,7 @@ function _update()
     --o button----------------
     --========================
     if btnp(4) and #player_inventory > 0 then
-      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite))
+      add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite, player_inventory[1].ammo))
       del(player_inventory, player_inventory[1])
       timers["showinv"], timers["showinv2"] = .5, 0
     end
