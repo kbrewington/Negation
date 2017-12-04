@@ -17,7 +17,7 @@ player_max_health = 10
 player_shield = 0
 player_speed = 1
 player_angle = 0
-player_fire_rate = .75
+player_fire_rate = .6
 player_killed = 0
 player_tokens = 0
 
@@ -183,7 +183,7 @@ function gameflow()
   seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
   yield()
 
-  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster."
+  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
   yield()
 
   -- start level 4
@@ -197,7 +197,7 @@ function gameflow()
   init_tele_anim(boss(60, 20, 139, 2.5, 40))
   yield()
 
-  seraph.text = "almost there, be careful goingin the temple. no idea what's in there."
+  seraph.text = "almost there, be careful goingin the temple. no idea what's in there..."
   yield()
 
   kill_all_enemies(true)
@@ -326,7 +326,7 @@ end
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
-  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 15, 50
+  e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 20, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
   e.drops = {32, 33, 48, 49} -- sprites of drops
@@ -679,7 +679,7 @@ function draw_playerhp()
   if hpratio >= .5 then
     hpcolor = 11
   elseif hpratio >= .3 then
-    hpcolor = 9
+    hpcolor = (level_lvl == 3) and 10 or 9
   elseif player_health == 1 and flr(time()*10000)%2==0 then
     hpcolor = 6
   else
@@ -700,6 +700,7 @@ function draw_playerhp()
     local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
     rectfill(player.x + 4, player.y + (21 - flr(7  * ammoratio)) , player.x + 11, player.y + 21, 13)
     spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
+    spr(112, player.x + 4, player.y + 14)
   end
 end
 
@@ -806,7 +807,7 @@ function bullets_player()
     if (b.sprite==34) then
       for i=-1,6,7 do
         -- pset(b.x,b.y,10)
-        pset(b.x+i*sin((90+b.angle)/360)+3, b.y+i*cos((90+b.angle)/360)+2, 10)
+        pset(b.x+i*sin((90+b.angle)/360)+3, b.y+i*cos((90+b.angle)/360)+2, 8)
         -- line(b.x+i*sin((90+b.angle)/360), b.y+i*cos((90+b.angle)/360), b.x-2*sin(b.angle/360)+i*sin((90+b.angle)/360),b.y-2*cos(b.angle/360)+i*cos((90+b.angle)/360),10)
       end
     else
@@ -829,7 +830,7 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
-          if (level_lvl == 5) then coin.x, coin.y = 50, 100
+          if (level_lvl == 5) then coin.x, coin.y = 80, 50
           else coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
@@ -859,7 +860,7 @@ function bullets_enemies()
 
     spr(b.sprite, b.x, b.y)
     b.move()
-    if (bump(b.x, b.y)) del(enemy_bullets, b); add(boss_hit_anims, b)
+    if (bump_all(b.x, b.y)) del(enemy_bullets, b); add(boss_hit_anims, b)
   end
 end
 
@@ -1029,7 +1030,7 @@ function skill_tree()
         next_cost[currently_selected] += 1
         sfx(0)
     elseif (selection_set[currently_selected] == "fire rate" and player_tokens >= next_cost[currently_selected]) then
-        player_fire_rate = max(.1, player_fire_rate-.15)
+        player_fire_rate = max(.1, player_fire_rate-.1)
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
         sfx(0)
@@ -1584,7 +1585,7 @@ fecbcbcbcbdeeddfcbcbcbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdc7873737379797bf0
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcb737375c1dcdcdcdcc1787373d07474747a7ad07979797979f27df0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f56e6f7ff5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcbcefdfdfdcfcbcbcbcbcbcbcbebeccbcbcb7474d0737373737373d0747477dcdcdce1f07c7a7a7a7a7d7df0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2cda2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcbcdddddddfccbcbcbcbcbcbcbebeccbcbcbccdc7674747474747477dcdcdcdcdcdce1f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5e309c8c03b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3cda3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcdfbddfbfccbcbcefdfdcfcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdcdce1f0f0f0f0f0f0f1f0f0f1f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f51a1bf3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2cdadada2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
+fecbcbcdfbddddfccbcbcefdfdcfcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdcdce1f0f0f0f0f0f0f1f0f0f1f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f51a1bf3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2cdadada2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
 fecbcbcdfbfbddfccbcbcdfbfbfccbfffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1dce1f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50af30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
 fecbcbdeedededdfcbcbdeededdfcbfffefacbcbccdcdcdcc1dcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f1f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50af31dc01d0bf3f33b3c3b3cf3f30b1dc01d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1d0b1d0b1d0b1d1d1d1d0b0b3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffefafacbccdcc1dcdcdcdcdcdcdcc1dcdcdcdce1f0f0f0f0f0f0f0f0f0f1f0f0e5f5f5f5f5f5f5f5f5f5f5f6f5f5f6f5c5dbc6f5f5f5f5f5f50af31dc0c01d0b0bf3f3f3f30b0b1dc0c01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d0b0b3b0000000000
