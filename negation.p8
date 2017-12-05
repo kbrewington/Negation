@@ -121,7 +121,7 @@ function gameflow()
   yield()
 
   fill_enemy_table(1, 65)
-  spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
+  spawn_time_start, timers["leveltimer"], wait.timer =  60, 1, true
   yield()
 
   kill_all_enemies(true)
@@ -129,8 +129,8 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  -- init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
-  add(boss_table, boss(90, 90, 38, 1.5, 10))
+  init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
+  -- add(boss_table, boss(90, 90, 38, 1.5, 10))
   --music(3)
   yield()
 
@@ -387,7 +387,7 @@ function boss(startx, starty, sprite, lvl, hp)
            local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
            b.b_count += 1
            if b.level == 1 then
-             if (flr(timers["bossstart"])%10 == 0) rev*=-1; timers["bossstart"] = 100
+             if (flr(timers["bossstart"])%10 == 0) rev*=0xffff; timers["bossstart"] = 100
              b.angle = (b.angle+5)%360
              for i=1,360,90 do
                if (b.b_count%5 == 0) shoot(b.x, b.y, i+(rev*b.angle)+rnd(10), 141, false, true)
@@ -426,7 +426,7 @@ function boss(startx, starty, sprite, lvl, hp)
                b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
              end
              for c in all(b.circs) do
-               for i=12,c[3],-1 do
+               for i=12,c[3],0xffff do
                  circ(c[1], c[2], i, 8)
                end
                if abs(time()*1000000)%2 == 0 then
@@ -649,6 +649,7 @@ end
 
 function skilltree()
   rectfill(-50, -50, 200, 200, 0)
+  print("pURCHASE uPGRADES",10,10,7)
   spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], 20, 20, 2, 2)
   print(" - " .. player_tokens, 36, 26, 7)
 
@@ -794,7 +795,7 @@ function bullets_player()
       return
     end
     if (b.shotgun) then
-      for i=-1,6,7 do
+      for i=0xffff,6,7 do
         pset(b.x+i*sin((90+b.angle)/360)+3, b.y+i*cos((90+b.angle)/360)+2, 10)
       end
     elseif b.rocket then
@@ -942,7 +943,7 @@ function init_tele_anim(e)
 end
 
 function step_teleport_animation(e)
-  local offset = -1
+  local offset = 0xffff
   if (e == player) offset = 4
   if e.anim_step < e.anim_length then
     if (e == player) wait.controls = true
@@ -1182,7 +1183,7 @@ function _update()
   for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
   if (level_change)  levelchange()
   if (titlescreen == nil and continuebuttons()) titlescreen = true; return
-  if (drawcontrols and continuebuttons()) music(-1) showcontrols = false coresume(game); return
+  if (drawcontrols and continuebuttons()) music(0xffff) showcontrols = false coresume(game); return
   if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
   if (in_skilltree) skill_tree(); return;
   if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
