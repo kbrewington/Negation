@@ -121,7 +121,7 @@ function gameflow()
   yield()
 
   fill_enemy_table(1, 65)
-  spawn_time_start, timers["leveltimer"], wait.timer =  60, 1, true
+  spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
   yield()
 
   kill_all_enemies(true)
