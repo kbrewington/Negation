@@ -758,7 +758,7 @@ function item_drops()
         player_shield = 5 --player_shield_dur
         sfx(6)
         del(dropped, d)
-      elseif d.type ~= "heart" and #player_inventory < 4 --[[player_inv_max]] then
+      elseif d.type ~= "heart" and #player_inventory < 4 then
         add(player_inventory, d)
         if (#player_inventory < 4) timers["showinv"] = .5
         sfx(19)
@@ -871,9 +871,7 @@ function show_leaderboard()
 end
 
 --======================= animation functions ================================--
---[[
-    draw enemy destruction animation to screen
-  ]]
+--draw enemy destruction animation to screen
 function step_destroy_animation(e)
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
@@ -1106,7 +1104,7 @@ function levelchange()
       if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) level_sx = (previoussx%8)-2
       if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) level_sx = previoussx
     end
-    if btn(1) --[[and level_sx - ((level_lvl-1) * 128) <= (level_transition[level_i+1])*8]]  and player.x > farx then
+    if btn(1) and player.x > farx then
       level_sx -= move
       if player.x > farx then player.x = farx end
 
@@ -1371,7 +1369,7 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2) --player_health -= 2; sfx(18); timers["playerlasthit"] = 2 -- player_immune_time
+    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2)
     if b.level == 10 or b.level == 1.5 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     elseif (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
