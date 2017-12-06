@@ -133,7 +133,6 @@ function gameflow()
   yield()
 
   init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
-  -- add(boss_table, boss(90, 90, 38, 1.5, 10))
   yield()
 
   kill_all_enemies(true)
@@ -305,7 +304,7 @@ end
 --====================== object-like structures ==============================--
 function drop_obj(sx, sy, sprite, am)
   local d = {}
-  d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 5
+  d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 7
   d.init_time = time()
   d.types = {[32] = "heart",
              [33] = "shotgun",
@@ -413,8 +412,8 @@ function boss(startx, starty, sprite, lvl, hp)
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%7 == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
-                 b.x = b.x - 2*sin(p_ang/360)
-                 b.y = b.y - 2*cos(p_ang/360)
+                 b.x = b.x - 1.5*sin(p_ang/360)
+                 b.y = b.y - 1.5*cos(p_ang/360)
                end
              end
            elseif b.level == 3 then
@@ -455,7 +454,7 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true)
              local locs = {0,100,100,0}
-             if (flr(timers["bossstart"]%20) == 0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; timers["bossstart"]=100
+             if ((b.health%9)==0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; b.health-=1
            elseif b.level == 6 then
              b.angle = (b.angle+10)%p_ang
              if (flr(timers["bossstart"])%3==0 and not once) for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once=true
