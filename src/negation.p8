@@ -130,7 +130,7 @@ function gameflow()
   drawcontrols, wait.controls = false, false
 
   init_tele_anim(player)
-  --music(14)
+  music(14)
   yield()
 
   seraph.text = "i see a door. give me a minuteand i'll get it open."
@@ -145,7 +145,7 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
+  init_tele_anim(boss(20, 20, 128, 1, 40))
   yield()
 
   kill_all_enemies(true)
@@ -162,7 +162,7 @@ function gameflow()
   wait.controls = true
   seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
-  --music(15)
+  music(15)
   yield()
 
   seraph.text = "unfortunately we weren't alone"
@@ -182,7 +182,7 @@ function gameflow()
   -- start level 3
   open_door = false
   seraph.text = "so the main source of the     infestation is up here past   the desert."
-  --music(16)
+  music(16)
   yield()
 
   fill_enemy_table(3, 60)
@@ -195,7 +195,7 @@ function gameflow()
   yield()
 
   seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
-  --music(20)
+  music(20)
   yield()
 
   seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
@@ -365,7 +365,7 @@ function enemy(x, y, type, time_spwn)
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 20, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
-  e.drops = {32, 33, 48, 49} -- sprites of drops
+  e.drops = {32, 32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 7, 132, type
   e.speed = type == "exploder" and .9 or .35
@@ -481,7 +481,7 @@ function boss(startx, starty, sprite, lvl, hp)
               for i=1,360,180 do
                 if (b.b_count%4 == 0) shoot(b.x, b.y, i+b.angle+rnd(10), 141, false, true)
               end
-              if (b.b_count%20==0) for i=0,360,180 do shoot(b.x, b.y, i+b.angle, 76, false, true, false, true) end
+              if (b.b_count%30==0) for i=0,360,180 do shoot(b.x, b.y, i+b.angle, 76, false, true, false, true) end
             end
            elseif b.level == 4 then
              if abs(time()*10)%2 == 0 then
@@ -913,8 +913,9 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
+          enemy_bullets={}
           if (level_lvl == 5) then coin.x, coin.y = 80, 50
-          else enemy_bullets={}; coin.x,coin.y = bos.x,bos.y end
+          else coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
         break
@@ -1129,13 +1130,14 @@ end
 function skill_tree()
   skills_selected[currently_selected] = false
   local diff = 0
-  if btnp(2) then
+  if btn(2) and timers["firerate"]==0 then
     diff = 0xffff
     sfx(0)
-  elseif btnp(3) then
+    timers["firerate"] = .2
+  elseif btn(3) and timers["firerate"]==0 then
     diff = 1
     sfx(0)
-  --elseif btnp(5) then
+    timers["firerate"] = .2
   elseif continuebuttons() then
     if selection_set[currently_selected] == "quit" then
       in_skilltree = false
@@ -1176,13 +1178,12 @@ end
 --[[
   fill enemy table with an assortment of random x,y values, enemy types, and
   spawn timing
-  -- do we need to randomize x, y here anymore??
 ]]
 function fill_enemy_table(level, lvl_timer)
   local types = {"basic", "shooter", "exploder"}
   local baseline = 15
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
+    add(enemy_table, enemy(0, 0, types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
   end
 end
 
