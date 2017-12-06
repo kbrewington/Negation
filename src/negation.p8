@@ -47,7 +47,7 @@ timers = {
   leftclick = 0,
   middleclick = 0,
   rightclick = 0,
-  firerate = 0,
+  firerate = 1,
   invalid = 0,
   bossstart = 0,
   spawn = 0,
@@ -108,6 +108,8 @@ playonce = 0
 --============================= helper functions =============================--
 
 function gameflow()
+  -- showplayer = true
+  -- titlescreen = true
   -- start game
   drawcontrols, wait.controls = true, true
   yield()
@@ -171,8 +173,8 @@ function gameflow()
   --music(16)
   yield()
 
-  fill_enemy_table(3, 90)
-  spawn_time_start = 90
+  fill_enemy_table(3, 60)
+  spawn_time_start = 60
   init_tele_anim(boss(100, 60, 160, 3, 40))
   yield()
 
@@ -232,26 +234,30 @@ function gameflow()
   yield()
 
   kill_all_enemies(true)
-  init_tele_anim(boss(50, 50, 169, 6, 50))
+  init_tele_anim(boss(56, 56, 169, 6, 50))
   yield()
 
   level_change = true
-  music(21)
+  --music(21)
   yield()
 
   --start level 7 final boss
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
-
+  add(boss_table, boss(100, 60, 5, 10, 50))
   yield()
 
   seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
-  music(22)
+  -- music(22)
 
-  boss(50, 50, 5, 10, 50)
   yield()
 
+  seraph.text = "so close... to perfection..."
+  yield()
 
+  music(3)
+  win = true
+  in_leaderboard = true
 end
 
 -- http://pico-8.wikia.com/wiki/centering_text
@@ -270,7 +276,8 @@ function delete_offscreen(list, obj)
 end
 
 function continuebuttons()
-  if ((btnp(4) or btnp(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = 1; return true
+  --if ((stat(34) == 1 and timers["firerate"] == 0) or btnp(4) or btnp(5)) timers["firerate"] = 1; return true
+  if ((btn(4) or btn(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = .5; return true
   return false
 end
 
@@ -690,8 +697,7 @@ function draw_playerhp()
     spr(112, player.x + 4, player.y + 14)
   end
   if timers["showinv2"] > 0 and #player_inventory > 0 then
-    local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
-    rectfill(player.x + 4, player.y + 23 , player.x + (4+flr(7  * ammoratio)), player.y + 24, 8)
+    rectfill(player.x + 4, player.y + (21 - flr(7  * (player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]))) , player.x + 11, player.y + 21, 13)
     spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
     spr(112, player.x + 4, player.y + 14)
   end
@@ -864,14 +870,16 @@ end
 
 function show_leaderboard()
   rectfill(0,0,128,128,0)
-  print("you died",hcenter(8), 55, 8)
-  --k = min(player_killed, k+0.5)
-  if (k<player_killed-1) k += player_killed*.01--0.5
-  local t = "killed: "..flr(k)
+  if not win then mes = "game over"
+  else mes = "tHE eND..?" end
+  print(mes,hcenter(#mes), 55, 8)
+  if (k<player_killed-1) k += player_killed*.01
+  local t = "KILLED: "..flr(k)
   print(t, hcenter(#t), 63, 5)
-  print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
+  print("press \x8e/\x97 to start over", 14, 100, flr(time()*5)%15+1)
   if (flr(k)==player_killed-1) timers["invalid"] = 0.5; k+=1
-  if (timers["invalid"] > 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  if (timers["invalid"] > 0) then camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  else camera() end
 end
 
 --======================= animation functions ================================--
@@ -931,8 +939,10 @@ function step_boss_destroyed_animation(b)
     end
   else
     if (b~= player) del(destroyed_bosses, b)
-    if (#boss_table == 0) coin.dropped = true
-    music(3)
+    if (b.sprite ~= 5) then
+      if (#boss_table == 0) coin.dropped = true
+      music(3)
+    end
   end
 
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
@@ -1047,7 +1057,7 @@ end
 
 function fill_enemy_table(level, lvl_timer)
   local types = {"basic", "shooter", "exploder"}
-  local baseline = 20
+  local baseline = 15
   for i=1,(baseline*level) do
     add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
   end
@@ -1159,9 +1169,11 @@ function drop_item(e)
 end
 
 function player_hit(d)
-  player_health -= d
-  sfx(18)
-  timers["playerlasthit"] = 2
+  if timers["playerlasthit"] == 0 then
+    player_health -= d
+    sfx(18)
+    timers["playerlasthit"] = 2
+  end
 end
 ---------------------------------- constructor ---------------------------------
 function _init()
@@ -1177,19 +1189,20 @@ end --end _init()
 
 --================================ update ====================================--
 function _update()
-  -- timers["playerlasthit"] = 1 --uncomment for god mode
+
   -- collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
   move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
-  if ((bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) and timers["playerlasthit"] == 0) player_hit(1)
+  if (bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) player_hit(1)
 
   -- count down timers
   for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
+  -- timers["playerlasthit"] = 0x.0001 --uncomment for god mode
   if (level_change)  levelchange()
   if (titlescreen == nil and continuebuttons()) titlescreen = true; return
-  if (drawcontrols and continuebuttons()) music(0xffff) showcontrols = false coresume(game); return
-  if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
+  if (drawcontrols and continuebuttons()) music(0xffff) showcontrols = false; coresume(game); return
+  if (in_leaderboard and continuebuttons()) in_leaderboard = false; run()
   if (in_skilltree) skill_tree(); return;
   if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
   if not wait.controls and seraph.text == nil then
@@ -1284,7 +1297,6 @@ function _update()
       player.x -= move
       moving = true
       if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
-      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) player.x -= previousx%8
     end
 
     --========================
@@ -1294,7 +1306,6 @@ function _update()
       player.x += move
       moving = true
       if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
-      if (bump(player.x + 12, player.y + 4, 3) or bump(player.x + 12, player.y + 11, 3)) player.x += min(move, previousx%8-2)
     end
 
     --========================================================================--
@@ -1345,7 +1356,7 @@ function _draw()
   end
 
   if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
-  if ((level_lvl == 6 or level_lvl == 7) and #boss_table == 0) spr(5, 100+level_sx, 60, 2, 2)
+  if ((level_lvl == 6) and #boss_table == 0) spr_r(5, 228+level_sx, 60, angle_btwn(player.x, player.y, 228+level_sx, 60), 2, 2)--spr(5, 228+level_sx, 60, 2, 2)
   if (drawcontrols) draw_controls(); return
   if (open_door) opendoor()
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
@@ -1377,11 +1388,11 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2)
+    if (ent_collide(player, b)) player_hit(2)
     if b.level == 10 or b.level == 1.5 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     elseif (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
-    b.update()
+    if (not wait.controls and seraph.text == nil) b.update()
   end
 
   foreach(boss_hit_anims, boss_hit_animation)
@@ -1556,11 +1567,11 @@ fecbcbcbcbcbcbcbcbcbcbcbcbfafafffefafacbccdcdcc5dbdbdbdbc3c1dcdcdcdcdcdce1f0f0f0
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafffefafacbccdcdcc4cacacac3dcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f5f5f5f5f50af31dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffefacbcbccc1dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f1f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f50af31d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcc1dcdcdcdcdce1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f51819f3f3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c3b3c3b3c3b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f07e797bf0e5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcbcefdfdcfcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1dce1f0f0f0f0f0f0f0f07ef27af279794e4e4e4e4e4e4e4e4e4ed6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbcd5b5cfccbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdc7873737373797bf0f0f1f0f07ef27df07c7a7a7a4f4f4f4f4f4f4f4f4fe6f5f55e5f6df5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcbcd6b6cfccbcbcbcbcbebeccbcbcbcc7375c1dcdcdcdcc1787373d0747474747ad07979797979f27df0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f56e6f7ff5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbdeededdfcbcbcbcbcbebeccbcbcbcc74d0737373737373d0747477dcdcdce1f07c7a7a7a7a7d7df0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f07e797bf0e5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcefdfdcfcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1dce1f0f0f0f0f0f0f0f07ef27af279794e4e4e4e4e4e4e4e4e4ed6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbcd5b5cfccbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdc7873737373797bf0f0f1f0f07ef27df07c7a7a7a4f4f4f4f4f4f4f4f4fe6f5f55e5f6df5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0292ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcd6b6cfccbcbcbcbcbebeccbcbcbcc7375c1dcdcdcdcc1787373d0747474747ad07979797979f27df0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f56e6f7ff5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0393ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbdeededdfcbcbcbcbcbebeccbcbcbcc74d0737373737373d0747477dcdcdce1f07c7a7a7a7a7d7df0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbccdc7674747474747477dcdcdcdcdcdce1f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5e309c8c03b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdcdce1f0f0f0f0f0f0f1f0f0f1f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f51a1bf3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2c2b2c2b2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcefdfdfffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1dce1f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50af30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
@@ -1713,4 +1724,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
