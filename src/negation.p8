@@ -252,7 +252,7 @@ function gameflow()
   level_change = true
   --music(21)
   yield()
-
+  
   --start level 7 final boss
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
   add(boss_table, boss(100, 60, 5, 10, 50))
@@ -406,7 +406,7 @@ end
 ]]
 function bullet(startx, starty, angle, sprite, friendly, shotgun, _sin, homing)
   local b = {}
-  b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
+  b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 20
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket, b.size = 0.5, 15, true, 4
   if (homing) b.duration = 50
@@ -574,7 +574,7 @@ end
   reads pixel color values from the title.text gloabal variable
 ]]
 function draw_titlescreen()
-  rectfill(0, 0, 127, 127, 13)
+  rectfill(0, 0, 127, 127, 6)
   circfill(64, 35, 45+time()%2, 8)
   rectfill(0, 35, 128, 128, 0)
   line(0, 35, 128, 35, 12)
@@ -621,7 +621,7 @@ function draw_titlescreen()
     music(1)
     playonce+=1
   end
-  print("left click to start", 28, 100, flr(time())%15+1)
+  print("left click to start", 28, 110, flr(time())%15+1)
 end
 
 --[[
@@ -902,7 +902,7 @@ function bullets_player()
     for bos in all(boss_table) do
       if ent_collide(bos, b) then
         sfx(23,1)
-        bos.health -= ((b.sprite == 48) and 3 or 1)
+        bos.health -= ((b.sprite == 48) and 5 or 1)
         bos.shot_last = time()
         bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
         del(player_bullets, b)
@@ -958,14 +958,19 @@ end
   draws leaderboard to screen
 ]]
 function show_leaderboard()
-  rectfill(0,0,128,128,0)
-  if not win then mes = "game over"
-  else mes = "the horde is beaten... for now!" end
-  print(mes,hcenter(#mes), 55, 8)
+  --rectfill(0,0,128,128,0)
+  if not win then
+    mes = "game over";
+  else
+    mes = "the horde is beaten... for now!"
+    rectfill(0,11,127,116,12)
+    rectfill(0,13,127,114,6)
+  end
+  print(mes,hcenter(#mes), 55, win and 13 or 8)
   if (k<player_killed-1) k += player_killed*.01
   local t = "killed: "..flr(k)
   print(t, hcenter(#t), 63, 5)
-  print("press \x8e/\x97 to start over", 14, 100, flr(time()*5)%15+1)
+  print("left click to start over", 15, 100, flr(time()*5)%15+1)
   if (flr(k)==player_killed-1) timers["invalid"] = 0.5; k+=1
   if (timers["invalid"] > 0) then camera(cos((time()*1000)/3), cos((time()*1000)/2))
   else camera() end
@@ -1041,7 +1046,7 @@ function step_boss_destroyed_animation(b)
     if (b~= player) del(destroyed_bosses, b)
     if (b.sprite ~= 5) then
       if (#boss_table == 0) coin.dropped = true
-      music(3)
+      if (b.level ~= 1.5) music(3)
     end
   end
 
@@ -1361,9 +1366,9 @@ function _update()
     --left mouse button-------
     --========================
     if stat(34) == 1 and timers["firerate"] == 0 then
-        shoot(player.x, player.y, player_angle, 53, true, false)
-        timers["firerate"] = player_fire_rate
-        sfx(2)
+      shoot(player.x, player.y, player_angle, 53, true, false)
+      timers["firerate"] = player_fire_rate
+      sfx(2)
     end
 
     --========================
