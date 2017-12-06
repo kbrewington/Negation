@@ -1,7 +1,10 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+--============================================================================--
 --=============================== global variables  ==========================--
+--============================================================================--
+-- player parameters
 player = {
   x = 56,
   y = 56,
@@ -19,6 +22,7 @@ player_fire_rate = .6
 player_killed = 0
 player_tokens = 0
 
+-- level placement
 level_lvl = 1
 level_sx = 0
 level_sy = 0
@@ -34,11 +38,13 @@ level_transition = {
   7, 107, 0
 }
 
+-- wait controllers
 wait = {
   controls = false,
   dialog_finish = false
 }
 
+-- timers
 timers = {
   leveltimer = 0,
   showinv = 0,
@@ -47,13 +53,14 @@ timers = {
   leftclick = 0,
   middleclick = 0,
   rightclick = 0,
-  firerate = 0,
+  firerate = 1,
   invalid = 0,
   bossstart = 0,
   spawn = 0,
   mvmt = 0
 }
 
+-- coin
 coin = {
   dropped = false,
   size = 8,
@@ -103,11 +110,19 @@ title = {
                    "12,12,12, 8, 8, 8, 8, 8,12,12, 8,12,12,12,12,12,12,12, 8, 12,12,12,12,12,12,12,12, 8,12,12,12, 8,12,12,12, 8, 8, 8,12,12,12, 8, 8, 8,12,12,12,12,12,12,12, 8, 8,12,12,12,12, 8, 8,12,12,12, 8, 8, 8, 8, 8,12,12"}
 }
 
+-- flags
 playonce = 0
 
+--============================================================================--
 --============================= helper functions =============================--
-
+--============================================================================--
+--[[
+  gameflow
+    coroutine to handle the flow of the game.
+]]
 function gameflow()
+  -- showplayer = true
+  -- titlescreen = true
   -- start game
   drawcontrols, wait.controls = true, true
   yield()
@@ -115,7 +130,7 @@ function gameflow()
   drawcontrols, wait.controls = false, false
 
   init_tele_anim(player)
-  --music(14)
+
   yield()
 
   seraph.text = "i see a door. give me a minuteand i'll get it open."
@@ -130,8 +145,8 @@ function gameflow()
   seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
   yield()
 
-  init_tele_anim(boss(20, 20, 128, 1, 40)) -- 100, 60, 5, 10, 40
-  -- add(boss_table, boss(90, 90, 38, 1.5, 10))
+  init_tele_anim(boss(20, 20, 128, 1, 40))
+  music(14)
   yield()
 
   kill_all_enemies(true)
@@ -148,7 +163,7 @@ function gameflow()
   wait.controls = true
   seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
-  --music(15)
+
   yield()
 
   seraph.text = "unfortunately we weren't alone"
@@ -168,12 +183,12 @@ function gameflow()
   -- start level 3
   open_door = false
   seraph.text = "so the main source of the     infestation is up here past   the desert."
-  --music(16)
   yield()
 
-  fill_enemy_table(3, 90)
-  spawn_time_start = 90
+  fill_enemy_table(3, 60)
+  spawn_time_start = 60
   init_tele_anim(boss(100, 60, 160, 3, 40))
+  music(16)
   yield()
 
   kill_all_enemies(true)
@@ -181,7 +196,7 @@ function gameflow()
   yield()
 
   seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
-  --music(20)
+
   yield()
 
   seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
@@ -194,12 +209,13 @@ function gameflow()
 
   kill_all_enemies(true)
   init_tele_anim(boss(60, 60, 166, 1, 40))
+  music(20)
   init_tele_anim(boss(90, 90, 38, 1.5, 10))
   init_tele_anim(boss(20, 20, 38, 1.5, 10))
   yield()
 
   seraph.text = "almost there, be careful goingin the temple. no idea what's in there..."
-  --music(17)
+
   yield()
 
   kill_all_enemies(true)
@@ -212,6 +228,7 @@ function gameflow()
   yield()
 
   init_tele_anim(boss(56, 52, 164, 4, 40))
+  music(17)
   yield()
 
   kill_all_enemies(true)
@@ -221,84 +238,116 @@ function gameflow()
   -- start level 6 "final" boss
   fill_enemy_table(3, 75)
   spawntime_start,detect_killed_enemies = 75, true
-  --music(18)
+
   yield()
 
   seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it..."
-  --music(19)
+
   yield()
 
   seraph.text = "it needs your blood so please do us a favor and just die!"
   yield()
 
   kill_all_enemies(true)
-  init_tele_anim(boss(50, 50, 169, 6, 50))
+  init_tele_anim(boss(56, 56, 169, 6, 50))
+  music(19)
   yield()
 
   level_change = true
-  music(21)
+
   yield()
 
   --start level 7 final boss
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
-
+  add(boss_table, boss(100, 60, 5, 10, 50))
+  music(22)
   yield()
 
   seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
-  music(22)
 
-  boss(50, 50, 5, 10, 50)
+
   yield()
 
+  seraph.text = "so close... to perfection..."
+  yield()
 
+  music(3)
+  win = true
+  in_leaderboard = true
 end
 
--- http://pico-8.wikia.com/wiki/centering_text
+--[[
+  function used to center text
+  sourced from: http://pico-8.wikia.com/wiki/centering_text
+]]
 function hcenter(s) return 64-flr((s*4)/2) end
 
-function distance(n, d, m)
-  return (m==nil) and sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) or abs(n.x-d.x)+abs(n.y-d.y)
+--[[
+  calculate euclidean distance between n and d
+]]
+function distance(n, d)
+  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
 end
 
+--[[
+  calculate angle between two coordinates (tx,ty) and (fx,fy)
+]]
 function angle_btwn(tx, ty, fx, fy)
   return ((atan2((ty - fy), (tx - fx)) * 360) + 180)%360
 end
 
+--[[
+  remove object 'obj' from list 'list' if it has traveled offscreen
+]]
 function delete_offscreen(list, obj)
   if (obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128) del(list, obj)
 end
 
+--[[
+  check if buttons to continue have been pressed
+]]
 function continuebuttons()
-  if ((btnp(4) or btnp(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = 1; return true
+  --if ((stat(34) == 1 and timers["firerate"] == 0) or btnp(4) or btnp(5)) timers["firerate"] = 1; return true
+  if ((btn(4) or btn(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = .5; return true
   return false
 end
 
+--[[
+  check for collision between coordinates (x, y) and the flag value (defaults to 0)
+]]
 function bump(x, y, flag)
   return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
 end
 
+--[[
+  call bump to check every corner relative to (x, y) to check for basic wall collision
+]]
 function bump_all(x, y)
   return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
 end
 
+--[[
+  check for a collision between two entities (firstent and secondent)
+  'offs' is an attempt to get the player's hitbox to update with the player's rotation
+]]
 function ent_collide(firstent, secondent)
   offs = player_angle > 180 and 4+2*sin(player_angle/360) or 4-2*sin(player_angle/360)
   offset = (firstent == player) and offs or 0
-  -- pset(firstent.x + offset, firstent.y + offset, 12)
-  -- pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
-  -- pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
-  -- pset(secondent.x + level_sx, secondent.y, 11)
 
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
 end
 
-
---====================== object-like structures ==============================--
+--============================================================================--
+--=========================== object-like structures =========================--
+--============================================================================--
+--[[
+  object for power-up items that enemies drop
+]]
 function drop_obj(sx, sy, sprite, am)
   local d = {}
-  d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 5
+  d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 7
   d.init_time = time()
   d.types = {[32] = "heart",
              [33] = "shotgun",
@@ -312,13 +361,16 @@ function drop_obj(sx, sy, sprite, am)
   return d
 end
 
+--[[
+  enemy object, move() function updates enemy ai based on enemy type
+]]
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 20, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
-  e.drops = {32, 33, 48, 49} -- sprites of drops
+  e.drops = {32, 32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 7, 132, type
   e.speed = type == "exploder" and .9 or .35
@@ -352,9 +404,14 @@ function enemy(x, y, type, time_spwn)
   return e
 end
 
-function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
+--[[
+  bullet object
+  four basic types: regular bullet, _sin (more of slow and random movement),
+  shotgun, and homing
+]]
+function bullet(startx, starty, angle, sprite, friendly, shotgun, _sin, homing)
   local b = {}
-  b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
+  b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 20
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
   if (b.sprite == 48) b.acceleration, b.max_anim_steps, b.rocket, b.size = 0.5, 15, true, 4
   if (homing) b.duration = 50
@@ -363,16 +420,20 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
      if (b.sprite == 48 and b.friendly) b.acceleration += 0.5
      if (shotgun or homing) b.duration -= 1
      if (homing) b.speed, b.angle = .05, angle_btwn(player.x, player.y, b.x, b.y)
-     if (sine) b.speed = .5
-     if (sine and flr(rnd(2))==1) b.y -= sin(time()*5)*5*sin(b.y*.5*3.14); b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360); return
+     if (_sin) b.speed = .5
+     if (_sin and flr(rnd(2))==1) b.y -= sin(time()*5)*5*sin(b.y*.5*3.14); b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360); return
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
-     if (sine) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
+     if (_sin) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
      b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
    end
 
   return b
 end
 
+--[[
+  boss object
+  update() function contains all ai code for every different boss, based on b.level
+]]
 function boss(startx, starty, sprite, lvl, hp)
   local b = {}
   b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite, b.idx, b.b_count = startx, starty, .01, 0, lvl, nil, 0, sprite, 2, 0
@@ -406,8 +467,8 @@ function boss(startx, starty, sprite, lvl, hp)
              if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
                if flr(time()*50)%7 == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
-                 b.x = b.x - 2*sin(p_ang/360)
-                 b.y = b.y - 2*cos(p_ang/360)
+                 b.x = b.x - 1.5*sin(p_ang/360)
+                 b.y = b.y - 1.5*cos(p_ang/360)
                end
              end
            elseif b.level == 3 then
@@ -425,7 +486,7 @@ function boss(startx, starty, sprite, lvl, hp)
               for i=1,360,180 do
                 if (b.b_count%4 == 0) shoot(b.x, b.y, i+b.angle+rnd(10), 141, false, true)
               end
-              if (b.b_count%20==0) for i=0,360,180 do shoot(b.x, b.y, i+b.angle, 76, false, true, false, true) end
+              if (b.b_count%30==0) for i=0,360,180 do shoot(b.x, b.y, i+b.angle, 76, false, true, false, true) end
             end
            elseif b.level == 4 then
              if abs(time()*10)%2 == 0 then
@@ -448,7 +509,7 @@ function boss(startx, starty, sprite, lvl, hp)
              end
              if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true)
              local locs = {0,100,100,0}
-             if (flr(timers["bossstart"]%20) == 0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; timers["bossstart"]=100
+             if ((b.health%9)==0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; b.health-=1
            elseif b.level == 6 then
              b.angle = (b.angle+10)%p_ang
              if (flr(timers["bossstart"])%3==0 and not once) for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once=true
@@ -478,9 +539,13 @@ function boss(startx, starty, sprite, lvl, hp)
           end
   return b
 end
-
+--============================================================================--
 --========================== draw functions ==================================--
--- https://www.lexaloffle.com/bbs/?pid=22757
+--============================================================================--
+--[[
+  function used to rotate sprite.
+  this edited version is sourced from: https://www.lexaloffle.com/bbs/?pid=22757
+]]
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
@@ -509,8 +574,12 @@ function spr_r(s,x,y,a,w,h)
  end
 end
 
+--[[
+  function used to draw title screen.
+  reads pixel color values from the title.text gloabal variable
+]]
 function draw_titlescreen()
-  rectfill(0, 0, 127, 127, 13)
+  rectfill(0, 0, 127, 127, 6)
   circfill(64, 35, 45+time()%2, 8)
   rectfill(0, 35, 128, 128, 0)
   line(0, 35, 128, 35, 12)
@@ -557,9 +626,12 @@ function draw_titlescreen()
     music(1)
     playonce+=1
   end
-  print("left click to start", 28, 100, flr(time())%15+1)
+  print("left click to start", 28, 110, flr(time())%15+1)
 end
 
+--[[
+  prints instructions on how to play to the screen
+]]
 function draw_controls()
   rectfill(10, 20, 117, 101, 8)
   rectfill(11, 21, 116, 100, 6)
@@ -573,6 +645,9 @@ function draw_controls()
   print("q to drop power up", 17, 88, 5)
 end
 
+--[[
+  draws box with seraph's dialog text to the bottom of the screen
+]]
 function draw_dialog()
   local bck_color = 5
   local brd_color = 0
@@ -609,7 +684,7 @@ function draw_dialog()
   pset(125, 105, brd_color) -- top right
   rectfill(126, 106, 126, 124, brd_color) -- right
   pset(125, 125, brd_color) -- bottom right
-  rectfill(124, 126, 4, 126, brd_color) -- bootom
+  rectfill(124, 126, 4, 126, brd_color) -- bottom
   pset(3, 125, brd_color) -- bottom left
 
   print("seraph", 4, 100, fnt_color)
@@ -621,6 +696,9 @@ function draw_dialog()
   --if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
+--[[
+  draws count down timer for first level on the screen
+]]
 function drawcountdown()
   --local x, y, clr = 57, 15, 12
   local countdown = timers["leveltimer"]
@@ -635,7 +713,9 @@ function drawcountdown()
   if (countdown == 0) wait.timer = false; coresume(game)
 end
 
---changed here
+--[[
+  animates door opening on first level
+]]
 function opendoor()
 
   local offset = (level_lvl-1)*128
@@ -651,6 +731,9 @@ function opendoor()
   end
 end
 
+--[[
+  draws skilltree menu to screen, all button handling is done in skill_tree()
+]]
 function skilltree()
   rectfill(-50, -50, 200, 200, 0)
   print("purchase upgrades",10,10,7)
@@ -663,6 +746,9 @@ function skilltree()
   print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
 end
 
+--[[
+  draw player's healthbar
+]]
 function draw_playerhp()
   --local hpcolor = 11
   local hpratio = player_health/player_max_health
@@ -690,13 +776,15 @@ function draw_playerhp()
     spr(112, player.x + 4, player.y + 14)
   end
   if timers["showinv2"] > 0 and #player_inventory > 0 then
-    local ammoratio = player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]
-    rectfill(player.x + 4, player.y + 23 , player.x + (4+flr(7  * ammoratio)), player.y + 24, 8)
+    rectfill(player.x + 4, player.y + (21 - flr(7  * (player_inventory[1].ammo / player_inventory[1].ammos[player_inventory[1].sprite]))) , player.x + 11, player.y + 21, 13)
     spr(player_inventory[1].sprite, player.x + invtx, player.y + 14)
     spr(112, player.x + 4, player.y + 14)
   end
 end
 
+--[[
+  this function updates all enemies that have been spawned
+]]
 function enem_spawned()
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -751,6 +839,9 @@ function enem_spawned()
   end
 end
 
+--[[
+  updates any item that has been dropped by an enemy
+]]
 function item_drops()
   for d in all(dropped) do
     if ent_collide(player, d) then
@@ -786,6 +877,9 @@ function item_drops()
   pal()
 end
 
+--[[
+  updates and handles every bullet the player has fired
+]]
 function bullets_player()
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
@@ -813,7 +907,7 @@ function bullets_player()
     for bos in all(boss_table) do
       if ent_collide(bos, b) then
         sfx(23,1)
-        bos.health -= ((b.sprite == 48) and 3 or 1)
+        bos.health -= ((b.sprite == 48) and 5 or 1)
         bos.shot_last = time()
         bos.shot_ang = angle_btwn(player.x+5, player.y+5, bos.x, bos.y)
         del(player_bullets, b)
@@ -824,8 +918,9 @@ function bullets_player()
           add(destroyed_bosses, bos)
           player_killed += 1
           del(boss_table, bos)
+          enemy_bullets={}
           if (level_lvl == 5) then coin.x, coin.y = 80, 50
-          else enemy_bullets={}; coin.x,coin.y = bos.x,bos.y end
+          else coin.x,coin.y = bos.x,bos.y end
           if (#boss_table == 0) coresume(game)
         end
         break
@@ -834,6 +929,9 @@ function bullets_player()
   end
 end
 
+--[[
+  updates and handles every bullet an enemy has fired
+]]
 function bullets_enemies()
   for b in all(enemy_bullets) do
     -- first delete offscreen bullets:
@@ -862,20 +960,35 @@ function bullets_enemies()
   end
 end
 
+--[[
+  draws leaderboard to screen
+]]
 function show_leaderboard()
-  rectfill(0,0,128,128,0)
-  print("you died",hcenter(8), 55, 8)
-  --k = min(player_killed, k+0.5)
-  if (k<player_killed-1) k += player_killed*.01--0.5
+  --rectfill(0,0,128,128,0)
+  if not win then
+    mes = "game over";
+  else
+    mes = "the horde is beaten... for now!"
+    rectfill(0,11,127,116,12)
+    rectfill(0,13,127,114,6)
+  end
+  print(mes,hcenter(#mes), 55, win and 13 or 8)
+  if (k<player_killed-1) k += player_killed*.01
   local t = "killed: "..flr(k)
   print(t, hcenter(#t), 63, 5)
-  print("press \x8e/\x97 to start over", 20, 100, flr(time()*5)%15+1)
+  print("left click to start over", 15, 100, flr(time()*5)%15+1)
   if (flr(k)==player_killed-1) timers["invalid"] = 0.5; k+=1
-  if (timers["invalid"] > 0) camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  if (timers["invalid"] > 0) then camera(cos((time()*1000)/3), cos((time()*1000)/2))
+  else camera() end
 end
 
+--============================================================================--
 --======================= animation functions ================================--
---draw enemy destruction animation to screen
+--============================================================================--
+
+--[[
+  draw enemy destruction animation
+  ]]
 function step_destroy_animation(e)
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
@@ -901,6 +1014,9 @@ function step_destroy_animation(e)
   e.destroyed_step += 1
 end
 
+--[[
+  animate bullets hitting any object, this should really get renamed
+]]
 function boss_hit_animation(bul)
   local colors = {8, 9}
 
@@ -924,6 +1040,9 @@ function boss_hit_animation(bul)
   bul.current_step += 1
 end
 
+--[[
+  steps through boss exploding animation
+]]
 function step_boss_destroyed_animation(b)
   if (b.destroyed_step <= b.destroy_anim_length) then
     for i=1,3 do
@@ -931,8 +1050,10 @@ function step_boss_destroyed_animation(b)
     end
   else
     if (b~= player) del(destroyed_bosses, b)
-    if (#boss_table == 0) coin.dropped = true
-    music(3)
+    if (b.sprite ~= 5) then
+      if (#boss_table == 0) coin.dropped = true
+      if (b.level ~= 1.5) music(3)
+    end
   end
 
   circ(b.x+4, b.y+4, b.destroyed_step%5, 8)
@@ -941,11 +1062,17 @@ function step_boss_destroyed_animation(b)
 
 end
 
+--[[
+  initiates the teleport animation
+]]
 function init_tele_anim(e)
   e.anim_length,e.anim_step = 90,0
   add(tele_animation, e)
 end
 
+--[[
+  steps through teleport animation
+]]
 function step_teleport_animation(e)
   local offset = 0xffff
   if (e == player) offset = 4
@@ -973,6 +1100,9 @@ function step_teleport_animation(e)
   end
 end
 
+--[[
+  adds locations of water animations to a list of circles that are handled in _draw
+]]
 function water_anim()
   for i=0,16 do
     for j=0,16 do
@@ -981,7 +1111,13 @@ function water_anim()
   end
 end
 
+--============================================================================--
 --================================ functions =================================--
+--============================================================================--
+
+--[[
+  adds bullets to the respective table with the appropriate offset and values
+]]
 function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
   if (boss) sfx(2)
   if friendly then
@@ -998,16 +1134,20 @@ function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
   end
 end
 
+--[[
+  handle button presses inside skill tree, updates player attributes accordingly
+]]
 function skill_tree()
   skills_selected[currently_selected] = false
   local diff = 0
-  if btnp(2) then
+  if btn(2) and timers["firerate"]==0 then
     diff = 0xffff
     sfx(0)
-  elseif btnp(3) then
+    timers["firerate"] = .2
+  elseif btn(3) and timers["firerate"]==0 then
     diff = 1
     sfx(0)
-  --elseif btnp(5) then
+    timers["firerate"] = .2
   elseif continuebuttons() then
     if selection_set[currently_selected] == "quit" then
       in_skilltree = false
@@ -1045,14 +1185,22 @@ function skill_tree()
   return
 end
 
+--[[
+  fill enemy table with an assortment of random x,y values, enemy types, and
+  spawn timing
+]]
 function fill_enemy_table(level, lvl_timer)
   local types = {"basic", "shooter", "exploder"}
-  local baseline = 20
+  local baseline = 15
   for i=1,(baseline*level) do
-    add(enemy_table, enemy(flr(rnd(120)), flr(rnd(120)), types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
+    add(enemy_table, enemy(0, 0, types[flr(rnd(level))%#types+1], flr(rnd(lvl_timer))))
   end
 end
 
+--[[
+  if the enemies from 'enemy_table' are set to spawn at the current timme,
+  spawn them at least a distance of 50 pixels away from the player
+]]
 function spawnenemies()
   if (#enemy_table == 0) timers["spawn"] = 0; return
   if (timers["spawn"] == 0) timers["spawn"] = spawn_time_start
@@ -1068,6 +1216,9 @@ function spawnenemies()
   end
 end
 
+--[[
+  check if all enemies have been killed, if so, step the gameflow corouting
+]]
 function detect_kill_enemies()
   if #enemy_spawned == 0 and #enemy_table == 0 then
     detect_killed_enemies = false
@@ -1075,6 +1226,9 @@ function detect_kill_enemies()
   end
 end
 
+--[[
+  kill all enemies (including bosses) on screen
+]]
 function kill_all_enemies(no_drop_items)
   for e in all(enemy_spawned) do
     if (no_drop_items) e.drop_prob = 0
@@ -1093,6 +1247,9 @@ function kill_all_enemies(no_drop_items)
   enemy_table = {}
 end
 
+--[[
+  scrolls level to the left for our level transition, moves with player movement
+]]
 function levelchange()
   local farx = 100
   local previoussx = level_sx
@@ -1139,6 +1296,10 @@ function levelchange()
   end
 end
 
+--[[
+  handle a rocket explosion by adding sound effects, checking aoe, and incrementing
+  the player's kill counter
+]]
 function rocket_kill(rocket)
   sfx(22)
   for enemy in all(enemy_spawned) do
@@ -1153,17 +1314,28 @@ function rocket_kill(rocket)
   end
 end
 
---drop chance
+--[[
+  called when an enemy is killed. this function drops an opject with probability
+  e.drop_prob
+]]
 function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
+--[[
+  handle when a player gets hit by decrementing health, triggering sfx, and
+  updating timers
+]]
 function player_hit(d)
-  player_health -= d
-  sfx(18)
-  timers["playerlasthit"] = 2
+  if timers["playerlasthit"] == 0 then
+    player_health -= d
+    sfx(18)
+    timers["playerlasthit"] = 2
+  end
 end
----------------------------------- constructor ---------------------------------
+--============================================================================--
+--================================ constructor ===============================--
+--============================================================================--
 function _init()
   k=0
   poke(0x5f2d, 1)
@@ -1174,22 +1346,25 @@ function _init()
   coresume(game)
 end --end _init()
 
-
+--============================================================================--
 --================================ update ====================================--
+--============================================================================--
+--[[
+  called 30 times a second, we handle most button input here (other than skilltree)
+]]
 function _update()
-  -- timers["playerlasthit"] = 1 --uncomment for god mode
-  -- collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
   move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
-  if ((bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) and timers["playerlasthit"] == 0) player_hit(1)
+  if (bump(player.x + 4, player.y + 4, 2) or bump(player.x + 11, player.y + 11, 2)) player_hit(1)
 
   -- count down timers
   for k,t in pairs(timers) do timers[k] = max(0, timers[k] - (1/30)) end
+  -- timers["playerlasthit"] = 0x.0001 --uncomment for god mode
   if (level_change)  levelchange()
   if (titlescreen == nil and continuebuttons()) titlescreen = true; return
-  if (drawcontrols and continuebuttons()) music(0xffff) showcontrols = false coresume(game); return
-  if (in_leaderboard and continuebuttons()) in_leaderboard = false; sort = true; run()
+  if (drawcontrols and continuebuttons()) music(0xffff) showcontrols = false; coresume(game); return
+  if (in_leaderboard and continuebuttons()) in_leaderboard = false; run()
   if (in_skilltree) skill_tree(); return;
   if (seraph.text ~= nil and not wait.dialog_finish and continuebuttons()) seraph = {}; coresume(game); return
   if not wait.controls and seraph.text == nil then
@@ -1197,9 +1372,9 @@ function _update()
     --left mouse button-------
     --========================
     if stat(34) == 1 and timers["firerate"] == 0 then
-        shoot(player.x, player.y, player_angle, 53, true, false)
-        timers["firerate"] = player_fire_rate
-        sfx(2)
+      shoot(player.x, player.y, player_angle, 53, true, false)
+      timers["firerate"] = player_fire_rate
+      sfx(2)
     end
 
     --========================
@@ -1284,7 +1459,6 @@ function _update()
       player.x -= move
       moving = true
       if (bump(player.x + 3, player.y + 4) or bump(player.x + 3, player.y + 11)) player.x = previousx
-      if (bump(player.x + 3, player.y + 4, 3) or bump(player.x + 3, player.y + 11, 3)) player.x -= previousx%8
     end
 
     --========================
@@ -1294,7 +1468,6 @@ function _update()
       player.x += move
       moving = true
       if (bump(player.x + 12, player.y + 4) or bump(player.x + 12, player.y + 11)) player.x = previousx
-      if (bump(player.x + 12, player.y + 4, 3) or bump(player.x + 12, player.y + 11, 3)) player.x += min(move, previousx%8-2)
     end
 
     --========================================================================--
@@ -1318,9 +1491,12 @@ function _update()
 end
 
 
---------------------------------------------------------------------------------
---------------------------------- draw buffer ----------------------------------
---------------------------------------------------------------------------------
+--============================================================================--
+--=============================== draw buffer ================================--
+--============================================================================--
+--[[
+  draw all of our sprites and animations to the screen
+]]
 function _draw()
   cls()
 
@@ -1345,7 +1521,7 @@ function _draw()
   end
 
   if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
-  if ((level_lvl == 6 or level_lvl == 7) and #boss_table == 0) spr(5, 100+level_sx, 60, 2, 2)
+  if ((level_lvl == 6) and #boss_table == 0) spr_r(5, 228+level_sx, 60, angle_btwn(player.x, player.y, 228+level_sx, 60), 2, 2)--spr(5, 228+level_sx, 60, 2, 2)
   if (drawcontrols) draw_controls(); return
   if (open_door) opendoor()
   if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
@@ -1377,11 +1553,11 @@ function _draw()
   end
 
   for b in all(boss_table) do
-    if (timers["playerlasthit"] == 0 and ent_collide(player, b)) player_hit(2)
+    if (ent_collide(player, b)) player_hit(2)
     if b.level == 10 or b.level == 1.5 then spr_r(b.sprite, b.x, b.y, angle_btwn(player.x, player.y, b.x, b.y), 2, 2)
     elseif (b.level ~= 3) then spr(b.sprite, b.x, b.y, 2, 2)
     else sspr(0, 80, 8, 8, b.x, b.y, 16, 16) end
-    b.update()
+    if (not wait.controls and seraph.text == nil) b.update()
   end
 
   foreach(boss_hit_anims, boss_hit_animation)
@@ -1460,19 +1636,19 @@ a99999a99a0000000a9799a9a00000000000a9a00000000000a999999a000000a99999999a000000
 a999aaa99a0000000a999aa9a00000000000a9a00000000000a999999a000000a99999999a0000000000000000000000000000000000000044444444ffffffff
 00aaaaaa00000000000aaaa0000000000000aaa000000000000aaaa00000000000aaaaaa0000000000000000dddddddddddddddd00000000ffcccccccccccccc
 0a999999a000000000a9999a000000000000a9a00000000000a9999a000000000a999999a000000000000000dddddddddddddddd00000000ffccc55555555555
-a9979a999a0000000a9979a9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dd9ddd9999ddd9dd00000000ff55556666666666
-a979aaa99a0000000a979aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddddd9cccc9ddddd000000005556676666666666
-a979a9999a0000000a979a99a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dddd9cddddc9dddd000000006676676666662d66
-a979aaa99a0000000a979aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddd9cddddddc9ddd00000000667667666666d266
-a99999a99a0000000a9799a9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dd9cdddccdddc9dd00000000f676676666662d66
-a999aaa99a0000000a999aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dd9dddccccddd9dd00000000f67667666666d266
-0a999a99a000000000a999aa000000000000a9a00000000000a9999a000000000a999999a000000000000000dd9dddccccddd9ddccccccfff676676666666666
-00aaaaaa00000000000aaaa0000000000000aaa000000000000aaaa00000000000aaaaaa0000000000000000dd9dddccccddd9dd5555ccfff676676666666666
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddc9dddccddd9cdd6665555f6676675555555555
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dddc9dddddd9cddd666766556675555555555555
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddddc9dddd9cdddd666766765555551111111111
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dd9ddc9999cdd9dd66676676555ccccccccccccc
-0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddddddccccdddddd6667667ffccccccccccccccc
+a9979a999a0000000a9979a9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dd9dddddddddd9dd00000000ff55556666666666
+a979aaa99a0000000a979aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000dddd99999999dddd000000005556676666666666
+a979a9999a0000000a979a99a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddd9900000099ddd000000006676676666662d66
+a979aaa99a0000000a979aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddd9000000009ddd00000000667667666666d266
+a99999a99a0000000a9799a9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddd9000cc0009ddd00000000f676676666662d66
+a999aaa99a0000000a999aa9a00000000000a9a0000000000a999999a0000000a99999999a00000000000000ddd900cccc009ddd00000000f67667666666d266
+0a999a99a000000000a999aa000000000000a9a00000000000a9999a000000000a999999a000000000000000ddd900cccc009dddccccccfff676676666666666
+00aaaaaa00000000000aaaa0000000000000aaa000000000000aaaa00000000000aaaaaa0000000000000000ddd9000cc0009ddd5555ccfff676676666666666
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddd9000000009ddd6665555f6676675555555555
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddd9900000099ddd666766556675555555555555
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000ddd4999999994ddd666766765555551111111111
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dddd44444444dddd66676676555ccccccccccccc
+0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dd9dddddddddd9dd6667667ffccccccccccccccc
 0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dddddddddddddddd66676676ffcccccccccccccc
 660000660000000000080000333333334444444433333333b44444444444444b3333333399999999444444449999999944444444444444449999999966676676
 6000000600000000000800003bb3bbb344454444b3333333b44544444445444b33b3bbb394494449444f444449999999444f4444444f4444994944496667667f
@@ -1556,11 +1732,11 @@ fecbcbcbcbcbcbcbcbcbcbcbcbfafafffefafacbccdcdcc5dbdbdbdbc3c1dcdcdcdcdcdce1f0f0f0
 fecbcbcbcbcbcbcbcbcbcbcbcbfafafffefafacbccdcdcc4cacacac3dcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f6f5f5f5c5dbc6f5f5f5f5f5f5f50af31dc00b1df3f3f3f3f3f3f3f31d0bc01d3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c1d1d1d1d1d1d1d1d1d1d1d1d1d2b2c3b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffefacbcbccc1dcdcdcdcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f1f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f5f5f50af31d0b1df32b2c2b2c2b2c2b2cf31d0b1d2b2c2b2c2b2c2b2c2b2c2b2c2b2c2b2c1d1dc01dc01dc01d1d1d1d2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcc1dcdcdcdcdce1f0f0f1f0f0f0f0f0f0f0f0e5f5f5f6f5f5f5f5f5f5f5f5f5c5dbc6f6f5f5f5f5f51819f3f3f3f3f33b3c3b3c3b3c3b3cf3f3f3c0c03c3b3c3b3c3b3c3b3c3b3c3b3c3bc0f3f3f3f3f3f3f3f3f32b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f07e797bf0e5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcbcefdfdcfcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1dce1f0f0f0f0f0f0f0f07ef27af279794e4e4e4e4e4e4e4e4e4ed6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0292ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbcd5b5cfccbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdc7873737373797bf0f0f1f0f07ef27df07c7a7a7a4f4f4f4f4f4f4f4f4fe6f5f55e5f6df5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0393ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
-fecbcbcbcbcbcd6b6cfccbcbcbcbcbebeccbcbcbcc7375c1dcdcdcdcc1787373d0747474747ad07979797979f27df0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f56e6f7ff5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
-fecbcbcbcbcbdeededdfcbcbcbcbcbebeccbcbcbcc74d0737373737373d0747477dcdcdce1f07c7a7a7a7a7d7df0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcbcbcbcbcbcbcbcbcbfffecbcbcbccdcdcc1dcdcdcdcdcdcdcdcdcdcdcdcdce1f0f0f0f0f0f0f0f07e797bf0e5f5f5f5f5f5f5f6f5f5f5f6f5c5dbc6f5f5f5f5f5d3f3c0c02b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2c2b2c2b2c2b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcefdfdcfcbcbcbcbcbf8d7cbcbcbccdcdcdcdcdcc1dcdcdcc1dcdcdcc1dce1f0f0f0f0f0f0f0f07ef27af279794e4e4e4e4e4e4e4e4e4ed6f5c7dbdbd4f5f5f5d3f3f3c0f33b3c3b3c3b3cf30b0bf33b3c3b3c3b3cf3f33b3c3b3cc0c0c0c03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbcd5b5cfccbcbcbcbcbebeccbcbcbccdcdcdcdcdcdcdcdcdcdcdc7873737373797bf0f0f1f0f07ef27df07c7a7a7a4f4f4f4f4f4f4f4f4fe6f5f55e5f6df5f5d3f3f3f3f3f32b2c2b2c2b2cf31d1df32b2c2b2c2b2cf3f32b2c2b2cc0292ac02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
+fecbcbcbcbcbcd6b6cfccbcbcbcbcbebeccbcbcbcc7375c1dcdcdcdcc1787373d0747474747ad07979797979f27df0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f6f56e6f7ff5f5e3f4f3f3f3f33b3c3b3c3b3cf31d1df33b3c3b3c3b3cf3f33b3c3b3cc0393ac03b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
+fecbcbcbcbcbdeededdfcbcbcbcbcbebeccbcbcbcc74d0737373737373d0747477dcdcdce1f07c7a7a7a7a7d7df0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5e3f4f3c0f32b2c2b2c2b2cc0f3f3c02b2c2b2c2b2cf3f32b2c2b2cc0c0c0c02b2c2b2cf3f3f32b2c2b2c2b2c2b2c3b3c2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbebeccbcbcbccdc7674747474747477dcdcdcdcdcdce1f0f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5e309c8c03b3c3b3c3b3c2b2c2b2c3b3c3b3c3b3cf3f33b3c3b3c3b3c3b3c3b3c3b3cf3f3f33b3c3b3c3b3c3b3c2b2c3b3c2b2c3b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcbcbcbf7e7cbcbcbccdcc1dcdcdcdcdcdcdcdcc1dcdcdce1f0f0f0f0f0f0f1f0f0f1f0f0f0e5f5f5f5f5f5f5f5f5f5f5f5f5f5f5c5dbc6f5f5f5f5f51a1bf3f3f3f3f32b2c3b3c3b3c2b2cf3f3f3c0c02c2b2c2b2c2b2c2b2c2b2c2b2c2bc0f3f3f3f3f3f3f3f3f33b3c2b2c3b3c2b0000000000
 fecbcbcbcbcbcbcbcbcbcbcbcefdfdfffecbcbcbccdcdcdcdcdcdcdcc1dcdcdcdcdcc1dce1f0f0f0f0f0f0f0f0f0f0f0f0e5f5f5f5f5f6f5f5f6f5f5f5f5f5f5c5dbc6f5f5f5f5f5f50af30b0b0bf33b3c2b2c2b2c3b3cf30b0b0b3b3c3b3c3b3c3b3c3b3c3b3c3b3c3b3c0b0bc00bc00bc00b0b0b0b3b3c2b2c3b0000000000
@@ -1652,7 +1828,7 @@ __music__
 01 1d181e1b
 02 1a18191b
 00 4e4f4d45
-04 031c1f20
+04 431c1f20
 00 231c1f20
 01 21222344
 00 4c424344
@@ -1713,4 +1889,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
