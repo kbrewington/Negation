@@ -1123,7 +1123,9 @@ function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
   end
 end
 
-
+--[[
+  handle button presses inside skill tree, updates player attributes accordingly
+]]
 function skill_tree()
   skills_selected[currently_selected] = false
   local diff = 0
@@ -1171,6 +1173,11 @@ function skill_tree()
   return
 end
 
+--[[
+  fill enemy table with an assortment of random x,y values, enemy types, and
+  spawn timing
+  -- do we need to randomize x, y here anymore??
+]]
 function fill_enemy_table(level, lvl_timer)
   local types = {"basic", "shooter", "exploder"}
   local baseline = 15
@@ -1179,6 +1186,10 @@ function fill_enemy_table(level, lvl_timer)
   end
 end
 
+--[[
+  if the enemies from 'enemy_table' are set to spawn at the current timme,
+  spawn them at least a distance of 50 pixels away from the player
+]]
 function spawnenemies()
   if (#enemy_table == 0) timers["spawn"] = 0; return
   if (timers["spawn"] == 0) timers["spawn"] = spawn_time_start
@@ -1194,6 +1205,9 @@ function spawnenemies()
   end
 end
 
+--[[
+  check if all enemies have been killed, if so, step the gameflow corouting
+]]
 function detect_kill_enemies()
   if #enemy_spawned == 0 and #enemy_table == 0 then
     detect_killed_enemies = false
@@ -1201,6 +1215,9 @@ function detect_kill_enemies()
   end
 end
 
+--[[
+  kill all enemies (including bosses) on screen
+]]
 function kill_all_enemies(no_drop_items)
   for e in all(enemy_spawned) do
     if (no_drop_items) e.drop_prob = 0
@@ -1219,6 +1236,9 @@ function kill_all_enemies(no_drop_items)
   enemy_table = {}
 end
 
+--[[
+  scrolls level to the left for our level transition, moves with player movement
+]]
 function levelchange()
   local farx = 100
   local previoussx = level_sx
@@ -1265,6 +1285,10 @@ function levelchange()
   end
 end
 
+--[[
+  handle a rocket explosion by adding sound effects, checking aoe, and incrementing
+  the player's kill counter
+]]
 function rocket_kill(rocket)
   sfx(22)
   for enemy in all(enemy_spawned) do
@@ -1279,11 +1303,18 @@ function rocket_kill(rocket)
   end
 end
 
---drop chance
+--[[
+  called when an enemy is killed. this function drops an opject with probability
+  e.drop_prob
+]]
 function drop_item(e)
   if (flr(rnd(100)) <= e.drop_prob) add(dropped, drop_obj(e.x, e.y, e.drops[flr(rnd(#e.drops)) + 1]))
 end
 
+--[[
+  handle when a player gets hit by decrementing health, triggering sfx, and
+  updating timers
+]]
 function player_hit(d)
   if timers["playerlasthit"] == 0 then
     player_health -= d
@@ -1291,7 +1322,9 @@ function player_hit(d)
     timers["playerlasthit"] = 2
   end
 end
----------------------------------- constructor ---------------------------------
+--============================================================================--
+--================================ constructor ===============================--
+--============================================================================--
 function _init()
   k=0
   poke(0x5f2d, 1)
@@ -1302,11 +1335,13 @@ function _init()
   coresume(game)
 end --end _init()
 
-
+--============================================================================--
 --================================ update ====================================--
+--============================================================================--
+--[[
+  called 30 times a second, we handle most button input here (other than skilltree)
+]]
 function _update()
-
-  -- collide_all_enemies()
 
   local previousx, previousy = player.x, player.y
   move = (bump(player.x + 4, player.y + 4, 1) or bump(player.x + 11, player.y + 11, 1)) and player_speed/2 or player_speed
@@ -1445,9 +1480,12 @@ function _update()
 end
 
 
---------------------------------------------------------------------------------
---------------------------------- draw buffer ----------------------------------
---------------------------------------------------------------------------------
+--============================================================================--
+--=============================== draw buffer ================================--
+--============================================================================--
+--[[
+  draw all of our sprites and animations to the screen
+]]
 function _draw()
   cls()
 
@@ -1840,4 +1878,3 @@ __music__
 00 41424344
 00 41424344
 00 41424344
-
