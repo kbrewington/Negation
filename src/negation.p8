@@ -871,7 +871,7 @@ end
 function show_leaderboard()
   rectfill(0,0,128,128,0)
   if not win then mes = "game over"
-  else mes = "tHE eND..?" end
+  else mes = "tHE HORDE IS BEATEN... fOR NOW!" end
   print(mes,hcenter(#mes), 55, 8)
   if (k<player_killed-1) k += player_killed*.01
   local t = "KILLED: "..flr(k)
