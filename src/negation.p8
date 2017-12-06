@@ -130,7 +130,6 @@ function gameflow()
   drawcontrols, wait.controls = false, false
 
   init_tele_anim(player)
-  music(14)
   yield()
 
   seraph.text = "i see a door. give me a minuteand i'll get it open."
@@ -146,6 +145,7 @@ function gameflow()
   yield()
 
   init_tele_anim(boss(20, 20, 128, 1, 40))
+  music(14)
   yield()
 
   kill_all_enemies(true)
@@ -162,7 +162,7 @@ function gameflow()
   wait.controls = true
   seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
   add(boss_table, boss(100, 56, 139, 2, 35))
-  music(15)
+
   yield()
 
   seraph.text = "unfortunately we weren't alone"
@@ -182,12 +182,12 @@ function gameflow()
   -- start level 3
   open_door = false
   seraph.text = "so the main source of the     infestation is up here past   the desert."
-  music(16)
   yield()
 
   fill_enemy_table(3, 60)
   spawn_time_start = 60
   init_tele_anim(boss(100, 60, 160, 3, 40))
+  music(16)
   yield()
 
   kill_all_enemies(true)
@@ -195,7 +195,7 @@ function gameflow()
   yield()
 
   seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
-  music(20)
+
   yield()
 
   seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
@@ -208,12 +208,13 @@ function gameflow()
 
   kill_all_enemies(true)
   init_tele_anim(boss(60, 60, 166, 1, 40))
+  music(20)
   init_tele_anim(boss(90, 90, 38, 1.5, 10))
   init_tele_anim(boss(20, 20, 38, 1.5, 10))
   yield()
 
   seraph.text = "almost there, be careful goingin the temple. no idea what's in there..."
-  --music(17)
+
   yield()
 
   kill_all_enemies(true)
@@ -226,6 +227,7 @@ function gameflow()
   yield()
 
   init_tele_anim(boss(56, 52, 164, 4, 40))
+  music(17)
   yield()
 
   kill_all_enemies(true)
@@ -235,11 +237,11 @@ function gameflow()
   -- start level 6 "final" boss
   fill_enemy_table(3, 75)
   spawntime_start,detect_killed_enemies = 75, true
-  --music(18)
+
   yield()
 
   seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it..."
-  --music(19)
+
   yield()
 
   seraph.text = "it needs your blood so please do us a favor and just die!"
@@ -247,20 +249,22 @@ function gameflow()
 
   kill_all_enemies(true)
   init_tele_anim(boss(56, 56, 169, 6, 50))
+  music(19)
   yield()
 
   level_change = true
-  --music(21)
+
   yield()
-  
+
   --start level 7 final boss
   seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
   add(boss_table, boss(100, 60, 5, 10, 50))
+  music(22)
   yield()
 
   seraph.text = "no matter. we'll just use yourblood to summon it again!"
   yield()
-  -- music(22)
+
 
   yield()
 
