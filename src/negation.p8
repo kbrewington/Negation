@@ -132,7 +132,7 @@ function gameflow()
   init_tele_anim(player)
   yield()
 
-  seraph.text = "i see a door. give me a minuteand i'll get it open."
+  seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL GET IT OPEN."
   yield()
 
   fill_enemy_table(1, 65)
@@ -141,7 +141,7 @@ function gameflow()
 
   kill_all_enemies(true)
   wait.timer = false
-  seraph.text = "okay that should do...*static*incom-*static* b-*static*..."
+  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
   yield()
 
   init_tele_anim(boss(20, 20, 128, 1, 40))
@@ -149,7 +149,7 @@ function gameflow()
   yield()
 
   kill_all_enemies(true)
-  seraph.text = "nice work. the door should be opened now."
+  seraph.text = "NICE WORK. THE DOOR SHOULD BE OPENED NOW."
   yield()
 
   wait.controls,level_change,open_door = true,true,true
@@ -160,15 +160,15 @@ function gameflow()
 
   --start level 2
   wait.controls = true
-  seraph.text = "welcome to the planet heclao, suppose to be our home away   from home."
+  seraph.text = "WELCOME TO THE PLANET HECLAO, SUPPOSE TO BE OUR HOME AWAY   FROM HOME."
   add(boss_table, boss(100, 56, 139, 2, 35))
 
   yield()
 
-  seraph.text = "unfortunately we weren't alone"
+  seraph.text = "UNFORTUNATELY, WE WEREN'T     ALONE."
   yield()
 
-  seraph.text = "oh, who is this little guy?   seems to be checking you out."
+  seraph.text = "OH, WHO IS THIS LITTLE GUY?   SEEMS TO BE CHECKING YOU OUT."
   yield()
 
   fill_enemy_table(2, 60)
@@ -181,7 +181,8 @@ function gameflow()
 
   -- start level 3
   open_door = false
-  seraph.text = "so the main source of the     infestation is up here past   the desert."
+  seraph.text = "SO THE MAIN SOURCE OF THE     INFESTATION IS UP HERE PAST   THE DESERT."
+  --music(16)
   yield()
 
   fill_enemy_table(3, 60)
@@ -194,11 +195,11 @@ function gameflow()
   level_change = true
   yield()
 
-  seraph.text = "ever since the cult moved intothe temple these creatures    have been pouring out of there."
-
+  seraph.text = "EVER SINCE THE CULT MOVED INTOTHE TEMPLE THESE CREATURES    HAVE BEEN POURING OUT OF THERE."
+  --music(20)
   yield()
 
-  seraph.text = "i'm pretty certain that they  are trying to summon some kindof monster..."
+  seraph.text = "I'M PRETTY CERTAIN THAT THEY  ARE TRYING TO SUMMON SOME KINDOF MONSTER..."
   yield()
 
   -- start level 4
@@ -213,8 +214,8 @@ function gameflow()
   init_tele_anim(boss(20, 20, 38, 1.5, 10))
   yield()
 
-  seraph.text = "almost there, be careful goingin the temple. no idea what's in there..."
-
+  seraph.text = "ALMOST THERE, BE CAREFUL GOINGIN THE TEMPLE. NO IDEA WHAT'S IN THERE..."
+  --music(17)
   yield()
 
   kill_all_enemies(true)
@@ -240,11 +241,11 @@ function gameflow()
 
   yield()
 
-  seraph.text = "this is it. moment of truth.  i'm certain you will be no    problem for it..."
-
+  seraph.text = "THIS IS IT. MOMENT OF TRUTH.  I'M CERTAIN YOU WILL BE NO    PROBLEM FOR IT..."
+  --music(19)
   yield()
 
-  seraph.text = "it needs your blood so please do us a favor and just die!"
+  seraph.text = "IT NEEDS YOUR BLOOD SO PLEASE DO US A FAVOR AND JUST DIE!"
   yield()
 
   kill_all_enemies(true)
@@ -257,18 +258,18 @@ function gameflow()
   yield()
 
   --start level 7 final boss
-  seraph.text = "you fool! do you understand   how long it took us to summon that thing?"
+  seraph.text = "YOU FOOD! DO YOU UNDERSTAND   HOW LONG IT TOOK US TO SUMMON THAT THING?"
   add(boss_table, boss(100, 60, 5, 10, 50))
   music(22)
   yield()
 
-  seraph.text = "no matter. we'll just use yourblood to summon it again!"
+  seraph.text = "NO MATTER. WE'LL JUST USE YOURBLOOD TO SUMMON IT AGAIN!"
   yield()
 
 
   yield()
 
-  seraph.text = "so close... to perfection..."
+  seraph.text = "SO CLOSE... TO PERFECTION..."
   yield()
 
   music(3)
@@ -739,9 +740,9 @@ function skilltree()
   spr(coin.sprites[flr(time()*8)%#coin.sprites + 1], 20, 20, 2, 2)
   print(" - " .. player_tokens, 36, 26, 7)
 
-  print("upgrade speed - ".. next_cost[1] .." tokens ", 10, 36, 7+((skills_selected[1] and 1 or 0)*3))
-  print("upgrade fire rate - ".. next_cost[2] .." tokens ", 10, 44, 7+((skills_selected[2] and 1 or 0)*3))
-  print("upgrade health - ".. next_cost[3] .." tokens ", 10, 52, 7+((skills_selected[3] and 1 or 0)*3))
+  print("UPGRADE SPEED - ".. next_cost[1] .." TOKENS ", 10, 36, 7+((skills_selected[1] and 1 or 0)*3))
+  print("UPGRADE FIRE RATE - ".. next_cost[2] .." TOKENS ", 10, 44, 7+((skills_selected[2] and 1 or 0)*3))
+  print("UPGRADE HEALTH - ".. next_cost[3] .." TOKENS ", 10, 52, 7+((skills_selected[3] and 1 or 0)*3))
   print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
 end
 
@@ -1050,8 +1051,7 @@ function step_boss_destroyed_animation(b)
   else
     if (b~= player) del(destroyed_bosses, b)
     if (b.sprite ~= 5) then
-      if (#boss_table == 0) coin.dropped = true
-      if (b.level ~= 1.5) music(3)
+      if (#boss_table == 0) coin.dropped = true; music(3)
     end
   end
 
