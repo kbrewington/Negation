@@ -1,7 +1,10 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+--============================================================================--
 --=============================== global variables  ==========================--
+--============================================================================--
+-- player parameters
 player = {
   x = 56,
   y = 56,
@@ -19,6 +22,7 @@ player_fire_rate = .6
 player_killed = 0
 player_tokens = 0
 
+-- level placement
 level_lvl = 1
 level_sx = 0
 level_sy = 0
@@ -34,11 +38,13 @@ level_transition = {
   7, 107, 0
 }
 
+-- wait controllers
 wait = {
   controls = false,
   dialog_finish = false
 }
 
+-- timers
 timers = {
   leveltimer = 0,
   showinv = 0,
@@ -54,6 +60,7 @@ timers = {
   mvmt = 0
 }
 
+-- coin
 coin = {
   dropped = false,
   size = 8,
@@ -103,10 +110,16 @@ title = {
                    "12,12,12, 8, 8, 8, 8, 8,12,12, 8,12,12,12,12,12,12,12, 8, 12,12,12,12,12,12,12,12, 8,12,12,12, 8,12,12,12, 8, 8, 8,12,12,12, 8, 8, 8,12,12,12,12,12,12,12, 8, 8,12,12,12,12, 8, 8,12,12,12, 8, 8, 8, 8, 8,12,12"}
 }
 
+-- flags
 playonce = 0
 
+--============================================================================--
 --============================= helper functions =============================--
-
+--============================================================================--
+--[[
+  gameflow
+    coroutine to handle the flow of the game.
+]]
 function gameflow()
   -- showplayer = true
   -- titlescreen = true
@@ -259,49 +272,74 @@ function gameflow()
   in_leaderboard = true
 end
 
--- http://pico-8.wikia.com/wiki/centering_text
+--[[
+  function used to center text
+  sourced from: http://pico-8.wikia.com/wiki/centering_text
+]]
 function hcenter(s) return 64-flr((s*4)/2) end
 
-function distance(n, d, m)
-  return (m==nil) and sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y)) or abs(n.x-d.x)+abs(n.y-d.y)
+--[[
+  calculate euclidean distance between n and d
+]]
+function distance(n, d)
+  return sqrt((n.x-d.x)*(n.x-d.x)+(n.y-d.y)*(n.y-d.y))
 end
 
+--[[
+  calculate angle between two coordinates (tx,ty) and (fx,fy)
+]]
 function angle_btwn(tx, ty, fx, fy)
   return ((atan2((ty - fy), (tx - fx)) * 360) + 180)%360
 end
 
+--[[
+  remove object 'obj' from list 'list' if it has traveled offscreen
+]]
 function delete_offscreen(list, obj)
   if (obj.x < 0 or obj.y < 0 or obj.x > 128 or obj.y > 128) del(list, obj)
 end
 
+--[[
+  check if buttons to continue have been pressed
+]]
 function continuebuttons()
   --if ((stat(34) == 1 and timers["firerate"] == 0) or btnp(4) or btnp(5)) timers["firerate"] = 1; return true
   if ((btn(4) or btn(5) or stat(34) == 1) and timers["firerate"] == 0) timers["firerate"] = .5; return true
   return false
 end
 
+--[[
+  check for collision between coordinates (x, y) and the flag value (defaults to 0)
+]]
 function bump(x, y, flag)
   return fget(mget(flr((x - level_sx + (level_x*8)) / 8), flr((y - level_sy + (level_y*8)) / 8)), (flag or 0))
 end
 
+--[[
+  call bump to check every corner relative to (x, y) to check for basic wall collision
+]]
 function bump_all(x, y)
   return bump(x, y) or bump(x + 7, y) or bump(x, y + 7) or bump(x + 7, y + 7)
 end
 
+--[[
+  check for a collision between two entities (firstent and secondent)
+  'offs' is an attempt to get the player's hitbox to update with the player's rotation
+]]
 function ent_collide(firstent, secondent)
   offs = player_angle > 180 and 4+2*sin(player_angle/360) or 4-2*sin(player_angle/360)
   offset = (firstent == player) and offs or 0
-  -- pset(firstent.x + offset, firstent.y + offset, 12)
-  -- pset(firstent.x + offset + firstent.size, firstent.y + offset + firstent.size, 12)
-  -- pset(secondent.x + level_sx + secondent.size,  secondent.y + secondent.size, 11)
-  -- pset(secondent.x + level_sx, secondent.y, 11)
 
   return (firstent.x + offset > secondent.x + level_sx + secondent.size or firstent.x + offset + firstent.size < secondent.x + level_sx
     or firstent.y + offset > secondent.y + secondent.size or firstent.y + offset + firstent.size < secondent.y) == false
 end
 
-
---====================== object-like structures ==============================--
+--============================================================================--
+--=========================== object-like structures =========================--
+--============================================================================--
+--[[
+  object for power-up items that enemies drop
+]]
 function drop_obj(sx, sy, sprite, am)
   local d = {}
   d.x, d.y, d.sprite, d.size, d.drop_duration = sx, sy, sprite, 7, 7
@@ -318,6 +356,9 @@ function drop_obj(sx, sy, sprite, am)
   return d
 end
 
+--[[
+  enemy object, move() function updates enemy ai based on enemy type
+]]
 function enemy(x, y, type, time_spwn)
   local e = {}
   e.x, e.y, e.time, e.b_count,e.angle =  x, y, time_spwn, 0, 360
@@ -358,7 +399,12 @@ function enemy(x, y, type, time_spwn)
   return e
 end
 
-function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
+--[[
+  bullet object
+  four basic types: regular bullet, _sin (more of slow and random movement),
+  shotgun, and homing
+]]
+function bullet(startx, starty, angle, sprite, friendly, shotgun, _sin, homing)
   local b = {}
   b.x, b.y, b.angle, b.sprite, b.friendly, b.duration = startx, starty, angle, sprite, friendly, 15
   b.shotgun, b.speed, b.acceleration, b.current_step, b.max_anim_steps, b.rocket, b.size = (shotgun or false), 2, 0, 0, 5, false, 3
@@ -369,16 +415,20 @@ function bullet(startx, starty, angle, sprite, friendly, shotgun, sine, homing)
      if (b.sprite == 48 and b.friendly) b.acceleration += 0.5
      if (shotgun or homing) b.duration -= 1
      if (homing) b.speed, b.angle = .05, angle_btwn(player.x, player.y, b.x, b.y)
-     if (sine) b.speed = .5
-     if (sine and flr(rnd(2))==1) b.y -= sin(time()*5)*5*sin(b.y*.5*3.14); b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360); return
+     if (_sin) b.speed = .5
+     if (_sin and flr(rnd(2))==1) b.y -= sin(time()*5)*5*sin(b.y*.5*3.14); b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360); return
      b.y = b.y - (b.speed+b.acceleration) * cos(b.angle / 360)
-     if (sine) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
+     if (_sin) b.x -= sin(time()*5)*5*sin(b.x*.5*3.14); return
      b.x = b.x - (b.speed+b.acceleration) * sin(b.angle / 360)
    end
 
   return b
 end
 
+--[[
+  boss object
+  update() function contains all ai code for every different boss, based on b.level
+]]
 function boss(startx, starty, sprite, lvl, hp)
   local b = {}
   b.x, b.y, b.speed, b.angle, b.level, b.shot_last, b.shot_ang, b.sprite, b.idx, b.b_count = startx, starty, .01, 0, lvl, nil, 0, sprite, 2, 0
@@ -484,9 +534,13 @@ function boss(startx, starty, sprite, lvl, hp)
           end
   return b
 end
-
+--============================================================================--
 --========================== draw functions ==================================--
--- https://www.lexaloffle.com/bbs/?pid=22757
+--============================================================================--
+--[[
+  function used to rotate sprite.
+  this edited version is sourced from: https://www.lexaloffle.com/bbs/?pid=22757
+]]
 function spr_r(s,x,y,a,w,h)
  sw=(w or 1)*8
  sh=(h or 1)*8
@@ -515,6 +569,10 @@ function spr_r(s,x,y,a,w,h)
  end
 end
 
+--[[
+  function used to draw title screen.
+  reads pixel color values from the title.text gloabal variable
+]]
 function draw_titlescreen()
   rectfill(0, 0, 127, 127, 13)
   circfill(64, 35, 45+time()%2, 8)
@@ -566,6 +624,9 @@ function draw_titlescreen()
   print("left click to start", 28, 100, flr(time())%15+1)
 end
 
+--[[
+  prints instructions on how to play to the screen
+]]
 function draw_controls()
   rectfill(10, 20, 117, 101, 8)
   rectfill(11, 21, 116, 100, 6)
@@ -579,6 +640,9 @@ function draw_controls()
   print("q to drop power up", 17, 88, 5)
 end
 
+--[[
+  draws box with seraph's dialog text to the bottom of the screen
+]]
 function draw_dialog()
   local bck_color = 5
   local brd_color = 0
@@ -615,7 +679,7 @@ function draw_dialog()
   pset(125, 105, brd_color) -- top right
   rectfill(126, 106, 126, 124, brd_color) -- right
   pset(125, 125, brd_color) -- bottom right
-  rectfill(124, 126, 4, 126, brd_color) -- bootom
+  rectfill(124, 126, 4, 126, brd_color) -- bottom
   pset(3, 125, brd_color) -- bottom left
 
   print("seraph", 4, 100, fnt_color)
@@ -627,6 +691,9 @@ function draw_dialog()
   --if (seraph.step == #d+30) wait.dialog_finish = false
 end
 
+--[[
+  draws count down timer for first level on the screen
+]]
 function drawcountdown()
   --local x, y, clr = 57, 15, 12
   local countdown = timers["leveltimer"]
@@ -641,7 +708,9 @@ function drawcountdown()
   if (countdown == 0) wait.timer = false; coresume(game)
 end
 
---changed here
+--[[
+  animates door opening on first level
+]]
 function opendoor()
 
   local offset = (level_lvl-1)*128
@@ -657,6 +726,9 @@ function opendoor()
   end
 end
 
+--[[
+  draws skilltree menu to screen, all button handling is done in skill_tree()
+]]
 function skilltree()
   rectfill(-50, -50, 200, 200, 0)
   print("purchase upgrades",10,10,7)
@@ -669,6 +741,9 @@ function skilltree()
   print("quit", 10, 68, 7+((skills_selected[4] and 1 or 0)*3))
 end
 
+--[[
+  draw player's healthbar
+]]
 function draw_playerhp()
   --local hpcolor = 11
   local hpratio = player_health/player_max_health
@@ -702,6 +777,9 @@ function draw_playerhp()
   end
 end
 
+--[[
+  this function updates all enemies that have been spawned
+]]
 function enem_spawned()
   for e in all(enemy_spawned) do
     -- this should never happen, but just in case:
@@ -756,6 +834,9 @@ function enem_spawned()
   end
 end
 
+--[[
+  updates any item that has been dropped by an enemy
+]]
 function item_drops()
   for d in all(dropped) do
     if ent_collide(player, d) then
@@ -791,6 +872,9 @@ function item_drops()
   pal()
 end
 
+--[[
+  updates and handles every bullet the player has fired
+]]
 function bullets_player()
   for b in all(player_bullets) do
     -- first delete offscreen bullets:
@@ -839,6 +923,9 @@ function bullets_player()
   end
 end
 
+--[[
+  updates and handles every bullet an enemy has fired
+]]
 function bullets_enemies()
   for b in all(enemy_bullets) do
     -- first delete offscreen bullets:
@@ -867,6 +954,9 @@ function bullets_enemies()
   end
 end
 
+--[[
+  draws leaderboard to screen
+]]
 function show_leaderboard()
   rectfill(0,0,128,128,0)
   if not win then mes = "game over"
@@ -881,8 +971,13 @@ function show_leaderboard()
   else camera() end
 end
 
+--============================================================================--
 --======================= animation functions ================================--
---draw enemy destruction animation to screen
+--============================================================================--
+
+--[[
+  draw enemy destruction animation
+  ]]
 function step_destroy_animation(e)
   if e.destroyed_step <= e.destroy_anim_length then
     spr(e.destroy_sequence[flr(e.destroyed_step/15)+1], e.x, e.y)
@@ -908,6 +1003,9 @@ function step_destroy_animation(e)
   e.destroyed_step += 1
 end
 
+--[[
+  animate bullets hitting any object, this should really get renamed
+]]
 function boss_hit_animation(bul)
   local colors = {8, 9}
 
@@ -931,6 +1029,9 @@ function boss_hit_animation(bul)
   bul.current_step += 1
 end
 
+--[[
+  steps through boss exploding animation
+]]
 function step_boss_destroyed_animation(b)
   if (b.destroyed_step <= b.destroy_anim_length) then
     for i=1,3 do
@@ -950,11 +1051,17 @@ function step_boss_destroyed_animation(b)
 
 end
 
+--[[
+  initiates the teleport animation
+]]
 function init_tele_anim(e)
   e.anim_length,e.anim_step = 90,0
   add(tele_animation, e)
 end
 
+--[[
+  steps through teleport animation
+]]
 function step_teleport_animation(e)
   local offset = 0xffff
   if (e == player) offset = 4
@@ -982,6 +1089,9 @@ function step_teleport_animation(e)
   end
 end
 
+--[[
+  adds locations of water animations to a list of circles that are handled in _draw
+]]
 function water_anim()
   for i=0,16 do
     for j=0,16 do
@@ -990,7 +1100,13 @@ function water_anim()
   end
 end
 
+--============================================================================--
 --================================ functions =================================--
+--============================================================================--
+
+--[[
+  adds bullets to the respective table with the appropriate offset and values
+]]
 function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
   if (boss) sfx(2)
   if friendly then
@@ -1006,6 +1122,7 @@ function shoot(x, y, a, spr, friendly, boss, shotgun, sine, homing)
     add(enemy_bullets, bullet((x - 8*sin(a / 360)), (y - 8*cos(a / 360)), a, spr, friendly))
   end
 end
+
 
 function skill_tree()
   skills_selected[currently_selected] = false
