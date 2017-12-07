@@ -1406,6 +1406,7 @@ function _update()
       local invt = player_inventory[1]
       timers["rightclick"] = 1 -- player_power_fire_rate
 
+      -- controls individual power ups
       if invt.type == "shotgun" then
         shoot(player.x, player.y, player_angle, 34, true, false, true)
         sfx(20)
@@ -1414,6 +1415,7 @@ function _update()
         sfx(16)
       end
 
+      -- dec ammo if above 1, else delete
       if invt.ammo == 1 then
         if (invt.type ~= "rockets") sfx(3)
         del(player_inventory, player_inventory[1])
@@ -1427,6 +1429,7 @@ function _update()
     --========================
     --o button----------------
     --========================
+    -- drops current power up
     if btnp(4) and #player_inventory > 0 then
       add(dropped, drop_obj((player.x + 5) + 12*sin(player_angle / 360), (player.y + 5) + 12*cos(player_angle / 360), player_inventory[1].sprite, player_inventory[1].ammo))
       del(player_inventory, player_inventory[1])
@@ -1472,11 +1475,13 @@ function _update()
     --========================================================================--
     player_angle = flr(atan2(stat(32) - (player.x + 8), stat(33) - (player.y + 8)) * -360 + 90) % 360
 
+    -- screen border
     if (player.x < -2) player.x = -2
     if (player.y < -2) player.y = -2
     if (player.x > 107) player.x = 107
     if (player.y > 112) player.y = 112
 
+    -- decrease shield
     if (not wait.controls or seraph.text == nil) player_shield = max(player_shield - .01,0)
 
     spawnenemies()
@@ -1502,6 +1507,8 @@ function _draw()
   if (in_leaderboard) show_leaderboard(); return
 
   map(level_x, level_y, level_sx, level_sy, 128, 128)
+
+  -- water animation
   if (rnd(10) > 9.5 and not level_change) water_anim()
     for i in all(water_anim_list) do
     circ(i[1], i[2], i[3], i[4])
@@ -1519,13 +1526,16 @@ function _draw()
     in_leaderboard = true
   end
 
-  if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2)
+  if (level_lvl == 1 and #boss_table == 0) spr(139, 228+level_sx, 56, 2, 2) -- show second boss on screen
+  -- draw seraph on screen before spawning him in
   if ((level_lvl == 6) and #boss_table == 0) spr_r(5, 228+level_sx, 60, angle_btwn(player.x, player.y, 228+level_sx, 60), 2, 2)--spr(5, 228+level_sx, 60, 2, 2)
   if (drawcontrols) draw_controls(); return
-  if (open_door) opendoor()
-  if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1)
+  if (open_door) opendoor() -- door animation
+  if (player_shield > 0) circ((player.x+8), (player.y+7), ((time()*50)%2)+6, 1) -- circle around player
   if (showplayer ~= nil) draw_playerhp()
   sp = moving and 2+flr(rnd(2))*32 or 0; moving = false
+
+  -- draw player or flash if damage
   if (showplayer ~= nil and timers["playerlasthit"] <= 0x.0001) then
     spr_r(sp, player.x, player.y, player_angle, 2, 2)
   elseif showplayer ~= nil and timers["playerlasthit"] > 0x.0001 and flr(time()*1000%2) == 0 then
@@ -1588,8 +1598,6 @@ function _draw()
   end
 
   if (in_skilltree) skilltree()
-
-  --debug() -- always on bottom
 end
 
 __gfx__
