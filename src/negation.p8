@@ -453,20 +453,21 @@ function boss(startx, starty, sprite, lvl, hp)
              rectfill(b.x + xoffset, b.y - 3, b.x + xoffset + flr(12 * (b.health / b.full_health)), b.y - 3, 8)
            end
   b.update = function()
-           local p_ang = angle_btwn(player.x, player.y, b.x, b.y)
-           b.b_count += 1
-           if b.level == 1 then
-             if (flr(timers["bossstart"])%10 == 0) rev*=0xffff; timers["bossstart"] = 100
-             b.angle = (b.angle+5)%360
+           -- this function can and should be optimized
+           local p_ang = angle_btwn(player.x, player.y, b.x, b.y) -- calculate angle between player here and use in rest of function
+           b.b_count += 1 -- increment boss's bullet count no matter what
+           if b.level == 1 then -- first boss ai
+             if (flr(timers["bossstart"])%10 == 0) rev*=0xffff; timers["bossstart"] = 100 -- reverse pattern every 10 seconds
+             b.angle = (b.angle+5)%360 -- rotate pattern
              for i=1,360,90 do
                if (b.b_count%5 == 0) shoot(b.x, b.y, i+(rev*b.angle)+rnd(10), 141, false, true)
              end
-           elseif b.level == 1.5 then
+           elseif b.level == 1.5 then -- turret bosses in level 4
              if (flr(timers["bossstart"])%2==0 and not once) shoot(b.x, b.y, p_ang, 142, false, true); once = true
-             if (flr(timers["bossstart"])%2!=0) once = false
-           elseif b.level < 3 then
-             if (#enemy_spawned == 0 and #enemy_table == 0 and not wait.controls) b.level = 2.5
-             if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then
+             if (flr(timers["bossstart"])%2!=0) once = false -- reset once flag
+           elseif b.level < 3 then -- second boss ai
+             if (#enemy_spawned == 0 and #enemy_table == 0 and not wait.controls) b.level = 2.5 -- if there aren't any enemies left, don't wait to be shot
+             if b.level==2.5 or b.shot_last ~= nil and ((time() - b.shot_last) < 2) then -- only shoot when this boss has been shot
                if flr(time()*50)%7 == 0 then
                  shoot(b.x, b.y, p_ang, 141, false, true)
                  b.x = b.x - 1.5*sin(p_ang/360)
@@ -475,13 +476,13 @@ function boss(startx, starty, sprite, lvl, hp)
              end
            elseif b.level == 3 then
              if #enemy_spawned > 0 or #enemy_table > 0 then
-              local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50))
-              if (timers["bossstart"] <= 900) timers["bossstart"] = 1000
+              local ang = (360/(timers["bossstart"]/50))*(10%(timers["bossstart"]/50)) -- update angle to move boss in circle around player
+              if (timers["bossstart"] <= 900) timers["bossstart"] = 1000 -- reset timer so boss doesn't speed up too much
               b.x = 60 - 55*cos(ang)
               b.y = 60 - 55*sin(ang)
-              line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10)
+              line((b.x-8*sin(p_ang/360)+8),(b.y-8*cos(p_ang/360)+8),((b.x+8)-(30*sin(p_ang/360))),((b.y+8)-(30*cos(p_ang/360))),10) -- draw line of sight
               if (distance(player, b) <= 30+8) shoot(b.x, b.y, p_ang, 141, false, true)
-            else
+            else -- if all of the enemies are dead, change patterns
               b.angle = (b.angle+7)%360
               b.x = 60
               b.y = 60
@@ -490,7 +491,7 @@ function boss(startx, starty, sprite, lvl, hp)
               end
               if (b.b_count%30==0) for i=0,360,180 do shoot(b.x, b.y, i+b.angle, 76, false, true, false, true) end
             end
-           elseif b.level == 4 then
+          elseif b.level == 4 then -- aoe boss
              if abs(time()*10)%2 == 0 then
                b.circs[#b.circs+1] = {player.x+8, player.y+8, 12}
              end
@@ -509,32 +510,33 @@ function boss(startx, starty, sprite, lvl, hp)
                  end
                end
              end
-             if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true)
+             if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true) -- shoot slower bullets at player
              local locs = {0,100,100,0}
-             if ((b.health%9)==0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; b.health-=1
-           elseif b.level == 6 then
+             if ((b.health%9)==0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; b.health-=1 -- move boss to a corner
+           elseif b.level == 6 then -- second to last boss
              b.angle = (b.angle+10)%360
              if (flr(timers["bossstart"])%1.5==0 and not once) for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once=true
              for i=-30,30,30 do
-               b.sang = (b.sang+1)%360
+               b.sang = (b.sang+1)%360 -- secondary angle offset
                if b.b_count%3 == 0 then
                    shoot(b.x, b.y, i+(b.angle+b.sang), 141, false, true)
                end
              end
              if (timers["bossstart"] == 0) timers["bossstart"] = 4; once = false
-           elseif b.level == 10 then
+           elseif b.level == 10 then -- final boss
              local locs = {40, 60, 80}
-             if (timers["mvmt"]==0) b.y = locs[b.idx%3+1]; b.idx+=1; timers["mvmt"]=3
-             if (timers["bossstart"] > 990) then
+             if (timers["mvmt"]==0) b.y = locs[b.idx%3+1]; b.idx+=1; timers["mvmt"]=3 -- move up and down every 3 seconds
+             if (timers["bossstart"] > 990) then -- change patterns every 10 seconds
                b.angle = (b.angle+8)%180 + 180
-               if (flr(timers["bossstart"])%3 == 0 and not once) for i=p_ang-60,p_ang+60, 60 do shoot(b.x, b.y, i, 48, false, true, false, false, true) end; for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once = true
+               -- the following statement fires homing rockets and an additional pattern every 3 seconds
+               if (flr(timers["bossstart"])%3 == 0 and not once) for i=p_ang-60,p_ang+60,60 do shoot(b.x, b.y, i, 48, false, true, false, false, true) end; for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once = true
                if (flr(timers["bossstart"])%3!=0) once = false
                if (b.b_count%5==0) shoot(b.x, b.y, b.angle, 53, false)
              else
                b.angle = (b.angle+5)%180 + 180
                if (b.b_count%3==0) shoot(b.x, b.y, b.angle, 53, false)
                if (b.b_count%30 == 0) shoot(b.x, b.y, p_ang, 76, false, true, false, true)
-               if (timers["bossstart"] < 980) timers["bossstart"] = 1000
+               if (timers["bossstart"] < 980) timers["bossstart"] = 1000 -- reset timer
              end
            end
            b.draw_healthbar()
@@ -964,7 +966,6 @@ end
   draws leaderboard to screen
 ]]
 function show_leaderboard()
-  --rectfill(0,0,128,128,0)
   if not win then
     mes = "game over";
   else
