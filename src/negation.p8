@@ -14,7 +14,7 @@ player = {
   destroy_sequence = {135, 136, 135},
 }
 player_health = 15
-player_max_health = 15
+player_max_health = player_health
 player_shield = 0
 player_speed = 1
 player_angle = 0
@@ -1153,7 +1153,7 @@ function skill_tree()
       sfx(0)
     elseif (selection_set[currently_selected] == "health" and player_tokens >= next_cost[currently_selected]) then
         player_max_health += 1
-        player_health += 1
+        player_health = player_max_health
         player_tokens -= next_cost[currently_selected]
         next_cost[currently_selected] += 1
         sfx(0)
