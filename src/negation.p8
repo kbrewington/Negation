@@ -578,7 +578,7 @@ end
 
 --[[
   function used to draw title screen.
-  reads pixel color values from the title.text gloabal variable
+  reads pixel color values from the title.text global variable
 ]]
 function draw_titlescreen()
   rectfill(0, 0, 127, 127, 6)
