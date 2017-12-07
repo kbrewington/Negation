@@ -13,8 +13,8 @@ player = {
   destroy_anim_length = 30,
   destroy_sequence = {135, 136, 135},
 }
-player_health = 10
-player_max_health = 10
+player_health = 15
+player_max_health = 15
 player_shield = 0
 player_speed = 1
 player_angle = 0
@@ -23,10 +23,10 @@ player_killed = 0
 player_tokens = 0
 
 -- level placement
-level_lvl = 1
+level_lvl = 6
 level_sx = 0
 level_sy = 0
-level_x = 0
+level_x = 91
 level_y = 0
 level_transition = {
   1, 0, 0,
@@ -121,144 +121,146 @@ playonce = 0
     coroutine to handle the flow of the game.
 ]]
 function gameflow()
-  -- showplayer = true
-  -- titlescreen = true
+  showplayer = true
+  titlescreen = true
   -- start game
-  drawcontrols, wait.controls = true, true
-  yield()
-
-  drawcontrols, wait.controls = false, false
-
-  init_tele_anim(player)
-  yield()
-
-  seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL GET IT OPEN."
-  yield()
-
-  fill_enemy_table(1, 65)
-  spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
-  yield()
-
-  kill_all_enemies(true)
-  wait.timer = false
-  seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
-  yield()
-
-  init_tele_anim(boss(20, 20, 128, 1, 40))
-  music(14)
-  yield()
-
-  kill_all_enemies(true)
-  seraph.text = "NICE WORK. THE DOOR SHOULD BE OPENED NOW."
-  yield()
-
-  wait.controls,level_change,open_door = true,true,true
-  yield()
-
-  wait.controls = false
-  yield()
-
-  --start level 2
-  wait.controls = true
-  seraph.text = "WELCOME TO THE PLANET HECLAO, SUPPOSE TO BE OUR HOME AWAY   FROM HOME."
-  add(boss_table, boss(100, 56, 139, 2, 35))
-
-  yield()
-
-  seraph.text = "UNFORTUNATELY, WE WEREN'T     ALONE."
-  yield()
-
-  seraph.text = "OH, WHO IS THIS LITTLE GUY?   SEEMS TO BE CHECKING YOU OUT."
-  yield()
-
-  fill_enemy_table(2, 60)
-  wait.controls,spawn_time_start = false,60
-  yield()
-
-  kill_all_enemies(true)
-  level_change = true
-  yield()
-
-  -- start level 3
-  open_door = false
-  seraph.text = "SO THE MAIN SOURCE OF THE     INFESTATION IS UP HERE PAST   THE DESERT."
-  --music(16)
-  yield()
-
-  fill_enemy_table(3, 60)
-  spawn_time_start = 60
-  init_tele_anim(boss(100, 60, 160, 3, 40))
-  music(16)
-  yield()
-
-  kill_all_enemies(true)
-  level_change = true
-  yield()
-
-  seraph.text = "EVER SINCE THE CULT MOVED INTOTHE TEMPLE THESE CREATURES    HAVE BEEN POURING OUT OF THERE."
-  --music(20)
-  yield()
-
-  seraph.text = "I'M PRETTY CERTAIN THAT THEY  ARE TRYING TO SUMMON SOME KINDOF MONSTER..."
-  yield()
-
-  -- start level 4
-  fill_enemy_table(4, 90)
-  spawn_time_start,detect_killed_enemies = 90, true
-  yield()
-
-  kill_all_enemies(true)
-  init_tele_anim(boss(60, 60, 166, 1, 40))
-  music(20)
-  init_tele_anim(boss(90, 90, 38, 1.5, 10))
-  init_tele_anim(boss(20, 20, 38, 1.5, 10))
-  yield()
-
-  seraph.text = "ALMOST THERE, BE CAREFUL GOINGIN THE TEMPLE. NO IDEA WHAT'S IN THERE..."
-  --music(17)
-  yield()
-
-  kill_all_enemies(true)
-  level_change = true
-  yield()
-
-  -- start level 5 (aoe boss)
-  fill_enemy_table(3, 75)
-  spawn_time_start,detect_killed_enemies = 75, true
-  yield()
-
-  init_tele_anim(boss(56, 52, 164, 4, 40))
-  music(17)
-  yield()
-
-  kill_all_enemies(true)
-  level_change = true
-  yield()
-
-  -- start level 6 "final" boss
-  fill_enemy_table(3, 75)
-  spawntime_start,detect_killed_enemies = 75, true
-
-  yield()
-
-  seraph.text = "THIS IS IT. MOMENT OF TRUTH.  I'M CERTAIN YOU WILL BE NO    PROBLEM FOR IT..."
-  --music(19)
-  yield()
+  -- drawcontrols, wait.controls = true, true
+  -- yield()
+  --
+  -- drawcontrols, wait.controls = false, false
+  --
+  -- init_tele_anim(player)
+  -- yield()
+  --
+  -- seraph.text = "I SEE A DOOR. GIVE ME A MINUTEAND I'LL GET IT OPEN."
+  -- yield()
+  --
+  -- fill_enemy_table(1, 65)
+  -- spawn_time_start, timers["leveltimer"], wait.timer =  60, 60, true
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- wait.timer = false
+  -- seraph.text = "OKAY THAT SHOULD DO...*static*INCOM-*static* B-*static*..."
+  -- yield()
+  --
+  -- init_tele_anim(boss(20, 20, 128, 1, 40))
+  -- music(14)
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- seraph.text = "NICE WORK. THE DOOR SHOULD BE OPENED NOW."
+  -- yield()
+  --
+  -- wait.controls,level_change,open_door = true,true,true
+  -- yield()
+  --
+  -- wait.controls = false
+  -- yield()
+  --
+  -- --start level 2
+  -- wait.controls = true
+  -- seraph.text = "WELCOME TO THE PLANET HECLAO, SUPPOSE TO BE OUR HOME AWAY   FROM HOME."
+  -- add(boss_table, boss(100, 56, 139, 2, 35))
+  --
+  -- yield()
+  --
+  -- seraph.text = "UNFORTUNATELY, WE WEREN'T     ALONE."
+  -- yield()
+  --
+  -- seraph.text = "OH, WHO IS THIS LITTLE GUY?   SEEMS TO BE CHECKING YOU OUT."
+  -- yield()
+  --
+  -- fill_enemy_table(2, 60)
+  -- wait.controls,spawn_time_start = false,60
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- level_change = true
+  -- yield()
+  --
+  -- -- start level 3
+  -- open_door = false
+  -- seraph.text = "SO THE MAIN SOURCE OF THE     INFESTATION IS UP HERE PAST   THE DESERT."
+  -- --music(16)
+  -- yield()
+  --
+  -- fill_enemy_table(3, 60)
+  -- spawn_time_start = 60
+  -- init_tele_anim(boss(100, 60, 160, 3, 40))
+  -- music(16)
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- level_change = true
+  -- yield()
+  --
+  -- seraph.text = "EVER SINCE THE CULT MOVED INTOTHE TEMPLE THESE CREATURES    HAVE BEEN POURING OUT OF THERE."
+  -- --music(20)
+  -- yield()
+  --
+  -- seraph.text = "I'M PRETTY CERTAIN THAT THEY  ARE TRYING TO SUMMON SOME KINDOF MONSTER..."
+  -- yield()
+  --
+  -- -- start level 4
+  -- fill_enemy_table(4, 90)
+  -- spawn_time_start,detect_killed_enemies = 90, true
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- init_tele_anim(boss(60, 60, 166, 1, 40))
+  -- music(20)
+  -- init_tele_anim(boss(90, 90, 38, 1.5, 10))
+  -- init_tele_anim(boss(20, 20, 38, 1.5, 10))
+  -- yield()
+  --
+  -- seraph.text = "ALMOST THERE, BE CAREFUL GOINGIN THE TEMPLE. NO IDEA WHAT'S IN THERE..."
+  -- --music(17)
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- level_change = true
+  -- yield()
+  --
+  -- -- start level 5 (aoe boss)
+  -- fill_enemy_table(3, 75)
+  -- spawn_time_start,detect_killed_enemies = 75, true
+  -- yield()
+  --
+  -- init_tele_anim(boss(56, 52, 164, 4, 40))
+  -- music(17)
+  -- yield()
+  --
+  -- kill_all_enemies(true)
+  -- level_change = true
+  -- yield()
+  --
+  -- -- start level 6 "final" boss
+  -- fill_enemy_table(3, 75)
+  -- spawntime_start,detect_killed_enemies = 75, true
+  --
+  -- yield()
+  --
+  -- seraph.text = "THIS IS IT. MOMENT OF TRUTH.  I'M CERTAIN YOU WILL BE NO    PROBLEM FOR IT..."
+  -- --music(19)
+  -- yield()
 
   seraph.text = "IT NEEDS YOUR BLOOD SO PLEASE DO US A FAVOR AND JUST DIE!"
   yield()
 
   kill_all_enemies(true)
-  init_tele_anim(boss(56, 56, 169, 6, 50))
+  init_tele_anim(boss(56, 56, 169, 6, 1))
   music(19)
   yield()
 
   level_change = true
+  add(dropped, drop_obj(46, 70, 32))
+  add(dropped, drop_obj(66, 70, 32))
 
   yield()
 
   --start level 7 final boss
-  seraph.text = "YOU FOOD! DO YOU UNDERSTAND   HOW LONG IT TOOK US TO SUMMON THAT THING?"
+  seraph.text = "YOU FOOL! DO YOU UNDERSTAND   HOW LONG IT TOOK US TO SUMMON THAT THING?"
   add(boss_table, boss(100, 60, 5, 10, 50))
   music(22)
   yield()
@@ -370,7 +372,7 @@ function enemy(x, y, type, time_spwn)
   e.destroy_anim_length, e.destroyed_step, e.drop_prob, e.shoot_distance = 15, 0, 20, 50
   e.destroy_sequence = {135, 136, 135}
   e.walking = {132, 134, 137}
-  e.drops = {32, 32, 33, 48, 49} -- sprites of drops
+  e.drops = {32, 32, 32, 33, 48, 49} -- sprites of drops
   e.explode_distance, e.explode_wait, e.explode_step, e.fire_rate = 15, 15, 0, 20
   e.exploding, e.dont_move, e.size, e.sprite, e.type = false, false, 7, 132, type
   e.speed = type == "exploder" and .9 or .35
@@ -511,15 +513,15 @@ function boss(startx, starty, sprite, lvl, hp)
              local locs = {0,100,100,0}
              if ((b.health%9)==0) b.x, b.y = 10+locs[b.idx%#locs+1], 10+locs[(b.idx-1)%#locs+1]; b.idx+=1; b.health-=1
            elseif b.level == 6 then
-             b.angle = (b.angle+10)%p_ang
-             if (flr(timers["bossstart"])%3==0 and not once) for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once=true
+             b.angle = (b.angle+10)%360
+             if (flr(timers["bossstart"])%1.5==0 and not once) for i=0,360,30 do shoot(b.x, b.y, i, 76, false, true) end; once=true
              for i=-30,30,30 do
-               b.sang = (b.sang+1)%p_ang
-               if b.b_count%4 == 0 then
+               b.sang = (b.sang+1)%360
+               if b.b_count%3 == 0 then
                    shoot(b.x, b.y, i+(b.angle+b.sang), 141, false, true)
                end
              end
-             if (timers["bossstart"] == 0) timers["bossstart"] = 5; once = false
+             if (timers["bossstart"] == 0) timers["bossstart"] = 4; once = false
            elseif b.level == 10 then
              local locs = {40, 60, 80}
              if (timers["mvmt"]==0) b.y = locs[b.idx%3+1]; b.idx+=1; timers["mvmt"]=3
