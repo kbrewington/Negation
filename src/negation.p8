@@ -249,7 +249,7 @@ function gameflow()
   yield()
 
   kill_all_enemies(true)
-  init_tele_anim(boss(56, 56, 169, 6, 1))
+  init_tele_anim(boss(56, 56, 169, 6, 40))
   music(19)
   yield()
 
